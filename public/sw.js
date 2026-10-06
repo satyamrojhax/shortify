@@ -18,9 +18,9 @@
  * and wasted storage).
  */
 
-const STATIC_CACHE = "reels-static-v4";
-const API_CACHE = "reels-api-v4";
-const DB_CACHE = "reels-db-v4";
+const STATIC_CACHE = "reels-static-v5";
+const API_CACHE = "reels-api-v5";
+const DB_CACHE = "reels-db-v5";
 
 const STATIC_URLS = ["/", "/manifest.json", "/logo.png", "/PWA_ICON.png"];
 
@@ -64,6 +64,16 @@ self.addEventListener("fetch", (event) => {
 
   // ── Skip non-HTTP(S) ────────────────────────────────────────────────────────
   if (!url.protocol.startsWith("http")) return;
+
+  // ── Skip external APIs and fonts to prevent SW from masking network errors ──
+  // (React Query handles caching for the API, and fonts are handled natively)
+  if (
+    url.hostname.includes("reelsbackend.satyamrojha") ||
+    url.hostname.includes("fonts.googleapis.com") ||
+    url.hostname.includes("fonts.gstatic.com")
+  ) {
+    return;
+  }
 
   // ── Skip video / streaming URLs (identified by .mp4 / .m3u8 / common CDN patterns) ──
   // Let the browser handle range requests natively — SW caching breaks streaming.

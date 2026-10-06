@@ -450,7 +450,7 @@ export async function fetchCreatorReelsPage(
   const res = await fetchWithRetry(`https://reelsbackend.satyamrojha.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`);
   
   if (!res) {
-    throw new Error("Failed to load creator reels");
+    return { items: [], nextPage: undefined };
   }
 
   try {

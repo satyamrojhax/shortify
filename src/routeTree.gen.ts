@@ -9,43 +9,37 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PinSetupRouteImport } from './routes/pin-setup'
-import { Route as PinRouteImport } from './routes/pin'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as AgeRouteImport } from './routes/age'
-import { Route as AppRouteImport } from './routes/_app'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as AppSkillsRouteImport } from './routes/_app.skills'
-import { Route as AppShopRouteImport } from './routes/_app.shop'
-import { Route as AppSettingsRouteImport } from './routes/_app.settings'
-import { Route as AppSavedRouteImport } from './routes/_app.saved'
-import { Route as AppReelsRouteImport } from './routes/_app.reels'
-import { Route as AppRedeemRouteImport } from './routes/_app.redeem'
-import { Route as AppMyCoursesRouteImport } from './routes/_app.my-courses'
-import { Route as AppLikedRouteImport } from './routes/_app.liked'
-import { Route as AppHomeRouteImport } from './routes/_app.home'
-import { Route as AppHistoryRouteImport } from './routes/_app.history'
-import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
-import { Route as AppCategoryRouteImport } from './routes/_app.category'
+import { Route as AppRouteImport } from './routes/_app'
+import { Route as AgeRouteImport } from './routes/age'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PinRouteImport } from './routes/pin'
+import { Route as PinSetupRouteImport } from './routes/pin-setup'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
+import { Route as AppCategoryRouteImport } from './routes/_app.category'
+import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
+import { Route as AppHistoryRouteImport } from './routes/_app.history'
+import { Route as AppHomeRouteImport } from './routes/_app.home'
+import { Route as AppLikedRouteImport } from './routes/_app.liked'
+import { Route as AppMyCoursesRouteImport } from './routes/_app.my-courses'
+import { Route as AppRedeemRouteImport } from './routes/_app.redeem'
+import { Route as AppReelsRouteImport } from './routes/_app.reels'
+import { Route as AppSavedRouteImport } from './routes/_app.saved'
+import { Route as AppSettingsRouteImport } from './routes/_app.settings'
+import { Route as AppShopRouteImport } from './routes/_app.shop'
+import { Route as AppSkillsRouteImport } from './routes/_app.skills'
+import { Route as AppCourseSlugRouteImport } from './routes/_app.course.$slug'
+import { Route as AppCreatorUsernameRouteImport } from './routes/_app.creator.$username'
 import { Route as AppEnglishCourseIndexRouteImport } from './routes/_app.english-course.index'
 import { Route as AppEnglishCourseCourseIdRouteImport } from './routes/_app.english-course.$courseId'
-import { Route as AppCreatorUsernameRouteImport } from './routes/_app.creator.$username'
-import { Route as AppCourseSlugRouteImport } from './routes/_app.course.$slug'
 
-const PinSetupRoute = PinSetupRouteImport.update({
-  id: '/pin-setup',
-  path: '/pin-setup',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PinRoute = PinRouteImport.update({
-  id: '/pin',
-  path: '/pin',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AppRoute = AppRouteImport.update({
+  id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AgeRoute = AgeRouteImport.update({
@@ -53,68 +47,24 @@ const AgeRoute = AgeRouteImport.update({
   path: '/age',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppRoute = AppRouteImport.update({
-  id: '/_app',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const PinRoute = PinRouteImport.update({
+  id: '/pin',
+  path: '/pin',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AppSkillsRoute = AppSkillsRouteImport.update({
-  id: '/skills',
-  path: '/skills',
-  getParentRoute: () => AppRoute,
+const PinSetupRoute = PinSetupRouteImport.update({
+  id: '/pin-setup',
+  path: '/pin-setup',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AppShopRoute = AppShopRouteImport.update({
-  id: '/shop',
-  path: '/shop',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSettingsRoute = AppSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppSavedRoute = AppSavedRouteImport.update({
-  id: '/saved',
-  path: '/saved',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppReelsRoute = AppReelsRouteImport.update({
-  id: '/reels',
-  path: '/reels',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppRedeemRoute = AppRedeemRouteImport.update({
-  id: '/redeem',
-  path: '/redeem',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppMyCoursesRoute = AppMyCoursesRouteImport.update({
-  id: '/my-courses',
-  path: '/my-courses',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppLikedRoute = AppLikedRouteImport.update({
-  id: '/liked',
-  path: '/liked',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHomeRoute = AppHomeRouteImport.update({
-  id: '/home',
-  path: '/home',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppHistoryRoute = AppHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppFavoritesRoute = AppFavoritesRouteImport.update({
-  id: '/favorites',
-  path: '/favorites',
+const AppAboutRoute = AppAboutRouteImport.update({
+  id: '/about',
+  path: '/about',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCategoryRoute = AppCategoryRouteImport.update({
@@ -122,9 +72,69 @@ const AppCategoryRoute = AppCategoryRouteImport.update({
   path: '/category',
   getParentRoute: () => AppRoute,
 } as any)
-const AppAboutRoute = AppAboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const AppFavoritesRoute = AppFavoritesRouteImport.update({
+  id: '/favorites',
+  path: '/favorites',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHistoryRoute = AppHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppHomeRoute = AppHomeRouteImport.update({
+  id: '/home',
+  path: '/home',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppLikedRoute = AppLikedRouteImport.update({
+  id: '/liked',
+  path: '/liked',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMyCoursesRoute = AppMyCoursesRouteImport.update({
+  id: '/my-courses',
+  path: '/my-courses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppRedeemRoute = AppRedeemRouteImport.update({
+  id: '/redeem',
+  path: '/redeem',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReelsRoute = AppReelsRouteImport.update({
+  id: '/reels',
+  path: '/reels',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSavedRoute = AppSavedRouteImport.update({
+  id: '/saved',
+  path: '/saved',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppShopRoute = AppShopRouteImport.update({
+  id: '/shop',
+  path: '/shop',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSkillsRoute = AppSkillsRouteImport.update({
+  id: '/skills',
+  path: '/skills',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCourseSlugRoute = AppCourseSlugRouteImport.update({
+  id: '/course/$slug',
+  path: '/course/$slug',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCreatorUsernameRoute = AppCreatorUsernameRouteImport.update({
+  id: '/creator/$username',
+  path: '/creator/$username',
   getParentRoute: () => AppRoute,
 } as any)
 const AppEnglishCourseIndexRoute = AppEnglishCourseIndexRouteImport.update({
@@ -138,16 +148,6 @@ const AppEnglishCourseCourseIdRoute =
     path: '/english-course/$courseId',
     getParentRoute: () => AppRoute,
   } as any)
-const AppCreatorUsernameRoute = AppCreatorUsernameRouteImport.update({
-  id: '/creator/$username',
-  path: '/creator/$username',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppCourseSlugRoute = AppCourseSlugRouteImport.update({
-  id: '/course/$slug',
-  path: '/course/$slug',
-  getParentRoute: () => AppRoute,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -310,32 +310,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/pin-setup': {
-      id: '/pin-setup'
-      path: '/pin-setup'
-      fullPath: '/pin-setup'
-      preLoaderRoute: typeof PinSetupRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pin': {
-      id: '/pin'
-      path: '/pin'
-      fullPath: '/pin'
-      preLoaderRoute: typeof PinRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/age': {
-      id: '/age'
-      path: '/age'
-      fullPath: '/age'
-      preLoaderRoute: typeof AgeRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_app': {
@@ -345,88 +324,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/age': {
+      id: '/age'
+      path: '/age'
+      fullPath: '/age'
+      preLoaderRoute: typeof AgeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_app/skills': {
-      id: '/_app/skills'
-      path: '/skills'
-      fullPath: '/skills'
-      preLoaderRoute: typeof AppSkillsRouteImport
-      parentRoute: typeof AppRoute
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/shop': {
-      id: '/_app/shop'
-      path: '/shop'
-      fullPath: '/shop'
-      preLoaderRoute: typeof AppShopRouteImport
-      parentRoute: typeof AppRoute
+    '/pin': {
+      id: '/pin'
+      path: '/pin'
+      fullPath: '/pin'
+      preLoaderRoute: typeof PinRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/settings': {
-      id: '/_app/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppSettingsRouteImport
-      parentRoute: typeof AppRoute
+    '/pin-setup': {
+      id: '/pin-setup'
+      path: '/pin-setup'
+      fullPath: '/pin-setup'
+      preLoaderRoute: typeof PinSetupRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_app/saved': {
-      id: '/_app/saved'
-      path: '/saved'
-      fullPath: '/saved'
-      preLoaderRoute: typeof AppSavedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/reels': {
-      id: '/_app/reels'
-      path: '/reels'
-      fullPath: '/reels'
-      preLoaderRoute: typeof AppReelsRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/redeem': {
-      id: '/_app/redeem'
-      path: '/redeem'
-      fullPath: '/redeem'
-      preLoaderRoute: typeof AppRedeemRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/my-courses': {
-      id: '/_app/my-courses'
-      path: '/my-courses'
-      fullPath: '/my-courses'
-      preLoaderRoute: typeof AppMyCoursesRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/liked': {
-      id: '/_app/liked'
-      path: '/liked'
-      fullPath: '/liked'
-      preLoaderRoute: typeof AppLikedRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/home': {
-      id: '/_app/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof AppHomeRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/history': {
-      id: '/_app/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof AppHistoryRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/favorites': {
-      id: '/_app/favorites'
-      path: '/favorites'
-      fullPath: '/favorites'
-      preLoaderRoute: typeof AppFavoritesRouteImport
+    '/_app/about': {
+      id: '/_app/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AppAboutRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/category': {
@@ -436,11 +366,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCategoryRouteImport
       parentRoute: typeof AppRoute
     }
-    '/_app/about': {
-      id: '/_app/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AppAboutRouteImport
+    '/_app/favorites': {
+      id: '/_app/favorites'
+      path: '/favorites'
+      fullPath: '/favorites'
+      preLoaderRoute: typeof AppFavoritesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/history': {
+      id: '/_app/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AppHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/home': {
+      id: '/_app/home'
+      path: '/home'
+      fullPath: '/home'
+      preLoaderRoute: typeof AppHomeRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/liked': {
+      id: '/_app/liked'
+      path: '/liked'
+      fullPath: '/liked'
+      preLoaderRoute: typeof AppLikedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/my-courses': {
+      id: '/_app/my-courses'
+      path: '/my-courses'
+      fullPath: '/my-courses'
+      preLoaderRoute: typeof AppMyCoursesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/redeem': {
+      id: '/_app/redeem'
+      path: '/redeem'
+      fullPath: '/redeem'
+      preLoaderRoute: typeof AppRedeemRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/reels': {
+      id: '/_app/reels'
+      path: '/reels'
+      fullPath: '/reels'
+      preLoaderRoute: typeof AppReelsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/saved': {
+      id: '/_app/saved'
+      path: '/saved'
+      fullPath: '/saved'
+      preLoaderRoute: typeof AppSavedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/settings': {
+      id: '/_app/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/shop': {
+      id: '/_app/shop'
+      path: '/shop'
+      fullPath: '/shop'
+      preLoaderRoute: typeof AppShopRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/skills': {
+      id: '/_app/skills'
+      path: '/skills'
+      fullPath: '/skills'
+      preLoaderRoute: typeof AppSkillsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/course/$slug': {
+      id: '/_app/course/$slug'
+      path: '/course/$slug'
+      fullPath: '/course/$slug'
+      preLoaderRoute: typeof AppCourseSlugRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/creator/$username': {
+      id: '/_app/creator/$username'
+      path: '/creator/$username'
+      fullPath: '/creator/$username'
+      preLoaderRoute: typeof AppCreatorUsernameRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/english-course/': {
@@ -455,20 +469,6 @@ declare module '@tanstack/react-router' {
       path: '/english-course/$courseId'
       fullPath: '/english-course/$courseId'
       preLoaderRoute: typeof AppEnglishCourseCourseIdRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/creator/$username': {
-      id: '/_app/creator/$username'
-      path: '/creator/$username'
-      fullPath: '/creator/$username'
-      preLoaderRoute: typeof AppCreatorUsernameRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/course/$slug': {
-      id: '/_app/course/$slug'
-      path: '/course/$slug'
-      fullPath: '/course/$slug'
-      preLoaderRoute: typeof AppCourseSlugRouteImport
       parentRoute: typeof AppRoute
     }
   }
