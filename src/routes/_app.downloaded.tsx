@@ -569,12 +569,6 @@ function DownloadTab({
                 Only {nf.format(pendingCount)} left — capped to what's remaining.
               </div>
             )}
-            {notEnoughSpace && (
-              <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-300">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                May not fit — only {formatBytes(freeBytes ?? 0)} free on this device.
-              </div>
-            )}
             {!online && (
               <div className="mt-1 flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-300">
                 <WifiOff className="h-3.5 w-3.5" /> Connect to the internet to download.
