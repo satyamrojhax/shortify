@@ -1,7 +1,7 @@
 {
-  "name": "InstantReels — Watch Premium Reels",
-  "short_name": "InstantReels",
-  "description": "InstantReels — Watch Premium Reels Instantly!",
+  "name": "Shortify — Watch Premium Reels",
+  "short_name": "Shortify",
+  "description": "Shortify — Watch Premium Reels Instantly!",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#000000",

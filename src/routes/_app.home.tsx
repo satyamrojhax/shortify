@@ -70,7 +70,7 @@ function HomePage() {
         <p className="font-display text-3xl lowercase md:text-4xl">
           that's all for now — go tap something.
         </p>
-        <p className="mt-2 text-sm opacity-80">InstantReels · A Product By <a href="https://lfrdcatechnologies.cc.cd" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition">LFRDCA Technologies</a></p>
+        <p className="mt-2 text-sm opacity-80">Shortify · A Product By <a href="https://lfrdcatechnologies.cc.cd" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition">LFRDCA Technologies</a></p>
       </footer>
     </div>
   );

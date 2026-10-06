@@ -15,7 +15,7 @@ function AboutPage() {
         </div>
         <div>
           <h1 className="font-display text-4xl lowercase text-cocoa dark:text-cream">
-            InstantReels
+            Shortify
           </h1>
           <p className="text-sm text-charcoal/60 dark:text-cream/60 mt-0.5">
             Your ultimate short video platform
@@ -24,17 +24,17 @@ function AboutPage() {
       </div>
 
       <section className="mt-8 space-y-6">
-        {/* What is InstantReels */}
+        {/* What is Shortify */}
         <div className="paper-card p-6">
           <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">
-            what is InstantReels?
+            what is Shortify?
           </h2>
           <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            InstantReels is your ultimate destination for watching premium short video content.
+            Shortify is your ultimate destination for watching premium short video content.
             We provide a seamless, ad-free experience with a curated collection of high-quality
             reels from various creators and sources. Our platform is designed to be blazing fast,
             fully responsive, and incredibly easy to use — giving you instant access to the best
-            content right at your fingertips. Whether you're on mobile or desktop, InstantReels
+            content right at your fingertips. Whether you're on mobile or desktop, Shortify
             delivers a buttery-smooth viewing experience every time.
           </p>
         </div>
@@ -76,7 +76,7 @@ function AboutPage() {
             open source
           </h2>
           <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            InstantReels is completely open source! Anyone can contribute, use, and modify the code. We believe in building together with the community. Check out our GitHub repository to get involved, submit issues, or create pull requests.
+            Shortify is completely open source! Anyone can contribute, use, and modify the code. We believe in building together with the community. Check out our GitHub repository to get involved, submit issues, or create pull requests.
           </p>
         </div>
 
@@ -130,7 +130,7 @@ function AboutPage() {
           <div className="mt-3 space-y-2 text-sm text-charcoal/70 dark:text-cream/70">
             <div className="flex justify-between">
               <span>App Name</span>
-              <span className="font-semibold text-cocoa dark:text-cream">InstantReels</span>
+              <span className="font-semibold text-cocoa dark:text-cream">Shortify</span>
             </div>
             <div className="flex justify-between">
               <span>Type</span>
@@ -159,7 +159,7 @@ function AboutPage() {
       {/* Footer */}
       <footer className="mt-10 pb-8 text-center">
         <p className="text-xs text-charcoal/40 dark:text-cream/40">
-          © {new Date().getFullYear()} InstantReels · A Product By{" "}
+          © {new Date().getFullYear()} Shortify · A Product By{" "}
           <a
             href="https://lfrdcatechnologies.cc.cd"
             target="_blank"

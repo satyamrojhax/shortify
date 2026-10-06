@@ -128,7 +128,7 @@ This project is open-source and licensed under the MIT License. See the [LICENSE
 
 ## Contributing
 
-We welcome contributions! InstantReels is completely open source. Anyone can contribute and use it.
+We welcome contributions! Shortify is completely open source. Anyone can contribute and use it.
 Please read our [Contributing Guidelines](CONTRIBUTING.md) to get started.
 For security issues, see our [Security Policy](SECURITY.md).
 
