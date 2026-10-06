@@ -268,7 +268,7 @@ function DownloadedPage() {
           icon={<HardDrive className="h-5 w-5" />}
           label="Storage used"
           value={formatBytes(usedBytes)}
-          hint={freeBytes != null ? `${formatBytes(freeBytes)} free on device` : "in browser storage"}
+          hint="in browser storage"
           tone="rose"
         />
       </section>
@@ -396,13 +396,18 @@ function TabButton(props: {
   );
 }
 
-function ProgressBar({ value, tone = "bg-cobalt-pop" }: { value: number; tone?: string }) {
+function ProgressBar({ value, tone = "bg-cobalt-pop", indeterminate }: { value: number; tone?: string; indeterminate?: boolean }) {
   return (
-    <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+    <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
       <div
-        className={`h-full rounded-full transition-[width] duration-300 ${tone}`}
-        style={{ width: `${Math.max(0, Math.min(100, value))}%` }}
+        className={`h-full rounded-full transition-[width] duration-300 ${tone} ${
+          indeterminate ? "w-full animate-pulse" : ""
+        }`}
+        style={indeterminate ? undefined : { width: `${Math.max(0, Math.min(100, value))}%` }}
       />
+      {indeterminate && (
+        <div className="absolute inset-0 bg-white/20 shimmer-effect" />
+      )}
     </div>
   );
 }
@@ -733,8 +738,9 @@ function DownloadTab({
                   </div>
                   <div className="flex-1 w-full">
                     <ProgressBar
-                      value={a.total > 0 ? (a.received / a.total) * 100 : 8}
+                      value={a.total > 0 ? (a.received / a.total) * 100 : 100}
                       tone="bg-cobalt-pop/80"
+                      indeterminate={a.total === 0}
                     />
                   </div>
                   <div className="text-right text-[11px] tabular-nums text-muted-foreground sm:w-24 sm:shrink-0">
