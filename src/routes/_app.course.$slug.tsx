@@ -198,7 +198,7 @@ function CourseDetailsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-magenta-haze border-t-transparent" />
+        <span className="animate-pulse text-lg font-bold text-magenta-haze dark:text-periwinkle-sky">Loading course...</span>
       </div>
     );
   }
@@ -246,22 +246,24 @@ function CourseDetailsPage() {
       <div className="h-4 md:h-8" />
       
       <div className="mx-auto max-w-4xl px-4 md:px-8">
-        {/* Top Header / Hero Section (Hidden when playing a video) */}
         {!activeVideo && (
-        <div className="flex flex-col gap-6 md:flex-row md:items-center rounded-3xl bg-cloud-white p-6 shadow-sm border border-twilight-navy/10 dark:bg-dusk-indigo dark:border-periwinkle-sky/10 mb-8 text-center md:text-left">
-          <div className="mx-auto md:mx-0 h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-slate-mist/20 shadow-sm border border-twilight-navy/5 dark:border-periwinkle-sky/5">
-            {courseImage ? (
-              <img src={courseImage} alt={course.courseName} className="h-full w-full object-cover" />
-            ) : (
-              <div className="flex h-full w-full items-center justify-center text-4xl font-bold text-twilight-navy dark:text-cream-linen">
-                {course.courseName.charAt(0)}
-              </div>
-            )}
-          </div>
-          <div className="flex-1 flex flex-col items-center md:items-start justify-center">
-            <h1 className="mb-4 text-3xl font-bold text-twilight-navy md:text-4xl dark:text-cream-linen">
-              {course.courseName}
-            </h1>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-twilight-navy via-dusk-indigo to-magenta-haze p-6 text-white shadow-xl md:p-8 border border-white/10 mb-8">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-1000 hover:scale-110" />
+          
+          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center text-center md:text-left">
+            <div className="mx-auto md:mx-0 h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-white/10 shadow-lg border border-white/20 backdrop-blur-sm">
+              {courseImage ? (
+                <img src={courseImage} alt={course.courseName} className="h-full w-full object-cover" />
+              ) : (
+                <div className="flex h-full w-full items-center justify-center text-4xl font-black text-white">
+                  {course.courseName.charAt(0)}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 flex flex-col items-center md:items-start justify-center">
+              <h1 className="mb-4 text-3xl font-black text-white md:text-4xl drop-shadow-md">
+                {course.courseName}
+              </h1>
             {!enrolled ? (
               <button
                 onClick={handleEnroll}
@@ -279,7 +281,7 @@ function CourseDetailsPage() {
                 </button>
                 <button 
                   onClick={() => unenroll(slug)}
-                  className="flex w-full sm:w-fit items-center justify-center gap-2 rounded-full border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-500 hover:text-white dark:text-red-400"
+                  className="flex w-full sm:w-fit items-center justify-center gap-2 rounded-full border border-red-400/30 bg-red-500/20 px-5 py-3 text-sm font-bold text-red-100 transition-colors hover:bg-red-500 hover:text-white backdrop-blur-sm"
                 >
                   <Trash2 className="h-4 w-4" />
                   Unenroll
@@ -287,6 +289,7 @@ function CourseDetailsPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
         )}
 

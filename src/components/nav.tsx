@@ -1,12 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Film, Heart, Bookmark, Settings, ShoppingBag, BadgeCheck, Compass, PlaySquare, Menu, X, Mic, Instagram, WandSparkles, Users, Download } from "lucide-react";
+import { Home, Film, Heart, Bookmark, Settings, ShoppingBag, BadgeCheck, Compass, PlaySquare, Menu, X, Mic, Instagram, WandSparkles, Users, Download, Clapperboard, Flame } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { hasUnlocked } from "@/lib/storage";
 import { useState } from "react";
 
 const bottomItems: { to: any; label: string; icon: LucideIcon }[] = [
   { to: "/home", label: "home", icon: Home },
-  { to: "/reels", label: "reels", icon: Film },
+  { to: "/reels", label: "reels", icon: Clapperboard },
   { to: "/skills", label: "skills", icon: Compass },
   { to: "/my-courses", label: "courses", icon: PlaySquare },
   { to: "/settings", label: "settings", icon: Settings },
@@ -14,9 +14,8 @@ const bottomItems: { to: any; label: string; icon: LucideIcon }[] = [
 
 const sidebarItems: { to: any; label: string; icon: LucideIcon }[] = [
   { to: "/home", label: "home", icon: Home },
-  { to: "/category", label: "instant reels", icon: WandSparkles },
-  { to: "/reels", label: "reels", icon: Film },
-  { to: "/downloaded", label: "downloads", icon: Download },
+  { to: "/category", label: "instant reels", icon: Flame },
+  { to: "/reels", label: "reels", icon: Clapperboard },
   { to: "/favorites", label: "favorites", icon: Users },
   { to: "/skills", label: "skills", icon: Compass },
   { to: "/english-course", label: "speaking", icon: Mic },
@@ -26,9 +25,8 @@ const sidebarItems: { to: any; label: string; icon: LucideIcon }[] = [
 
 const allItems = [
   { to: "/home", label: "home", icon: Home },
-  { to: "/category", label: "instant reels", icon: WandSparkles },
-  { to: "/reels", label: "reels", icon: Film },
-  { to: "/downloaded", label: "downloads", icon: Download },
+  { to: "/category", label: "instant reels", icon: Flame },
+  { to: "/reels", label: "reels", icon: Clapperboard },
   { to: "/skills", label: "skills", icon: Compass },
   { to: "/english-course", label: "speaking", icon: Mic },
   { to: "/my-courses", label: "my courses", icon: PlaySquare },

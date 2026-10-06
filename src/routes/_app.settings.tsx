@@ -238,6 +238,24 @@ function SettingsPage() {
         </section>
       )}
 
+      {/* Downloads */}
+      <section className="mt-4">
+        <Link
+          to="/downloaded"
+          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
+        >
+          <div>
+            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
+              downloads
+            </div>
+            <div className="text-sm text-charcoal/70 dark:text-cream/70">
+              manage offline reels and download more.
+            </div>
+          </div>
+          <Download className="h-5 w-5 text-cocoa dark:text-cream" />
+        </Link>
+      </section>
+
       {/* Shop */}
       <section className="mt-4">
         <Link

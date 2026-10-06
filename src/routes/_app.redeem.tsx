@@ -71,32 +71,37 @@ function RedeemPage() {
           Redeem Coins
         </h1>
 
-        <div className="rounded-3xl border border-twilight-navy/10 bg-cloud-white p-6 shadow-sm dark:border-periwinkle-sky/10 dark:bg-dusk-indigo flex flex-col items-center justify-center min-h-[300px]">
-          <div className="mb-8 rounded-full bg-magenta-haze/10 p-8 text-center flex flex-col items-center justify-center">
-            <Coins className="h-16 w-16 text-magenta-haze dark:text-periwinkle-sky mb-4" />
-            <p className="text-3xl font-bold text-magenta-haze dark:text-periwinkle-sky">
-              {currentCoins}
-            </p>
-            <p className="text-sm font-medium text-twilight-navy/80 dark:text-cream-linen/80 mt-1">
-              Available Coins
-            </p>
-          </div>
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-twilight-navy via-dusk-indigo to-magenta-haze p-8 text-white shadow-xl border border-white/10 flex flex-col items-center justify-center min-h-[350px]">
+          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-1000 hover:scale-110" />
+          <div className="pointer-events-none absolute -bottom-24 left-1/4 h-56 w-56 rounded-full bg-black/20 blur-3xl" />
           
-          <p className="mb-8 text-center font-medium text-twilight-navy dark:text-cream-linen">
-            Conversion rate: 1000 coins = ₹10
-          </p>
+          <div className="relative z-10 flex flex-col items-center justify-center w-full">
+            <div className="mb-8 rounded-full bg-white/10 p-8 text-center flex flex-col items-center justify-center border border-white/20 shadow-inner backdrop-blur-md transition-transform hover:scale-105 duration-300">
+              <Coins className="h-16 w-16 text-yellow-300 mb-4 drop-shadow-md" />
+              <p className="text-4xl font-black text-white drop-shadow-md tracking-tight">
+                {currentCoins}
+              </p>
+              <p className="text-sm font-bold text-white/80 mt-1 uppercase tracking-wider">
+                Available Coins
+              </p>
+            </div>
+            
+            <p className="mb-8 text-center font-bold text-white/90 bg-black/20 px-4 py-2 rounded-full border border-white/5 backdrop-blur-sm">
+              Conversion rate: <span className="text-yellow-300">1000 coins = ₹10</span>
+            </p>
 
-          <button
-            onClick={() => setIsModalOpen(true)}
-            disabled={currentCoins < 1000}
-            className={`rounded-full w-full sm:w-auto px-10 py-4 text-lg font-bold text-white shadow-md transition-transform ${
-              currentCoins >= 1000 
-                ? "bg-magenta-haze hover:scale-[1.02] active:scale-95" 
-                : "bg-slate-mist text-twilight-navy/50 cursor-not-allowed dark:bg-secondary dark:text-cream-linen/50"
-            }`}
-          >
-            Redeem Now
-          </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              disabled={currentCoins < 1000}
+              className={`rounded-full w-full sm:w-auto px-10 py-4 text-lg font-bold transition-all duration-300 shadow-xl border ${
+                currentCoins >= 1000 
+                  ? "bg-gradient-to-r from-yellow-400 to-yellow-500 text-twilight-navy border-yellow-300 hover:scale-[1.03] active:scale-95" 
+                  : "bg-white/10 text-white/40 border-white/5 cursor-not-allowed backdrop-blur-sm"
+              }`}
+            >
+              Redeem Now
+            </button>
+          </div>
           
           {currentCoins < 1000 && (
             <p className="mt-4 text-sm font-medium text-red-500 text-center">

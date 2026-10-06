@@ -49,7 +49,7 @@ export type DownloadState = {
   autoPaused: boolean;
 };
 
-const CONCURRENCY = 3;
+const CONCURRENCY = 1;
 const MAX_ATTEMPTS = 3;
 const PUBLISH_INTERVAL_MS = 150;
 const SPEED_WINDOW_MS = 4000;
