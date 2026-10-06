@@ -32,6 +32,7 @@ import {
   addToHistory,
 } from "@/lib/storage";
 import confetti from "canvas-confetti";
+import { useOfflineSrc } from "@/hooks/use-offline";
 
 type Props = {
   reel: Reel;
@@ -57,6 +58,8 @@ export const ReelPlayer = memo(function ReelPlayer({
   feedType,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  // Prefer the offline (IndexedDB) copy of a downloaded reel over the network URL
+  const videoSrc = useOfflineSrc(reel.videoUrl, reel.source === "local");
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
@@ -153,7 +156,7 @@ export const ReelPlayer = memo(function ReelPlayer({
       watchedFired.current = false;
       hideBuffering();
     }
-  }, [active, muted, onWatched, hideBuffering]);
+  }, [active, muted, onWatched, hideBuffering, videoSrc]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -287,7 +290,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   // ── Shared video props ────────────────────────────────────────────────────
   const videoProps = useMemo(() => ({
     ref: videoRef,
-    src: reel.videoUrl,
+    src: videoSrc,
     playsInline: true,
     "webkit-playsinline": "true",
     disableRemotePlayback: true,
@@ -311,7 +314,7 @@ export const ReelPlayer = memo(function ReelPlayer({
     onPlaying: hideBuffering,
     onCanPlay: hideBuffering,
     onCanPlayThrough: hideBuffering,
-  }), [reel.videoUrl, autoScroll, preload, onEnded, togglePlay, onDoubleClick, onPointerDown, clearHold, startHold, showBuffering, hideBuffering]);
+  }), [videoSrc, autoScroll, preload, onEnded, togglePlay, onDoubleClick, onPointerDown, clearHold, startHold, showBuffering, hideBuffering]);
 
   // ── Shared overlays (pause, buffering, heart, 2x, volume) ────────────────
   const Overlays = () => (

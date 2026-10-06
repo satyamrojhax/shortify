@@ -90,6 +90,38 @@ async function ensureDatabasesLoaded(): Promise<void> {
   await startDatabaseLoad();
 }
 
+let catalogPromise: Promise<Reel[]> | null = null;
+
+/**
+ * Full local reel catalog (unshuffled, stable order). Ids are identical to the
+ * ones used by the "local" feed, so downloads map 1:1 to feed reels.
+ */
+export function getLocalCatalog(): Promise<Reel[]> {
+  if (!catalogPromise) {
+    catalogPromise = fetch("/assets/v1-reels-db.json")
+      .then((res) => {
+        if (!res.ok) throw new Error(`Failed to load reels database (${res.status})`);
+        return res.json() as Promise<Array<{ url: string; views?: number; likes?: number }>>;
+      })
+      .then((raw) =>
+        raw.map((v, i) => ({
+          id: `local-${i}-${hashCode(v.url)}`,
+          source: "local" as const,
+          videoUrl: v.url,
+          views: v.views,
+          likes: v.likes,
+          title: "Watch Reels 18+",
+        })),
+      )
+      .catch((err) => {
+        catalogPromise = null; // allow retry
+        throw err;
+      });
+  }
+  return catalogPromise;
+}
+
+
 // ─── Network Fetch ────────────────────────────────────────────────────────────
 
 async function fetchWithRetry(url: string, attempts = 2): Promise<Response | null> {

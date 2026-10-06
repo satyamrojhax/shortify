@@ -65,6 +65,9 @@ self.addEventListener("fetch", (event) => {
   // ── Skip non-HTTP(S) ────────────────────────────────────────────────────────
   if (!url.protocol.startsWith("http")) return;
 
+  // ── Skip our own /api/* (offline-download video proxy streams large bodies) ──
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
+
   // ── Skip external APIs and fonts to prevent SW from masking network errors ──
   // (React Query handles caching for the API, and fonts are handled natively)
   if (

@@ -4,7 +4,7 @@
   "framework": null,
   "rewrites": [
     {
-      "source": "/((?!assets/|icons/|logo\\.png|PWA_ICON\\.png|manifest\\.json|favicon\\.|robots\\.txt|sitemap\\.).*)",
+      "source": "/((?!api/|assets/|icons/|logo\\.png|PWA_ICON\\.png|manifest\\.json|favicon\\.|robots\\.txt|sitemap\\.).*)",
       "destination": "/index.html"
     }
   ],

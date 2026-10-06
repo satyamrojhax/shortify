@@ -17,6 +17,7 @@ import { Route as PinRouteImport } from './routes/pin'
 import { Route as PinSetupRouteImport } from './routes/pin-setup'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
 import { Route as AppCategoryRouteImport } from './routes/_app.category'
+import { Route as AppDownloadedRouteImport } from './routes/_app.downloaded'
 import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
@@ -70,6 +71,11 @@ const AppAboutRoute = AppAboutRouteImport.update({
 const AppCategoryRoute = AppCategoryRouteImport.update({
   id: '/category',
   path: '/category',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppDownloadedRoute = AppDownloadedRouteImport.update({
+  id: '/downloaded',
+  path: '/downloaded',
   getParentRoute: () => AppRoute,
 } as any)
 const AppFavoritesRoute = AppFavoritesRouteImport.update({
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
+  '/downloaded': typeof AppDownloadedRoute
   '/favorites': typeof AppFavoritesRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
@@ -181,6 +188,7 @@ export interface FileRoutesByTo {
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
+  '/downloaded': typeof AppDownloadedRoute
   '/favorites': typeof AppFavoritesRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
@@ -207,6 +215,7 @@ export interface FileRoutesById {
   '/pin-setup': typeof PinSetupRoute
   '/_app/about': typeof AppAboutRoute
   '/_app/category': typeof AppCategoryRoute
+  '/_app/downloaded': typeof AppDownloadedRoute
   '/_app/favorites': typeof AppFavoritesRoute
   '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
@@ -233,6 +242,7 @@ export interface FileRouteTypes {
     | '/pin-setup'
     | '/about'
     | '/category'
+    | '/downloaded'
     | '/favorites'
     | '/history'
     | '/home'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/pin-setup'
     | '/about'
     | '/category'
+    | '/downloaded'
     | '/favorites'
     | '/history'
     | '/home'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/pin-setup'
     | '/_app/about'
     | '/_app/category'
+    | '/_app/downloaded'
     | '/_app/favorites'
     | '/_app/history'
     | '/_app/home'
@@ -364,6 +376,13 @@ declare module '@tanstack/react-router' {
       path: '/category'
       fullPath: '/category'
       preLoaderRoute: typeof AppCategoryRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/downloaded': {
+      id: '/_app/downloaded'
+      path: '/downloaded'
+      fullPath: '/downloaded'
+      preLoaderRoute: typeof AppDownloadedRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/favorites': {
@@ -477,6 +496,7 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppCategoryRoute: typeof AppCategoryRoute
+  AppDownloadedRoute: typeof AppDownloadedRoute
   AppFavoritesRoute: typeof AppFavoritesRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
@@ -497,6 +517,7 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAboutRoute: AppAboutRoute,
   AppCategoryRoute: AppCategoryRoute,
+  AppDownloadedRoute: AppDownloadedRoute,
   AppFavoritesRoute: AppFavoritesRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
