@@ -3,7 +3,7 @@ import { useInfiniteQuery, useQueryClient, type InfiniteData, useQuery } from "@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { fetchReelsPage, warmAllFilters, CATEGORIES, type Reel, type FeedFilter } from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
-import { KEYS, get, set, getCoins, getAutoScroll, getLiked, getSaved } from "@/lib/storage";
+import { KEYS, get, set, getCoins, getAutoScroll, getLiked, getSaved, getHistory } from "@/lib/storage";
 import { warmCacheOnStartup } from "@/lib/video-cache";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
 import { AlertTriangle, RefreshCw, RotateCcw, X, Coins, ChevronUp, ChevronDown } from "lucide-react";
@@ -80,8 +80,8 @@ function ReelsPage() {
     const finalReels: Reel[] = [];
 
     if (start && all.findIndex((r) => r.id === start) === -1) {
-      const likedAndSaved = [...getLiked(), ...getSaved()];
-      const target = likedAndSaved.find((r) => r.id === start);
+      const localReels = [...getLiked(), ...getSaved(), ...getHistory()];
+      const target = localReels.find((r) => r.id === start);
       if (target) {
         finalReels.push(target);
         seen.add(target.id);

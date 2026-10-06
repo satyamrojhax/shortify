@@ -11,6 +11,7 @@ import {
   set,
   setLiked,
   setSaved,
+  setFavorites,
   getCoins,
   hasUnlocked,
   getRandomMode,
@@ -378,6 +379,8 @@ function SettingsPage() {
                 onClick={() => {
                   setLiked([]);
                   setSaved([]);
+                  setFavorites([]);
+                  set(KEYS.history, []);
                   set(KEYS.watched, 0);
                   set(KEYS.coins, 0);
                   setLikedCount(0);

@@ -1,8 +1,8 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { getHistory } from "@/lib/storage";
+import { getHistory, set, KEYS } from "@/lib/storage";
 import type { Reel } from "@/lib/reels";
-import { Eye, Play } from "lucide-react";
+import { Eye, Play, Trash2, X } from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { formatCount } from "@/lib/utils";
 
@@ -25,21 +25,37 @@ function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
-      <div className="mb-8 flex items-center justify-between">
+      <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <p className="font-display text-marker text-xl lowercase italic">
+          <p className="font-display text-marker text-lg md:text-xl lowercase italic">
             your viewing trace —
           </p>
-          <h1 className="mt-2 font-display text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
+          <h1 className="mt-1 font-display text-4xl sm:text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
             history <span className="text-marker">({history.length})</span>
           </h1>
         </div>
-        <button
-          onClick={() => navigate({ to: "/settings" })}
-          className="btn-pill"
-        >
-          back
-        </button>
+        <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+          {history.length > 0 && (
+            <button
+              onClick={() => {
+                if (confirm("clear all watch history?")) {
+                  setHistory([]);
+                  set(KEYS.history, []);
+                }
+              }}
+              className="btn-pill !px-3"
+              aria-label="clear history"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => navigate({ to: "/settings" })}
+            className="btn-pill"
+          >
+            back
+          </button>
+        </div>
       </div>
 
       {history.length === 0 ? (
@@ -79,10 +95,24 @@ function HistoryPage() {
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
               
+              <button
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  const newHistory = history.filter((h) => h.id !== r.id);
+                  setHistory(newHistory);
+                  set(KEYS.history, newHistory);
+                }}
+                className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-cream backdrop-blur transition hover:bg-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                aria-label="Remove from history"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              
               <Link
                 to="/reels"
                 search={{ start: r.id }}
-                className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
+                className="absolute inset-0 flex items-center justify-center opacity-100 lg:opacity-0 transition group-hover:opacity-100"
                 aria-label="Play"
               >
                 <div className="flex h-14 w-14 flex-col items-center justify-center rounded-full border-[1.5px] border-cream bg-cream/20 backdrop-blur">

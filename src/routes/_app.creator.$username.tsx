@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { fetchCreatorReelsPage, type Reel } from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
@@ -30,6 +30,12 @@ function CreatorPage() {
     queryFn: ({ pageParam }) => fetchCreatorReelsPage(username, activeTab, pageParam),
     initialPageParam: 0,
     getNextPageParam: (last) => last.nextPage,
+    staleTime: 5 * 60_000,
+  });
+
+  const { data: stats } = useQuery({
+    queryKey: ["creator-stats", username],
+    queryFn: () => fetchCreatorStats(username!),
     staleTime: 5 * 60_000,
   });
 
@@ -226,41 +232,85 @@ function CreatorPage() {
   // PROFILE / GRID VIEW MODE
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Sticky Header & Tabs */}
-      <div className="sticky top-0 z-20 flex flex-col bg-background/95 backdrop-blur-md shadow-sm">
-        <div className="flex items-center justify-between border-b border-border px-4 py-3">
-          <div className="flex items-center gap-3 min-w-0 flex-1 mr-3">
-            <button onClick={() => window.history.back()} className="p-1 -ml-1 shrink-0 text-foreground">
-              <ChevronLeft className="h-6 w-6" />
-            </button>
-            <h1 className="text-lg font-bold text-foreground truncate">@{username}</h1>
-          </div>
-          <button 
-             onClick={handleFollow}
-             className={`shrink-0 flex items-center justify-center px-4 py-1.5 rounded-full text-xs font-bold transition-all border ${favSince ? "bg-muted border-border text-foreground hover:bg-muted/80" : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90"}`}
-          >
-            {favSince ? "following" : "follow"}
+      {/* Profile Header section */}
+      <div className="w-full bg-background/80 backdrop-blur-3xl pt-4 pb-6 px-4 md:px-8 border-b border-border shadow-sm flex flex-col items-center">
+        {/* Top nav */}
+        <div className="w-full flex items-center justify-between mb-2">
+          <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full hover:bg-muted text-foreground transition-colors">
+            <ChevronLeft className="h-6 w-6" />
           </button>
+          <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">@{username}</h1>
+          <div className="w-10"></div> {/* Placeholder to center the title */}
         </div>
 
-        <div className="flex border-b border-border">
-          <button
-            onClick={() => setActiveTab("latest")}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "latest" ? "border-b-2 border-foreground text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Latest
-          </button>
-          <button
-            onClick={() => setActiveTab("popular")}
-            className={`flex-1 py-3 text-sm font-semibold transition-colors ${
-              activeTab === "popular" ? "border-b-2 border-foreground text-foreground" : "text-muted-foreground"
-            }`}
-          >
-            Popular
-          </button>
+        {/* Avatar & Stats row */}
+        <div className="flex flex-col items-center w-full max-w-lg mt-2">
+          {/* Avatar with gradient border */}
+          <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-tr from-cobalt-pop via-periwinkle-sky to-magenta-haze p-1 shadow-xl">
+            <div className="h-full w-full rounded-full bg-background flex items-center justify-center border-[4px] border-background">
+               <span className="text-4xl font-black uppercase text-foreground">{username?.[0]}</span>
+            </div>
+          </div>
+          
+          <h2 className="mt-4 text-2xl font-black text-foreground">@{username}</h2>
+          <p className="text-muted-foreground text-sm font-medium mt-1">Creator</p>
+          
+          {/* Stats */}
+          <div className="flex items-center gap-8 md:gap-12 mt-6 w-full justify-center">
+            <div className="flex flex-col items-center">
+              <span className="text-xl md:text-2xl font-bold text-foreground">
+                {stats?.postsCount !== undefined ? formatViews(stats.postsCount) : "..."}
+              </span>
+              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Videos</span>
+            </div>
+            <div className="flex flex-col items-center">
+              <span className="text-xl md:text-2xl font-bold text-foreground">
+                {stats?.followersCount !== undefined ? formatViews(stats.followersCount) : "..."}
+              </span>
+              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Followers</span>
+            </div>
+          </div>
+          
+          {/* Action Buttons */}
+          <div className="flex items-center gap-3 w-full mt-6 px-4 md:px-0">
+            <button 
+               onClick={handleFollow}
+               className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all border shadow-sm ${
+                 favSince 
+                 ? "bg-muted border-border text-foreground hover:bg-muted/80" 
+                 : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90 shadow-cobalt-pop/20 shadow-md"
+               }`}
+            >
+              {favSince ? "Following" : "Follow"}
+            </button>
+          </div>
         </div>
+      </div>
+
+      {/* Sticky Tabs */}
+      <div className="sticky top-0 z-20 flex bg-background/95 backdrop-blur-md border-b border-border shadow-sm">
+        <button
+          onClick={() => setActiveTab("latest")}
+          className={`flex-1 py-3.5 text-sm font-bold transition-colors relative ${
+            activeTab === "latest" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Latest
+          {activeTab === "latest" && (
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-foreground rounded-t-full mx-10"></div>
+          )}
+        </button>
+        <button
+          onClick={() => setActiveTab("popular")}
+          className={`flex-1 py-3.5 text-sm font-bold transition-colors relative ${
+            activeTab === "popular" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          Popular
+          {activeTab === "popular" && (
+            <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-foreground rounded-t-full mx-10"></div>
+          )}
+        </button>
       </div>
 
       {/* Content */}
@@ -372,7 +422,36 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
         decoding="async"
         onError={() => setFailed(true)}
         onLoad={() => setLoaded(true)}
+        ref={(img) => {
+          if (img?.complete) {
+            setLoaded(true);
+          }
+        }}
       />
     </>
   );
+}
+
+async function fetchCreatorStats(username: string) {
+  const [postsRes, userRes] = await Promise.all([
+    fetch(`https://love.viraly.wtf/getPostsCount/${username}`).catch(() => null),
+    fetch(`https://love.viraly.wtf/getuser/${username}`).catch(() => null),
+  ]);
+  
+  let postsCount = 0;
+  let followersCount = 0;
+  
+  if (postsRes && postsRes.ok) {
+    const pData = await postsRes.json();
+    postsCount = pData.count || 0;
+  }
+  
+  if (userRes && userRes.ok) {
+    const uData = await userRes.json();
+    if (uData.followers && Array.isArray(uData.followers)) {
+      followersCount = uData.followers.length;
+    }
+  }
+  
+  return { postsCount, followersCount };
 }
