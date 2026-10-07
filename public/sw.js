@@ -24,7 +24,7 @@ const DB_CACHE = "reels-db-v5";
 
 const STATIC_URLS = ["/", "/manifest.json", "/logo.png", "/PWA_ICON.png"];
 
-const API_ORIGIN = "xvideos.lfrdcatechnologies.cc.cd";
+const API_ORIGIN = "api.shortify.cc.cd";
 
 // ─── Install: Pre-cache static assets ─────────────────────────────────────────
 self.addEventListener("install", (event) => {

@@ -4,6 +4,8 @@ import "@vidstack/react/player/styles/default/layouts/video.css";
 import { MediaPlayer, MediaProvider, Poster } from "@vidstack/react";
 import { defaultLayoutIcons, DefaultVideoLayout } from "@vidstack/react/player/layouts/default";
 import { useEffect, useRef, useState } from "react";
+import { ScreenOrientation } from "@capacitor/screen-orientation";
+import { Capacitor } from "@capacitor/core";
 import { getCoins, KEYS, set } from "@/lib/storage";
 
 interface CoursePlayerProps {
@@ -33,15 +35,27 @@ export function CoursePlayer({ videoUrl, posterUrl, title, onEnded }: CoursePlay
 
   useEffect(() => {
     // Automatically switch to landscape when fullscreen on mobile
-    const handleFullscreenChange = () => {
+    const handleFullscreenChange = async () => {
+      const isNative = Capacitor.isNativePlatform();
+      
       if (document.fullscreenElement) {
-        if (screen.orientation && (screen.orientation as any).lock) {
+        if (isNative) {
+          try {
+            await ScreenOrientation.lock({ orientation: "landscape" });
+          } catch (err) {
+            console.log("Capacitor orientation lock failed", err);
+          }
+        } else if (screen.orientation && (screen.orientation as any).lock) {
           (screen.orientation as any).lock("landscape").catch((err: any) => {
             console.log("Orientation lock failed", err);
           });
         }
       } else {
-        if (screen.orientation && (screen.orientation as any).unlock) {
+        if (isNative) {
+          try {
+            await ScreenOrientation.unlock();
+          } catch (err) {}
+        } else if (screen.orientation && (screen.orientation as any).unlock) {
           (screen.orientation as any).unlock();
         }
       }

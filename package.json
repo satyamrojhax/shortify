@@ -9,9 +9,15 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "cap:build": "vite build && npx cap sync",
+    "cap:icons": "npx @capacitor/assets generate --iconBackgroundColor #000000 --iconBackgroundColorDark #000000 --splashBackgroundColor #000000 --splashBackgroundColorDark #000000 --assetPath public --icon public/logo.png"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/screen-orientation": "^6.0.4",
     "@fontsource-variable/geist": "^5.2.9",
     "@fontsource/fraunces": "^5.2.9",
     "@hookform/resolvers": "^5.2.2",
@@ -77,6 +83,8 @@
     "zod": "^3.24.2"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.2",
     "@eslint/js": "^9.32.0",
     "@types/node": "^22.16.5",
     "@types/react": "^19.2.0",

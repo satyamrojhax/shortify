@@ -29,9 +29,9 @@ type XvideoItem = {
 };
 
 const XVIDEO_BASES = [
-  { key: "v1" as const, url: "https://xvideos.lfrdcatechnologies.cc.cd/v1/xvideos", maxPage: 67 },
-  { key: "v2" as const, url: "https://xvideos.lfrdcatechnologies.cc.cd/v2/xvideos", maxPage: 67 },
-  { key: "v4" as const, url: "https://xvideos.lfrdcatechnologies.cc.cd/v4/xvideos", maxPage: 62 },
+  { key: "v1" as const, url: "https://api.shortify.cc.cd/v1/xvideos", maxPage: 67 },
+  { key: "v2" as const, url: "https://api.shortify.cc.cd/v2/xvideos", maxPage: 67 },
+  { key: "v4" as const, url: "https://api.shortify.cc.cd/v4/xvideos", maxPage: 62 },
 ];
 
 function shuffle<T>(arr: T[]): T[] {
@@ -186,7 +186,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
   const cached = await videoCache.get<Reel[]>(cacheKey);
   if (cached) return cached;
 
-  const res = await fetchWithRetry(`https://reelsbackend.satyamrojha.cc.cd/api/latest-reels?page=${apiPage}`);
+  const res = await fetchWithRetry(`https://love.shortify.cc.cd/api/latest-reels?page=${apiPage}`);
   if (!res) return [];
   try {
     const rawJson = await res.json();
@@ -204,7 +204,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
       dislikes: v.dislikes,
       username: v.username,
     }));
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
     return reels;
   } catch {
     return [];
@@ -212,7 +212,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
 }
 
 async function fetchCategoryReels(category: string): Promise<Reel[]> {
-  const res = await fetchWithRetry(`https://reelsbackend.satyamrojha.cc.cd/api/categories/${encodeURIComponent(category)}`);
+  const res = await fetchWithRetry(`https://love.shortify.cc.cd/api/categories/${encodeURIComponent(category)}`);
   if (!res) return [];
   try {
     const rawJson = await res.json();
@@ -481,8 +481,8 @@ export async function fetchCreatorReelsPage(
   type: "latest" | "popular",
   page: number
 ): Promise<{ items: Reel[]; nextPage: number | undefined }> {
-  const res = await fetchWithRetry(`https://reelsbackend.satyamrojha.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`);
-  
+  const res = await fetchWithRetry(`https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`);
+
   if (!res) {
     return { items: [], nextPage: undefined };
   }

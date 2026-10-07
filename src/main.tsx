@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createRouter } from "@tanstack/react-router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { App as CapacitorApp } from "@capacitor/app";
 
 import "./styles.css";
 import { routeTree } from "./routeTree.gen";
@@ -38,6 +39,23 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
+}
+
+// Handle hardware back button on Android
+if (typeof window !== "undefined") {
+  CapacitorApp.addListener("backButton", ({ canGoBack }) => {
+    if (canGoBack) {
+      window.history.back();
+    } else {
+      // If we're on the reels page or another main page and there's no history,
+      // go to home instead of exiting the app.
+      if (window.location.pathname !== "/") {
+        router.navigate({ to: "/" });
+      } else {
+        CapacitorApp.exitApp();
+      }
+    }
+  });
 }
 
 createRoot(document.getElementById("root")!).render(
