@@ -352,8 +352,15 @@ function CreatorPage() {
                 <CreatorThumb src={reel.thumbnail} alt={reel.title || "Reel thumbnail"} />
                 <div className="absolute inset-0 bg-black/10 transition-opacity md:group-hover:bg-black/40" />
                 
+                {/* Duration Badge */}
+                {reel.duration && (
+                  <div className="absolute top-2 right-2 flex items-center rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white drop-shadow-md backdrop-blur-sm z-10 pointer-events-none">
+                    {reel.duration}
+                  </div>
+                )}
+                
                 {/* Views Counter (Hidden on PC hover) */}
-                <div className="absolute bottom-2 left-2 flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md transition-opacity md:group-hover:opacity-0">
+                <div className="absolute bottom-2 left-2 flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md transition-opacity md:group-hover:opacity-0 pointer-events-none">
                   <Play className="h-3 w-3 fill-white" />
                   {reel.views ? formatViews(reel.views) : "0"}
                 </div>

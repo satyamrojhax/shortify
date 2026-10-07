@@ -1,38 +1,18 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import {
-  ChevronDown,
-  ChevronsDown,
-  ChevronUp,
-  Eye,
-  Heart,
-  Play,
-  Repeat1,
-  Volume2,
-  VolumeX,
-  WifiOff,
-  X,
-} from "lucide-react";
-import { formatBytes, getOfflineBlob, type OfflineMeta } from "@/lib/offline-store";
+import { ChevronDown, ChevronsDown, ChevronUp, Repeat1, WifiOff, X } from "lucide-react";
+import type { OfflineMeta } from "@/lib/offline-store";
+import type { Reel } from "@/lib/reels";
+import { ReelPlayer } from "./reel-player";
 
 type Props = {
   items: OfflineMeta[];
   startIndex: number;
+  catalog?: Reel[] | null;
   onClose: () => void;
 };
 
-/** Number formatter: 1.2K / 3.4M */
-function compact(n: number) {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "K";
-  return String(n);
-}
-
-/**
- * Full-screen, vertical-snap player that plays reels straight from IndexedDB —
- * zero network requests, so it works with the device fully offline.
- */
-export function OfflinePlayer({ items, startIndex, onClose }: Props) {
+export function OfflinePlayer({ items, startIndex, catalog, onClose }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const slideRefs = useRef<Array<HTMLElement | null>>([]);
   const [active, setActive] = useState(startIndex);
@@ -106,56 +86,57 @@ export function OfflinePlayer({ items, startIndex, onClose }: Props) {
 
   const node = (
     <div
-      className="fixed inset-0 z-[300] bg-black text-white"
+      className="fixed inset-0 z-[50] bg-background text-foreground md:left-[72px] md:z-[20]"
       role="dialog"
       aria-modal="true"
       aria-label="Offline reels player"
     >
-      {/* Top bar */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent p-3 pt-[max(0.75rem,env(safe-area-inset-top))] md:p-5">
+      {/* Header controls (Close & Loop) */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between gap-3 p-4 pt-[max(1rem,env(safe-area-inset-top))] md:p-6">
         <button
           onClick={onClose}
           aria-label="Close player"
-          className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur transition hover:bg-white/25"
+          className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-background/80 border border-border/50 text-foreground backdrop-blur transition hover:bg-muted"
         >
           <X className="h-5 w-5" />
         </button>
-        <div className="pointer-events-none flex items-center gap-2 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold backdrop-blur">
-          <WifiOff className="h-3.5 w-3.5 text-emerald-300" />
-          <span>Offline</span>
-          <span className="opacity-60">·</span>
-          <span className="tabular-nums">
-            {Math.min(active + 1, items.length)} / {items.length}
-          </span>
-        </div>
         <div className="flex gap-2">
           <button
             onClick={() => setAutoNext((v) => !v)}
             aria-label={autoNext ? "Auto-next on" : "Loop current reel"}
             title={autoNext ? "Auto-next: on" : "Looping current reel"}
-            className={`pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition ${
-              autoNext ? "bg-emerald-400/90 text-black" : "bg-white/15 hover:bg-white/25"
+            className={`pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition border ${
+              autoNext ? "bg-foreground text-background border-foreground" : "bg-background/80 border-border/50 text-foreground hover:bg-muted"
             }`}
           >
             {autoNext ? <ChevronsDown className="h-5 w-5" /> : <Repeat1 className="h-5 w-5" />}
           </button>
-          <button
-            onClick={() => setMuted((m) => !m)}
-            aria-label={muted ? "Unmute" : "Mute"}
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/15 backdrop-blur transition hover:bg-white/25"
-          >
-            {muted ? <VolumeX className="h-5 w-5" /> : <Volume2 className="h-5 w-5" />}
-          </button>
         </div>
       </div>
 
-      {/* Desktop arrows */}
-      <div className="absolute right-8 top-1/2 z-30 hidden -translate-y-1/2 flex-col gap-4 md:flex">
+      {/* Center Tabs (Offline indicator) - Same position as Reels Page */}
+      <div className="absolute left-0 right-0 top-14 z-30 flex w-full justify-center px-4 md:top-6 md:justify-end md:pr-24 pointer-events-none">
+        <div className="no-scrollbar flex items-center justify-center gap-2 overflow-x-auto sm:gap-3 pointer-events-auto">
+          <div className="flex items-center gap-1.5 shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition sm:px-4 sm:text-xs bg-foreground text-background">
+            <WifiOff className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+            <span>Offline</span>
+            <span className="opacity-60 px-0.5">·</span>
+            <span className="tabular-nums">
+              {Math.min(active + 1, items.length)} / {items.length}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop right sidebar - Arrows only */}
+      <div className="absolute right-8 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-center gap-4 md:flex">
+
+        {/* Navigation Arrows */}
         <button
           onClick={() => goTo(active - 1)}
           disabled={active <= 0}
           aria-label="Previous reel"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur transition hover:bg-white/25 disabled:opacity-20"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-mist/20 dark:bg-white/10 text-twilight-navy dark:text-cream-linen transition hover:bg-slate-mist/30 dark:hover:bg-white/20 disabled:opacity-20 disabled:cursor-not-allowed backdrop-blur"
         >
           <ChevronUp className="h-6 w-6" />
         </button>
@@ -163,7 +144,7 @@ export function OfflinePlayer({ items, startIndex, onClose }: Props) {
           onClick={() => goTo(active + 1)}
           disabled={active >= items.length - 1}
           aria-label="Next reel"
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/15 backdrop-blur transition hover:bg-white/25 disabled:opacity-20"
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-slate-mist/20 dark:bg-white/10 text-twilight-navy dark:text-cream-linen transition hover:bg-slate-mist/30 dark:hover:bg-white/20 disabled:opacity-20 disabled:cursor-not-allowed backdrop-blur"
         >
           <ChevronDown className="h-6 w-6" />
         </button>
@@ -174,175 +155,46 @@ export function OfflinePlayer({ items, startIndex, onClose }: Props) {
         ref={containerRef}
         className="no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-scroll overscroll-contain"
       >
-        {items.map((meta, i) => (
-          <section
-            key={meta.url}
-            data-idx={i}
-            ref={(el) => {
-              slideRefs.current[i] = el;
-            }}
-            className="relative flex h-full w-full snap-start snap-always items-center justify-center"
-          >
-            <Slide
-              meta={meta}
-              near={Math.abs(i - active) <= 1}
-              active={i === active}
-              muted={muted}
-              loop={!autoNext}
-              onEnded={() => handleEnded(i)}
-              onAutoplayBlocked={() => setMuted(true)}
-            />
-          </section>
-        ))}
+        {items.map((meta, i) => {
+          const reel = catalog?.find((r) => r.videoUrl === meta.url || r.id === meta.reelId) || {
+            id: meta.reelId || meta.url,
+            videoUrl: meta.url,
+            source: "local",
+            likes: meta.likes ?? 0,
+            views: meta.views ?? 0,
+            title: `Reel #${meta.index + 1}`,
+            username: "offline_user",
+            description: "",
+            thumbnail: "",
+          };
+
+          return (
+            <section
+              key={meta.url}
+              data-idx={i}
+              ref={(el) => {
+                slideRefs.current[i] = el;
+              }}
+              className="relative flex h-full w-full snap-start snap-always items-center justify-center bg-background"
+            >
+              {Math.abs(i - active) <= 2 && (
+                <ReelPlayer
+                  reel={reel as Reel}
+                  active={i === active}
+                  muted={muted}
+                  onToggleMute={() => setMuted(!muted)}
+                  onEnded={() => handleEnded(i)}
+                  onWatched={() => {}}
+                  distance={Math.abs(i - active)}
+                  feedType="offline"
+                />
+              )}
+            </section>
+          );
+        })}
       </div>
     </div>
   );
 
   return createPortal(node, document.body);
-}
-
-// ─── One slide ────────────────────────────────────────────────────────────────
-
-type SlideProps = {
-  meta: OfflineMeta;
-  near: boolean;
-  active: boolean;
-  muted: boolean;
-  loop: boolean;
-  onEnded: () => void;
-  onAutoplayBlocked: () => void;
-};
-
-function Slide({ meta, near, active, muted, loop, onEnded, onAutoplayBlocked }: SlideProps) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const barRef = useRef<HTMLDivElement>(null);
-  const [src, setSrc] = useState<string | null>(null);
-  const [missing, setMissing] = useState(false);
-  const [paused, setPaused] = useState(false);
-
-  // Only materialise the blob for the current ± 1 slides, release the rest.
-  useEffect(() => {
-    if (!near) {
-      setSrc(null);
-      return;
-    }
-    let cancelled = false;
-    let objectUrl: string | null = null;
-    void getOfflineBlob(meta.url).then((blob) => {
-      if (cancelled) return;
-      if (!blob) {
-        setMissing(true);
-        return;
-      }
-      objectUrl = URL.createObjectURL(blob);
-      setSrc(objectUrl);
-    });
-    return () => {
-      cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-  }, [near, meta.url]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (v) v.muted = muted;
-  }, [muted, src]);
-
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !src) return;
-    if (active) {
-      v.currentTime = 0;
-      setPaused(false);
-      v.play().catch(() => {
-        // Autoplay with sound was blocked — fall back to muted playback.
-        v.muted = true;
-        onAutoplayBlocked();
-        v.play().catch(() => setPaused(true));
-      });
-    } else {
-      v.pause();
-      v.currentTime = 0;
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, src]);
-
-  const toggle = () => {
-    const v = videoRef.current;
-    if (!v) return;
-    if (v.paused) {
-      void v.play();
-      setPaused(false);
-    } else {
-      v.pause();
-      setPaused(true);
-    }
-  };
-
-  return (
-    <div className="relative h-full w-full overflow-hidden bg-black md:h-[min(100%,920px)] md:w-auto md:aspect-[9/16] md:max-w-[min(100%,520px)] md:rounded-2xl">
-      {missing ? (
-        <div className="flex h-full w-full items-center justify-center p-6 text-center text-sm text-white/70">
-          This reel's offline file is missing. Re-download it from the downloads page.
-        </div>
-      ) : (
-        <video
-          ref={videoRef}
-          src={src ?? undefined}
-          playsInline
-          loop={loop}
-          preload="auto"
-          disablePictureInPicture
-          onClick={toggle}
-          onEnded={onEnded}
-          onTimeUpdate={(e) => {
-            const v = e.currentTarget;
-            if (barRef.current && v.duration) {
-              barRef.current.style.width = `${(v.currentTime / v.duration) * 100}%`;
-            }
-          }}
-          onContextMenu={(e) => e.preventDefault()}
-          className="absolute inset-0 h-full w-full cursor-pointer object-cover md:object-contain"
-        />
-      )}
-
-      {/* Spinner while the blob is being read */}
-      {near && !src && !missing && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-        </div>
-      )}
-
-      {paused && (
-        <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="flex h-20 w-20 items-center justify-center rounded-full bg-black/40 backdrop-blur">
-            <Play className="h-10 w-10 fill-white text-white" />
-          </div>
-        </div>
-      )}
-
-      {/* Caption */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent p-4 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-16">
-        <p className="text-base font-bold drop-shadow">Reel #{meta.index + 1}</p>
-        <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs font-medium text-white/80">
-          {meta.views != null && (
-            <span className="flex items-center gap-1">
-              <Eye className="h-3.5 w-3.5" /> {compact(meta.views)}
-            </span>
-          )}
-          {meta.likes != null && (
-            <span className="flex items-center gap-1">
-              <Heart className="h-3.5 w-3.5" /> {compact(meta.likes)}
-            </span>
-          )}
-          <span>{formatBytes(meta.size)}</span>
-        </div>
-      </div>
-
-      {/* Progress */}
-      <div className="absolute inset-x-0 bottom-0 h-[3px] bg-white/20">
-        <div ref={barRef} className="h-full w-0 bg-white" />
-      </div>
-    </div>
-  );
 }

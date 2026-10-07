@@ -286,7 +286,7 @@ function ReelsPage() {
       <div className="relative h-[100dvh] w-full bg-background overflow-hidden flex items-center justify-center">
         <div className="flex gap-2">
           {[0, 150, 300].map((d) => (
-            <div key={d} className="h-3 w-3 animate-bounce rounded-full bg-white shadow-lg" style={{ animationDelay: `${d}ms` }} />
+            <div key={d} className="h-3 w-3 animate-bounce rounded-full bg-foreground shadow-lg" style={{ animationDelay: `${d}ms` }} />
           ))}
         </div>
       </div>

@@ -175,128 +175,37 @@ function DownloadedPage() {
   const freeBytes = estimate ? Math.max(0, estimate.quota - estimate.usage) : null;
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-5 md:px-8 md:py-10">
-      {/* ── Hero ─────────────────────────────────────────────────────────── */}
-      <header className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-cobalt-pop via-[#6a3df0] to-magenta-haze p-6 text-white shadow-xl md:p-10 border border-white/10">
-        <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/20 blur-3xl transition-transform duration-1000 hover:scale-110" />
-        <div className="pointer-events-none absolute -bottom-24 left-1/4 h-56 w-56 rounded-full bg-black/20 blur-3xl" />
-        <div className="relative flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm border ${
-                  online ? "bg-white/20 border-white/10 text-white" : "bg-amber-400/90 border-amber-300/50 text-amber-900"
-                }`}
-              >
-                {online ? <Wifi className="h-3.5 w-3.5" /> : <WifiOff className="h-3.5 w-3.5" />}
-                {online ? "Online" : "Offline · playing from device"}
-              </span>
-              {shellReady && (
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 border border-white/10 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider backdrop-blur-md shadow-sm">
-                  <Check className="h-3.5 w-3.5" /> App ready offline
-                </span>
-              )}
-            </div>
-            <h1 className="mt-4 text-4xl font-black tracking-tight leading-none !text-white md:text-5xl lg:text-6xl drop-shadow-md">
-              Downloads
-            </h1>
-            <p className="mt-3 max-w-md text-sm font-medium text-white/90 md:text-base leading-relaxed">
-              Save reels inside the app and watch them anywhere — no internet, nothing added to
-              your gallery.
-            </p>
-          </div>
-          <div className="mt-4 md:mt-0 flex items-end gap-6 md:text-right">
-            <div className="rounded-2xl bg-black/20 p-5 backdrop-blur-md border border-white/10 shadow-inner">
-              <div className="text-5xl font-black tabular-nums tracking-tighter md:text-6xl drop-shadow-md">
-                {nf.format(items.length)}
-              </div>
-              <div className="mt-1 text-xs font-bold uppercase tracking-widest text-white/80">
-                saved offline
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Overall progress */}
-        <div className="relative mt-8 rounded-2xl bg-black/10 p-4 backdrop-blur-sm border border-white/5">
-          <div className="mb-2 flex justify-between text-xs font-bold uppercase tracking-wider text-white/90">
-            <span>
-              {totalCount != null
-                ? `${nf.format(items.length)} of ${nf.format(totalCount)} reels`
-                : "Library"}
-            </span>
-            <span className="tabular-nums">{totalCount != null ? `${percent.toFixed(1)}%` : ""}</span>
-          </div>
-          <div className="h-3 overflow-hidden rounded-full bg-black/40 shadow-inner">
-            <div
-              className="relative h-full rounded-full bg-gradient-to-r from-white/80 to-white transition-[width] duration-700 ease-out shadow-[0_0_10px_rgba(255,255,255,0.5)]"
-              style={{ width: `${percent}%` }}
-            >
-              <div className="absolute inset-0 bg-white/20 shimmer-effect" />
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ── Stats ────────────────────────────────────────────────────────── */}
-      <section
-        aria-label="Library statistics"
-        className="mt-4 grid grid-cols-1 gap-3 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-4"
-      >
-        <StatTile
-          icon={<Database className="h-5 w-5" />}
-          label="Reels in local DB"
-          value={totalCount != null ? nf.format(totalCount) : "—"}
-          hint={totalCount != null ? "available to download" : catalogError ? "needs internet" : "loading…"}
-          tone="indigo"
-        />
-        <StatTile
-          icon={<Check className="h-5 w-5" />}
-          label="Downloaded"
-          value={nf.format(items.length)}
-          hint={totalCount ? `${percent.toFixed(1)}% of library` : "on this device"}
-          tone="emerald"
-        />
-        <StatTile
-          icon={<CloudDownload className="h-5 w-5" />}
-          label="Remaining"
-          value={catalog ? nf.format(pending.length) : "—"}
-          hint={catalog ? (pending.length === 0 ? "all saved 🎉" : "not downloaded yet") : "—"}
-          tone="amber"
-        />
-        <StatTile
-          icon={<HardDrive className="h-5 w-5" />}
-          label="Storage used"
-          value={formatBytes(usedBytes)}
-          hint="in browser storage"
-          tone="rose"
-        />
-      </section>
-
+    <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 md:py-10">
+      <div className="mb-6 md:mb-8">
+        <p className="font-display text-marker text-lg md:text-xl lowercase italic opacity-80">your offline collection —</p>
+        <h1 className="mt-1 font-display text-[40px] sm:text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
+          downloaded <span className="text-marker">({items.length})</span>
+        </h1>
+      </div>
       {/* ── Tabs ─────────────────────────────────────────────────────────── */}
-      <div className="mt-8 flex justify-center w-full">
+      <div className="mt-4 flex w-full">
         <div
           role="tablist"
           aria-label="Downloads sections"
-          className="flex w-full max-w-md gap-1.5 rounded-full border border-border/10 bg-card/60 p-1.5 shadow-sm backdrop-blur-md dark:bg-card/40"
+          className="inline-flex w-full sm:w-auto gap-1 rounded-full border border-border/20 bg-muted/50 p-1.5 dark:bg-charcoal/40"
         >
           <TabButton
-          active={tab === "download"}
-          onClick={() => setTab("download")}
-          icon={<Download className="h-4 w-4 shrink-0" />}
-          label="Mass download"
-        />
-        <TabButton
-          active={tab === "library"}
-          onClick={() => setTab("library")}
-          icon={<Film className="h-4 w-4 shrink-0" />}
-          label="My downloads"
-          count={items.length}
-        />
+            active={tab === "download"}
+            onClick={() => setTab("download")}
+            icon={<Download className="h-4 w-4" />}
+            label="Mass download"
+          />
+          <TabButton
+            active={tab === "library"}
+            onClick={() => setTab("library")}
+            icon={<Film className="h-4 w-4" />}
+            label="My downloads"
+            count={items.length}
+          />
         </div>
       </div>
 
-      <div className="mt-5">
+      <div className="mt-6">
         {tab === "download" ? (
           <DownloadTab
             online={online}
@@ -325,6 +234,7 @@ function DownloadedPage() {
         <OfflinePlayer
           items={player.items}
           startIndex={player.start}
+          catalog={catalog}
           onClose={() => setPlayer(null)}
         />
       )}
@@ -375,18 +285,18 @@ function TabButton(props: {
       role="tab"
       aria-selected={props.active}
       onClick={props.onClick}
-      className={`flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold transition-all duration-300 ${
+      className={`flex flex-1 sm:flex-none items-center justify-center gap-1.5 sm:gap-2 rounded-full px-3 py-2.5 sm:px-6 sm:py-2.5 text-[13px] sm:text-sm font-semibold transition-all duration-300 ${
         props.active
-          ? "bg-gradient-to-r from-cobalt-pop to-magenta-haze text-white shadow-md scale-[1.02]"
-          : "text-muted-foreground hover:bg-muted/80 hover:text-foreground"
+          ? "bg-white text-black shadow-sm dark:bg-cream dark:text-cocoa scale-[1.02]"
+          : "text-muted-foreground hover:text-foreground"
       }`}
     >
-      {props.icon}
-      <span>{props.label}</span>
+      <div className="shrink-0">{props.icon}</div>
+      <span className="truncate whitespace-nowrap">{props.label}</span>
       {props.count != null && (
         <span
-          className={`rounded-full px-2 py-0.5 text-[11px] tabular-nums transition-colors duration-300 ${
-            props.active ? "bg-white/20 text-white" : "bg-foreground/10 text-foreground"
+          className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold tabular-nums transition-colors duration-300 ${
+            props.active ? "bg-black/10 text-black dark:bg-cocoa/10 dark:text-cocoa" : "bg-foreground/10 text-foreground"
           }`}
         >
           {nf.format(props.count)}
@@ -517,14 +427,14 @@ function DownloadTab({
                 disabled={busy}
                 onClick={() => setChoice(key)}
                 aria-pressed={selected}
-                className={`rounded-2xl border-2 px-3 py-3 text-left transition disabled:opacity-50 ${
+                className={`rounded-2xl border-2 px-2.5 py-2.5 sm:px-3 sm:py-3 text-left transition disabled:opacity-50 ${
                   selected
                     ? "border-cobalt-pop bg-cobalt-pop/10 shadow-sm"
                     : "border-border/15 hover:border-cobalt-pop/50 hover:bg-muted"
                 }`}
               >
-                <div className="text-xl font-bold tabular-nums text-foreground">{big}</div>
-                <div className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                <div className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{big}</div>
+                <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   {small}
                 </div>
               </button>
@@ -767,34 +677,6 @@ function DownloadTab({
           <Info className="h-4 w-4 shrink-0 text-cobalt-pop" /> {dl.message}
         </div>
       )}
-
-      {/* How it works */}
-      <section className="rounded-3xl border border-dashed border-border/25 p-5 md:p-6">
-        <h3 className="flex items-center gap-2 text-base font-bold text-foreground">
-          <Info className="h-4 w-4 text-cobalt-pop" /> How offline playback works
-        </h3>
-        <ul className="mt-3 grid gap-2 text-sm text-muted-foreground md:grid-cols-2">
-          <li className="flex gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-            Videos are stored privately in this app's browser database (IndexedDB) — never in your
-            gallery or localStorage.
-          </li>
-          <li className="flex gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-            Open <b className="mx-1 text-foreground">My downloads</b> to watch them with zero
-            internet. Downloaded reels also play instantly in the main feed.
-          </li>
-          <li className="flex gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-            Install the app (PWA) for the best experience — it starts and plays fully offline.
-          </li>
-          <li className="flex gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
-            Browsers can clear site data under extreme storage pressure; we ask for persistent
-            storage so your downloads stay put.
-          </li>
-        </ul>
-      </section>
     </div>
   );
 }
@@ -938,7 +820,7 @@ function LibraryTab({
         </select>
       </div>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           <b className="text-foreground">{nf.format(visible.length)}</b>
           {visible.length !== items.length && <> of {nf.format(items.length)}</>} reels ·{" "}
@@ -981,87 +863,38 @@ function LibraryTab({
           No downloads match “{query}”.
         </p>
       ) : (
-        <ul className="mt-4 space-y-2.5">
-          {visible.map((m, i) => (
-            <li
-              key={m.url}
-              className="[content-visibility:auto] [contain-intrinsic-size:auto_104px]"
+        <div className="mt-6 grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
+          {visible.map((r, i) => (
+            <div
+              key={r.url}
+              className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"
+              style={{ transform: `rotate(${((i % 3) - 1) * 0.6}deg)` }}
             >
-              <Row meta={m} onPlay={() => onPlay(visible, i)} onDelete={() => removeOne(m)} />
-            </li>
+              <LazyThumb url={r.url} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent pointer-events-none" />
+              <button
+                onClick={() => onPlay(visible, i)}
+                className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
+                aria-label="Play"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-cream bg-cream/20 backdrop-blur">
+                  <Play className="h-6 w-6 fill-cream text-cream" />
+                </div>
+              </button>
+              <button
+                onClick={(e) => { e.stopPropagation(); removeOne(r); }}
+                className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border border-cream bg-charcoal/70 text-cream backdrop-blur z-10"
+                aria-label="Remove"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+              <p className="absolute inset-x-2 bottom-2 line-clamp-2 text-xs font-medium text-cream pointer-events-none">
+                Reel #{r.index + 1}
+              </p>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
-    </div>
-  );
-}
-
-function Row({
-  meta,
-  onPlay,
-  onDelete,
-}: {
-  meta: OfflineMeta;
-  onPlay: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div className="group flex items-center gap-3 rounded-2xl border border-border/15 bg-card p-2.5 pr-3 transition hover:border-cobalt-pop/40 hover:shadow-md sm:gap-4 sm:p-3">
-      <button
-        onClick={onPlay}
-        aria-label={`Play reel ${meta.index + 1}`}
-        className="relative h-[84px] w-[52px] shrink-0 overflow-hidden rounded-xl bg-black sm:h-[92px] sm:w-[58px]"
-      >
-        <LazyThumb url={meta.url} />
-        <span className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 transition group-hover:opacity-100">
-          <Play className="h-6 w-6 fill-white text-white" />
-        </span>
-      </button>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-          <span className="text-base font-bold text-foreground">Reel #{meta.index + 1}</span>
-          <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-600 dark:text-emerald-300">
-            offline
-          </span>
-        </div>
-        <div className="truncate text-xs text-muted-foreground">{fileName(meta.url)}</div>
-        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1 font-semibold text-foreground/80">
-            <HardDrive className="h-3.5 w-3.5" /> {formatBytes(meta.size)}
-          </span>
-          {meta.views != null && (
-            <span className="inline-flex items-center gap-1">
-              <Eye className="h-3.5 w-3.5" /> {compact(meta.views)}
-            </span>
-          )}
-          {meta.likes != null && (
-            <span className="inline-flex items-center gap-1">
-              <Heart className="h-3.5 w-3.5" /> {compact(meta.likes)}
-            </span>
-          )}
-          <span className="hidden sm:inline">
-            saved {formatDistanceToNow(meta.downloadedAt, { addSuffix: true })}
-          </span>
-        </div>
-      </div>
-
-      <div className="flex shrink-0 items-center gap-1.5">
-        <button
-          onClick={onPlay}
-          className="hidden items-center gap-1.5 rounded-full bg-foreground px-4 py-2 text-xs font-bold text-background transition hover:opacity-85 sm:inline-flex"
-        >
-          <Play className="h-3.5 w-3.5 fill-current" /> Play
-        </button>
-        <button
-          onClick={onDelete}
-          aria-label={`Delete reel ${meta.index + 1}`}
-          title="Remove from device"
-          className="flex h-9 w-9 items-center justify-center rounded-full text-muted-foreground transition hover:bg-destructive/10 hover:text-destructive"
-        >
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
     </div>
   );
 }
@@ -1074,6 +907,7 @@ function LazyThumb({ url }: { url: string }) {
   const hostRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
   const [src, setSrc] = useState<string | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
 
   useEffect(() => {
     const el = hostRef.current;
@@ -1104,16 +938,29 @@ function LazyThumb({ url }: { url: string }) {
   }, [visible, url]);
 
   return (
-    <div ref={hostRef} className="h-full w-full">
+    <div ref={hostRef} className="h-full w-full relative">
       {src ? (
-        <video
-          src={src}
-          muted
-          playsInline
-          preload="metadata"
-          tabIndex={-1}
-          className="h-full w-full object-cover"
-        />
+        <>
+          <video
+            src={src}
+            muted
+            playsInline
+            preload="metadata"
+            tabIndex={-1}
+            className="h-full w-full object-cover"
+            onLoadedMetadata={(e) => {
+              const dur = e.currentTarget.duration;
+              if (dur && !isNaN(dur) && dur !== Infinity) {
+                setDuration(dur);
+              }
+            }}
+          />
+          {duration !== null && (
+            <div className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white z-10 pointer-events-none backdrop-blur-sm">
+              {Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, "0")}
+            </div>
+          )}
+        </>
       ) : (
         <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-muted to-card">
           <Film className="h-5 w-5 text-muted-foreground/60" />

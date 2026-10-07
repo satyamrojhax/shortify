@@ -47,6 +47,34 @@ type Props = {
 
 const BUFFERING_DELAY_MS = 250;
 
+const Timeline = memo(({ videoRef, active }: { videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean }) => {
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const onTime = () => setProgress((v.currentTime / (v.duration || 1)) * 100);
+    v.addEventListener("timeupdate", onTime);
+    return () => v.removeEventListener("timeupdate", onTime);
+  }, [active, videoRef]);
+
+  return (
+    <div className="absolute bottom-0 left-0 right-0 h-4 z-30 group/timeline flex items-end">
+      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 group-hover/timeline:h-2.5 transition-all">
+        <div className="h-full bg-white transition-all duration-75" style={{ width: `${progress}%` }} />
+      </div>
+      <input
+        type="range" min="0" max="100" step="0.1" value={progress || 0}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        onChange={(e) => {
+          const v = videoRef.current;
+          if (v && v.duration) v.currentTime = (parseFloat(e.target.value) / 100) * v.duration;
+        }}
+      />
+    </div>
+  );
+});
+
 export const ReelPlayer = memo(function ReelPlayer({
   reel,
   active,
@@ -122,6 +150,14 @@ export const ReelPlayer = memo(function ReelPlayer({
     }, BUFFERING_DELAY_MS);
   }, []);
 
+  const showBufferingImmediate = useCallback(() => {
+    if (bufferingTimer.current) {
+      clearTimeout(bufferingTimer.current);
+      bufferingTimer.current = null;
+    }
+    setIsBuffering(true);
+  }, []);
+
   const hideBuffering = useCallback(() => {
     if (bufferingTimer.current) {
       clearTimeout(bufferingTimer.current);
@@ -129,6 +165,30 @@ export const ReelPlayer = memo(function ReelPlayer({
     }
     setIsBuffering(false);
   }, []);
+
+  // ── Duration formatting ──────────────────────────────────────────────────
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
+
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    const handleLoadedMetadata = () => {
+      if (v.duration && !isNaN(v.duration) && v.duration !== Infinity) {
+        setVideoDuration(v.duration);
+      }
+    };
+    v.addEventListener("loadedmetadata", handleLoadedMetadata);
+    if (v.readyState >= 1) handleLoadedMetadata();
+    return () => v.removeEventListener("loadedmetadata", handleLoadedMetadata);
+  }, [reel.id]);
+
+  const formatDurationFallback = () => {
+    if (reel.duration) return reel.duration;
+    const dur = videoDuration || videoRef.current?.duration;
+    if (!dur || isNaN(dur) || dur === Infinity) return null;
+    return `${Math.floor(dur / 60)}:${(Math.floor(dur % 60)).toString().padStart(2, "0")}`;
+  };
+  const finalDuration = formatDurationFallback();
 
   useEffect(() => () => {
     if (bufferingTimer.current) clearTimeout(bufferingTimer.current);
@@ -314,7 +374,9 @@ export const ReelPlayer = memo(function ReelPlayer({
     onPlaying: hideBuffering,
     onCanPlay: hideBuffering,
     onCanPlayThrough: hideBuffering,
-  }), [videoSrc, autoScroll, preload, onEnded, togglePlay, onDoubleClick, onPointerDown, clearHold, startHold, showBuffering, hideBuffering]);
+    onSeeking: showBufferingImmediate,
+    onSeeked: hideBuffering,
+  }), [videoSrc, autoScroll, preload, onEnded, togglePlay, onDoubleClick, onPointerDown, clearHold, startHold, showBuffering, showBufferingImmediate, hideBuffering]);
 
   // ── Shared overlays (pause, buffering, heart, 2x, volume) ────────────────
   const Overlays = () => (
@@ -343,43 +405,63 @@ export const ReelPlayer = memo(function ReelPlayer({
           <Heart className="h-32 w-32 animate-ping fill-white text-white opacity-90" />
         </div>
       )}
-      {/* Volume pill — icon always visible, slider expands on hover */}
+      {/* Volume pill — icon always visible, slider expands upwards on hover */}
       <div
-        className={`absolute right-3 bottom-4 z-20 flex items-center rounded-full text-white backdrop-blur p-1 transition-all duration-200 ${showVolumeSlider ? "bg-black/70" : "bg-black/50"}`}
+        className={`absolute right-3 ${feedType === "offline" ? "bottom-6" : "bottom-4"} z-20 flex flex-col items-center rounded-full text-white backdrop-blur p-1 transition-all duration-200 ${showVolumeSlider ? "bg-black/70" : "bg-black/50"}`}
         onMouseEnter={onVolumeAreaEnter}
         onMouseLeave={onVolumeAreaLeave}
       >
         <div
-          className="overflow-hidden transition-all duration-300 ease-out flex items-center"
-          style={{ width: showVolumeSlider ? 88 : 0, paddingLeft: showVolumeSlider ? 8 : 0, paddingRight: showVolumeSlider ? 8 : 0 }}
+          className="overflow-hidden transition-all duration-300 ease-out relative flex items-center justify-center touch-none cursor-pointer"
+          style={{ height: showVolumeSlider ? 88 : 0, width: 28 }}
+          onPointerDown={(e) => {
+            e.stopPropagation();
+            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+            setVolumeInteracting(true);
+            
+            const rect = e.currentTarget.getBoundingClientRect();
+            // Track height is 72, with 8px padding top/bottom in the 88px container
+            let y = e.clientY - rect.top - 8;
+            let val = 1 - (y / 72);
+            val = Math.max(0, Math.min(1, val));
+            setVolume(val);
+            setVolumeState(val);
+            if (val > 0 && muted) onToggleMute();
+            if (val === 0 && !muted) onToggleMute();
+          }}
+          onPointerMove={(e) => {
+            if (!volumeInteracting) return;
+            const rect = e.currentTarget.getBoundingClientRect();
+            let y = e.clientY - rect.top - 8;
+            let val = 1 - (y / 72);
+            val = Math.max(0, Math.min(1, val));
+            setVolume(val);
+            setVolumeState(val);
+            if (val > 0 && muted) onToggleMute();
+            if (val === 0 && !muted) onToggleMute();
+          }}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+            setVolumeInteracting(false);
+            onVolumeAreaLeave();
+          }}
+          onPointerCancel={(e) => {
+            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+            setVolumeInteracting(false);
+            onVolumeAreaLeave();
+          }}
         >
-          <input
-            type="range" min="0" max="1" step="0.01"
-            value={muted ? 0 : volume}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              setVolume(val);
-              setVolumeState(val);
-              if (val > 0 && muted) onToggleMute();
-              if (val === 0 && !muted) onToggleMute();
-            }}
-            onClick={(e) => e.stopPropagation()}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-              (e.target as HTMLElement).setPointerCapture(e.pointerId);
-              setVolumeInteracting(true);
-            }}
-            onPointerUp={(e) => {
-              (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-              setVolumeInteracting(false);
-              onVolumeAreaLeave();
-            }}
-            onPointerCancel={(e) => {
-              (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-              setVolumeInteracting(false);
-              onVolumeAreaLeave();
-            }}
-            className="w-full h-1 bg-white/30 rounded-full appearance-none cursor-pointer accent-white"
+          {/* Track */}
+          <div className="relative w-1 h-[72px] bg-white/30 rounded-full overflow-hidden pointer-events-none">
+            <div 
+              className="absolute bottom-0 left-0 right-0 bg-white" 
+              style={{ height: `${(muted ? 0 : volume) * 100}%` }}
+            />
+          </div>
+          {/* Thumb */}
+          <div 
+            className="absolute w-3 h-3 bg-white rounded-full pointer-events-none shadow-md"
+            style={{ bottom: 8 + (muted ? 0 : volume) * 72 - 6 }}
           />
         </div>
         <button
@@ -389,13 +471,17 @@ export const ReelPlayer = memo(function ReelPlayer({
           {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
         </button>
       </div>
+
+      {/* Timeline */}
+      <Timeline videoRef={videoRef} active={active} />
     </>
   );
 
   // ── Three-dots menu ───────────────────────────────────────────────────────
   // Mobile: bottom sheet sliding up; Desktop: right-side panel anchored to button
-  const MenuModal = () =>
-    showMenu ? (
+  const MenuModal = () => {
+
+    return showMenu ? (
       <>
         {/* MOBILE Backdrop — tap anywhere to close */}
         <div
@@ -422,20 +508,32 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="overflow-y-auto">
               {/* Video details */}
               <div className="px-4 pt-2 pb-3 border-b border-border">
-                <Link
-                  to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-                  className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <div className="ig-gradient-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                    {(reel.username || reel.source)[0]?.toUpperCase()}
+                {showFollowButton ? (
+                  <Link
+                    to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
+                    className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <div className="ig-gradient-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                      {(reel.username || reel.source)[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold text-card-foreground truncate">
+                      {reel.username || `${reel.source}_reels`}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 mb-2 w-fit">
+                    <div className="ig-gradient-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
+                      {(reel.username || reel.source)[0]?.toUpperCase()}
+                    </div>
+                    <span className="text-sm font-semibold text-card-foreground truncate">
+                      {reel.username || `${reel.source}_reels`}
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-card-foreground truncate">
-                    {reel.username || `${reel.source}_reels`}
-                  </span>
-                </Link>
+                )}
                 {reel.title && <p className="text-sm text-card-foreground font-medium leading-snug">{reel.title}</p>}
                 {reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">{reel.description}</p>}
-                <div className="mt-1.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
                   {reel.views && <span>{formatCount(reel.views)} views</span>}
                   {reel.likes && <span>{formatCount(reel.likes)} likes</span>}
                   {reel.timeAgo && <span>{reel.timeAgo}</span>}
@@ -477,21 +575,33 @@ export const ReelPlayer = memo(function ReelPlayer({
           <div className="relative w-64 rounded-2xl bg-popover border border-border shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 pointer-events-auto">
             {/* Video details */}
             <div className="px-4 py-3 border-b border-border bg-muted/30">
-              <Link
-                to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-                className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
-              >
-                <div className="ig-gradient-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-                  {(reel.username || reel.source)[0]?.toUpperCase()}
+              {showFollowButton ? (
+                <Link
+                  to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
+                  className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
+                >
+                  <div className="ig-gradient-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
+                    {(reel.username || reel.source)[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-sm font-semibold text-foreground truncate">
+                    {reel.username || `${reel.source}_reels`}
+                  </span>
+                </Link>
+              ) : (
+                <div className="flex items-center gap-3 mb-2 w-fit">
+                  <div className="ig-gradient-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
+                    {(reel.username || reel.source)[0]?.toUpperCase()}
+                  </div>
+                  <span className="text-sm font-semibold text-foreground truncate">
+                    {reel.username || `${reel.source}_reels`}
+                  </span>
                 </div>
-                <span className="text-sm font-semibold text-foreground truncate">
-                  {reel.username || `${reel.source}_reels`}
-                </span>
-              </Link>
+              )}
               {reel.title && <p className="text-sm text-foreground font-medium leading-snug">{reel.title}</p>}
               {reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{reel.description}</p>}
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
-                {reel.views && <span>{formatCount(reel.views)} views</span>}
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
+                {reel.views && <span>· {formatCount(reel.views)} views</span>}
                 {reel.likes && <span>· {formatCount(reel.likes)} likes</span>}
                 {reel.timeAgo && <span>· {reel.timeAgo}</span>}
               </div>
@@ -527,24 +637,36 @@ export const ReelPlayer = memo(function ReelPlayer({
         </div>
       </>
     ) : null;
+  };
 
   // ── Profile info ──────────────────────────────────────────────────────────
   const showFollowButton = feedType === "latest" || feedType?.startsWith("category");
 
   const ProfileInfo = ({ overlay }: { overlay: boolean }) => (
-    <div className={overlay ? "pointer-events-auto" : "pointer-events-auto"}>
-      <div className="flex items-center gap-3 w-fit">
-        <Link
-          to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
-        >
-          <div className="ig-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-            {(reel.username || reel.source)[0]?.toUpperCase()}
+    <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
+      <div className="flex items-center gap-3 w-full max-w-full">
+        {showFollowButton ? (
+          <Link
+            to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
+            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
+          >
+            <div className="ig-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
+              {(reel.username || reel.source)[0]?.toUpperCase()}
+            </div>
+            <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+              {reel.username || `${reel.source}_reels`}
+            </span>
+          </Link>
+        ) : (
+          <div className="flex items-center gap-2 min-w-0 shrink">
+            <div className="ig-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
+              {(reel.username || reel.source)[0]?.toUpperCase()}
+            </div>
+            <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+              {reel.username || `${reel.source}_reels`}
+            </span>
           </div>
-          <span className={`text-sm font-bold truncate max-w-[150px] ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
-            {reel.username || `${reel.source}_reels`}
-          </span>
-        </Link>
+        )}
         {showFollowButton && reel.source !== "local" && (
           <button
             onClick={(e) => {
@@ -552,7 +674,7 @@ export const ReelPlayer = memo(function ReelPlayer({
               const fav = toggleFavorite(reel.username || reel.source);
               setIsFav(fav);
             }}
-            className={`ml-1 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-white/20 border-white/30 text-white hover:bg-white/30" : "bg-muted border-border text-foreground hover:bg-muted/80") : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90"}`}
+            className={`ml-1 shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-white/20 border-white/30 text-white hover:bg-white/30" : "bg-muted border-border text-foreground hover:bg-muted/80") : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90"}`}
           >
             {isFav ? "Following" : "Follow"}
           </button>
@@ -564,7 +686,7 @@ export const ReelPlayer = memo(function ReelPlayer({
         </p>
       )}
       <div className={`mt-2 flex flex-wrap items-center gap-2 text-xs font-medium ${overlay ? "text-white/70 drop-shadow" : "text-slate-mist dark:text-muted-foreground"}`}>
-        {reel.duration && <span>{reel.duration}</span>}
+        {finalDuration && <span className="rounded bg-black/40 px-1.5 py-0.5 text-white">{finalDuration}</span>}
         {reel.views && <span>{formatCount(reel.views)} views</span>}
         {reel.timeAgo && <span>{reel.timeAgo}</span>}
       </div>
@@ -577,11 +699,13 @@ export const ReelPlayer = memo(function ReelPlayer({
   // Profile info left | video centre | actions right
   // ─────────────────────────────────────────────────────────────────────────
   if (isDesktop) {
+    const isOffline = feedType === "offline";
+    
     return (
       <div className="relative h-full w-full flex items-center justify-center gap-4 px-4 overflow-hidden bg-background">
 
         {/* Left — Profile info (Only for portrait) */}
-        {isPortrait && (
+        {isPortrait && !isOffline && (
           <div className="flex w-56 shrink-0 flex-col justify-end h-full pb-12 z-10">
             <ProfileInfo overlay={false} />
           </div>
@@ -609,7 +733,7 @@ export const ReelPlayer = memo(function ReelPlayer({
           <Overlays />
 
           {/* Overlaid Profile info (bottom left inside the video - Only for landscape) */}
-          {!isPortrait && (
+          {!isPortrait && !isOffline && (
             <div className="absolute bottom-4 left-4 z-20 w-3/4 max-w-[400px] pointer-events-none">
               <div className="pointer-events-auto">
                 <ProfileInfo overlay={true} />
@@ -617,59 +741,61 @@ export const ReelPlayer = memo(function ReelPlayer({
             </div>
           )}
 
-          <MenuModal />
+          {!isOffline && <MenuModal />}
         </div>
 
         {/* Right — Action buttons */}
-        <div
-          className="flex w-16 shrink-0 flex-col items-center justify-end pb-4 gap-5 z-10"
-          style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
-        >
-          {/* Like */}
-          <button onClick={() => { doLike(); }} className="flex flex-col items-center gap-1 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-              <Heart className={`h-6 w-6 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`} strokeWidth={2} />
-            </div>
-            <span className="text-xs font-semibold text-foreground">
-              {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : "Like"}
-            </span>
-          </button>
+        {!isOffline && (
+          <div
+            className="flex w-16 shrink-0 flex-col items-center justify-end pb-4 gap-5 z-10"
+            style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
+          >
+            {/* Like */}
+            <button onClick={() => { doLike(); }} className="flex flex-col items-center gap-1 group">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                <Heart className={`h-6 w-6 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`} strokeWidth={2} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">
+                {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : "Like"}
+              </span>
+            </button>
 
-          {/* Dislike */}
-          <button className="flex flex-col items-center gap-1 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-              <ThumbsDown className="h-6 w-6 text-foreground" strokeWidth={2} />
-            </div>
-            <span className="text-xs font-semibold text-foreground">
-              {reel.dislikes ? formatCount(reel.dislikes) : "Dislike"}
-            </span>
-          </button>
+            {/* Dislike */}
+            <button className="flex flex-col items-center gap-1 group">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                <ThumbsDown className="h-6 w-6 text-foreground" strokeWidth={2} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">
+                {reel.dislikes ? formatCount(reel.dislikes) : "Dislike"}
+              </span>
+            </button>
 
-          {/* Share */}
-          <button onClick={share} className="flex flex-col items-center gap-1 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-              <Share2 className="h-6 w-6 text-foreground" strokeWidth={2} />
-            </div>
-            <span className="text-xs font-semibold text-foreground">Share</span>
-          </button>
+            {/* Share */}
+            <button onClick={share} className="flex flex-col items-center gap-1 group">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                <Share2 className="h-6 w-6 text-foreground" strokeWidth={2} />
+              </div>
+              <span className="text-xs font-semibold text-foreground">Share</span>
+            </button>
 
-          {/* Save */}
-          <button onClick={doSave} className="flex flex-col items-center gap-1 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-              {saved
-                ? <BookmarkCheck className="h-6 w-6 fill-foreground text-foreground" strokeWidth={2} />
-                : <Bookmark className="h-6 w-6 text-foreground" strokeWidth={2} />}
-            </div>
-            <span className="text-xs font-semibold text-foreground">{saved ? "Saved" : "Save"}</span>
-          </button>
+            {/* Save */}
+            <button onClick={doSave} className="flex flex-col items-center gap-1 group">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                {saved
+                  ? <BookmarkCheck className="h-6 w-6 fill-foreground text-foreground" strokeWidth={2} />
+                  : <Bookmark className="h-6 w-6 text-foreground" strokeWidth={2} />}
+              </div>
+              <span className="text-xs font-semibold text-foreground">{saved ? "Saved" : "Save"}</span>
+            </button>
 
-          {/* Three dots */}
-          <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1 group">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-              <MoreHorizontal className="h-6 w-6 text-foreground" strokeWidth={2} />
-            </div>
-          </button>
-        </div>
+            {/* Three dots */}
+            <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1 group">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                <MoreHorizontal className="h-6 w-6 text-foreground" strokeWidth={2} />
+              </div>
+            </button>
+          </div>
+        )}
       </div>
     );
   }
@@ -678,6 +804,8 @@ export const ReelPlayer = memo(function ReelPlayer({
   // MOBILE LAYOUT
   // Full-screen video with overlaid UI elements
   // ─────────────────────────────────────────────────────────────────────────
+  const isOffline = feedType === "offline";
+
   return (
     <div className="relative h-full w-full bg-black">
       {reel.thumbnail && !imgError && (
@@ -692,50 +820,54 @@ export const ReelPlayer = memo(function ReelPlayer({
       <Overlays />
 
       {/* Right action rail */}
-      <div className="absolute bottom-24 right-3 z-20 flex flex-col items-center gap-5">
-        {/* Like */}
-        <button onClick={doLike} className="flex flex-col items-center gap-1">
-          <Heart className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`} strokeWidth={2} />
-          <span className="text-xs font-medium text-white drop-shadow">
-            {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : ""}
-          </span>
-        </button>
+      {!isOffline && (
+        <div className="absolute bottom-24 right-3 z-20 flex flex-col items-center gap-5">
+          {/* Like */}
+          <button onClick={doLike} className="flex flex-col items-center gap-1">
+            <Heart className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`} strokeWidth={2} />
+            <span className="text-xs font-medium text-white drop-shadow">
+              {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : ""}
+            </span>
+          </button>
 
-        {/* Dislike */}
-        <button className="flex flex-col items-center gap-1">
-          <ThumbsDown className="h-8 w-8 text-white" strokeWidth={2} />
-          <span className="text-xs font-medium text-white drop-shadow">
-            {reel.dislikes ? formatCount(reel.dislikes) : ""}
-          </span>
-        </button>
+          {/* Dislike */}
+          <button className="flex flex-col items-center gap-1">
+            <ThumbsDown className="h-8 w-8 text-white" strokeWidth={2} />
+            <span className="text-xs font-medium text-white drop-shadow">
+              {reel.dislikes ? formatCount(reel.dislikes) : ""}
+            </span>
+          </button>
 
-        {/* Share */}
-        <button onClick={share} className="flex flex-col items-center gap-1">
-          <Share2 className="h-8 w-8 text-white" strokeWidth={2} />
-          <span className="text-xs font-semibold text-white drop-shadow">Share</span>
-        </button>
+          {/* Share */}
+          <button onClick={share} className="flex flex-col items-center gap-1">
+            <Share2 className="h-8 w-8 text-white" strokeWidth={2} />
+            <span className="text-xs font-semibold text-white drop-shadow">Share</span>
+          </button>
 
-        {/* Save */}
-        <button onClick={doSave} className="flex flex-col items-center gap-1">
-          {saved
-            ? <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
-            : <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />}
-          <span className="text-xs font-medium text-white drop-shadow">{saved ? "Saved" : "Save"}</span>
-        </button>
+          {/* Save */}
+          <button onClick={doSave} className="flex flex-col items-center gap-1">
+            {saved
+              ? <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
+              : <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />}
+            <span className="text-xs font-medium text-white drop-shadow">{saved ? "Saved" : "Save"}</span>
+          </button>
 
-        {/* Three dots */}
-        <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1">
-          <MoreHorizontal className="h-8 w-8 text-white" strokeWidth={2} />
-        </button>
-      </div>
+          {/* Three dots */}
+          <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1">
+            <MoreHorizontal className="h-8 w-8 text-white" strokeWidth={2} />
+          </button>
+        </div>
+      )}
 
       {/* MenuModal rendered at root level — outside overflow containers so it's never clipped */}
-      <MenuModal />
+      {!isOffline && <MenuModal />}
 
       {/* Bottom caption */}
-      <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pr-20 pb-6 pointer-events-none">
-        <ProfileInfo overlay />
-      </div>
+      {!isOffline && (
+        <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/80 via-black/30 to-transparent p-4 pr-20 pb-6 pointer-events-none">
+          <ProfileInfo overlay />
+        </div>
+      )}
     </div>
   );
 });
