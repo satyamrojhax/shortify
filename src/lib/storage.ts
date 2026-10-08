@@ -278,3 +278,27 @@ export function setMemeSoundsEnabled(value: boolean): void {
   }
 }
 
+export async function clearAllStats() {
+  const keepKeys = [
+    KEYS.age, KEYS.username, KEYS.pin, KEYS.pinCode,
+    KEYS.realName, KEYS.dob, KEYS.hash, KEYS.deviceId, KEYS.fingerprint
+  ];
+
+  for (const key of Array.from(memoryCache.keys())) {
+    if (!keepKeys.includes(key as any)) {
+      memoryCache.delete(key);
+      if (typeof localStorage !== "undefined") {
+         localStorage.removeItem(key);
+      }
+    }
+  }
+  
+  const uid = currentUserId || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null);
+  if (uid) {
+    const { resetAllStatsDb } = await import("./db");
+    await resetAllStatsDb(uid);
+  }
+  
+  if (isBrowser()) window.dispatchEvent(new Event("coins-change"));
+}
+

@@ -78,7 +78,8 @@ export function useAuth() {
 
       setAgeOk(get<boolean>(KEYS.age, false));
       setUsername(get<string | null>(KEYS.username, null));
-      setPinOk(get<boolean>(KEYS.pin, false));
+      const isSessionPinOk = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(SESSION_PIN_KEY) === "true" : false;
+      setPinOk(isSessionPinOk);
       setPinCodeState(get<string | null>(KEYS.pinCode, null));
       setRealName(get<string | null>(KEYS.realName, null));
       setDob(get<string | null>(KEYS.dob, null));
@@ -148,7 +149,10 @@ export function useAuth() {
       setUsername(user.name);
     },
     setPinOk: (ok: boolean) => {
-      set(KEYS.pin, ok);
+      if (typeof sessionStorage !== "undefined") {
+        if (ok) sessionStorage.setItem(SESSION_PIN_KEY, "true");
+        else sessionStorage.removeItem(SESSION_PIN_KEY);
+      }
       setPinOk(ok);
     },
     savePinSetup: async (name: string, dobStr: string) => {
@@ -188,7 +192,9 @@ export function useAuth() {
       return code;
     },
     logout: () => {
-      remove(KEYS.pin);
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem(SESSION_PIN_KEY);
+      }
       setPinOk(false);
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem("ig.user_id");

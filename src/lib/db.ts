@@ -183,3 +183,24 @@ export async function fetchUserProfile(userId: string) {
   if (error) throw error;
   return data;
 }
+
+export async function resetAllStatsDb(userId: string) {
+  const keepKeys = [
+    "ig.age_ok", "ig.username", "ig.pin_ok", "ig.pin_code", 
+    "ig.real_name", "ig.dob", "ig.hash", "ig.device_id", "ig.fingerprint"
+  ];
+  
+  await supabase.from("user_data").delete().eq("user_id", userId).not("key", "in", `(${keepKeys.join(",")})`);
+  
+  await supabase.from("user_liked_reels").delete().eq("user_id", userId);
+  await supabase.from("user_saved_reels").delete().eq("user_id", userId);
+  await supabase.from("user_watch_history").delete().eq("user_id", userId);
+  await supabase.from("user_favorite_creators").delete().eq("user_id", userId);
+  await supabase.from("user_followed_accounts").delete().eq("user_id", userId);
+  await supabase.from("user_courses").delete().eq("user_id", userId);
+  await supabase.from("user_course_lectures").delete().eq("user_id", userId);
+  await supabase.from("user_reels_watched_count").delete().eq("user_id", userId);
+  
+  await supabase.from("users").update({ total_coins: 0, profile_details: {} }).eq("id", userId);
+}
+

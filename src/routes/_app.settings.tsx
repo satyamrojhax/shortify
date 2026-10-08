@@ -542,19 +542,16 @@ function SettingsPage() {
                 cancel
               </button>
               <button
-                onClick={() => {
-                  setLiked([]);
-                  setSaved([]);
-                  setFavorites([]);
-                  set(KEYS.history, []);
-                  set(KEYS.watched, 0);
-                  set(KEYS.coins, 0);
+                onClick={async () => {
+                  const { clearAllStats } = await import("@/lib/storage");
+                  await clearAllStats();
                   setLikedCount(0);
                   setSavedCount(0);
                   setFavoritesCount(0);
                   setWatched(0);
                   setCoins(0);
                   setShowResetConfirm(false);
+                  window.location.reload();
                 }}
                 className="flex-1 rounded-lg border-[1.5px] border-marker bg-marker px-4 py-2.5 font-display text-sm lowercase text-white transition hover:bg-marker/90"
               >
