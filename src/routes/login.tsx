@@ -22,6 +22,8 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
+  const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   useEffect(() => {
     if (!admin && ready && !ageOk) navigate({ to: "/age" });
@@ -61,6 +63,29 @@ function LoginPage() {
   };
 
   const isSignup = mode === "signup";
+
+  useEffect(() => {
+    if (!isSignup || !userHandle.trim()) {
+      setUsernameAvailable(null);
+      return;
+    }
+    
+    const handle = userHandle.trim().toLowerCase();
+    setCheckingUsername(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { checkUsernameAvailability } = await import("@/lib/db");
+        const available = await checkUsernameAvailability(handle);
+        setUsernameAvailable(available);
+      } catch (e) {
+        setUsernameAvailable(null);
+      } finally {
+        setCheckingUsername(false);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [userHandle, isSignup]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-6 py-10">
@@ -121,10 +146,25 @@ function LoginPage() {
               value={userHandle}
               onChange={(e) => setUserHandle(e.target.value.toLowerCase())}
               placeholder="e.g. LFRDCA"
-              className="w-full rounded-lg border-[1.5px] border-foreground/30 bg-background px-4 py-3 text-lg text-foreground placeholder:text-foreground/40 outline-none transition focus:bg-muted disabled:opacity-50"
+              className={`w-full rounded-lg border-[1.5px] bg-background px-4 py-3 text-lg text-foreground placeholder:text-foreground/40 outline-none transition focus:bg-muted disabled:opacity-50 ${
+                isSignup && userHandle.trim() && usernameAvailable === false
+                  ? "border-destructive focus:border-destructive"
+                  : "border-foreground/30"
+              }`}
               disabled={loading}
               autoFocus={!isSignup}
             />
+            {isSignup && userHandle.trim() && (
+              <div className="mt-1.5 text-xs font-medium">
+                {checkingUsername ? (
+                  <span className="text-foreground/50">checking availability...</span>
+                ) : usernameAvailable === false ? (
+                  <span className="text-destructive">username not available.</span>
+                ) : usernameAvailable === true ? (
+                  <span className="text-[#0095f6] dark:text-[#0095f6]">username is available!</span>
+                ) : null}
+              </div>
+            )}
           </label>
           <label className="block">
             <span className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
@@ -141,7 +181,7 @@ function LoginPage() {
           </label>
           <button
             type="submit"
-            disabled={loading || !userHandle.trim() || !password.trim() || (isSignup && !name.trim())}
+            disabled={loading || !userHandle.trim() || !password.trim() || (isSignup && (!name.trim() || usernameAvailable === false))}
             className="btn-pill"
           >
             {loading ? "loading..." : "continue →"}

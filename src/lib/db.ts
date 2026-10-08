@@ -23,6 +23,14 @@ export async function loginUserDb(email: string, pass: string) {
   return user;
 }
 
+export async function checkUsernameAvailability(username: string) {
+  const email = `${username.toLowerCase()}@shortify.cc.cd`;
+  const { data, error } = await supabase.rpc('check_username_available', { p_email: email });
+
+  if (error) return false;
+  return data === true;
+}
+
 export async function signupUserDb(name: string, email: string, pass: string) {
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
