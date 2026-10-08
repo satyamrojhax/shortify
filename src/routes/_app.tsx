@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Sidebar, BottomNav, Footer, MobileHeader } from "@/components/nav";
 import { InstallPwa } from "@/components/install-pwa";
+import { StreakModal } from "@/components/streak-modal";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -43,6 +44,7 @@ function AppLayout() {
         {!isReels && <BottomNav />}
       </div>
       <InstallPwa />
+      <StreakModal />
     </div>
   );
 }

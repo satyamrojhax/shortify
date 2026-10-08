@@ -1,5 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme, type Theme } from "@/hooks/use-theme";
@@ -8,34 +7,23 @@ import {
   getSaved,
   KEYS,
   get,
-  set,
-  setLiked,
-  setSaved,
   getFavorites,
-  setFavorites,
   getCoins,
   hasUnlocked,
   getRandomMode,
   setRandomMode,
   getAvatarStyle,
-  setAvatarStyle,
   getAvatarSeed,
-  setAvatarSeed,
+  getStreak,
 } from "@/lib/storage";
-import { fetchUserProfile } from "@/lib/db";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { usePwa } from "@/hooks/use-pwa";
-import { DICEBEAR_STYLES } from "@/lib/avatar";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import {
-  Eye,
-  EyeOff,
-  LogOut,
   Moon,
   Sun,
   Monitor,
   Trash2,
-  Coins,
   Download,
   BadgeCheck,
   Gift,
@@ -43,8 +31,12 @@ import {
   Bookmark,
   ShoppingBag,
   Users,
-  Sparkles,
-  RefreshCw,
+  Eye,
+  Trophy,
+  Flame,
+  ChevronRight,
+  LogOut,
+  Info
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -57,18 +49,16 @@ function SettingsPage() {
   const { canInstall, install } = usePwa();
   const { theme, setTheme } = useTheme();
   const hydrated = useHydrated();
-  const [showPin, setShowPin] = useState(false);
+  
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  
   const [likedCount, setLikedCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
   const [favoritesCount, setFavoritesCount] = useState(0);
   const [watched, setWatched] = useState(0);
   const [coins, setCoins] = useState(0);
+  const [streak, setStreak] = useState(0);
   const [randomMode, setRandomModeState] = useState(false);
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
 
   const [avatarStyle, setAvatarStyleState] = useState<string>("avataaars");
   const [avatarSeed, setAvatarSeedState] = useState<string>("");
@@ -80,31 +70,11 @@ function SettingsPage() {
     setFavoritesCount(getFavorites().length);
     setWatched(get<number>(KEYS.watched, 0));
     setCoins(getCoins());
+    setStreak(getStreak().current);
     setRandomModeState(getRandomMode());
     setAvatarStyleState(getAvatarStyle());
     setAvatarSeedState(getAvatarSeed(username || ""));
-
-    const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
-    if (uid) {
-      fetchUserProfile(uid)
-        .then(data => {
-          setEmail(data.email || "");
-          setPassword(data.password || "");
-        })
-        .catch(console.error);
-    }
   }, [hydrated, username]);
-
-  const handleStyleChange = (newStyle: string) => {
-    setAvatarStyleState(newStyle);
-    setAvatarStyle(newStyle);
-  };
-
-  const handleRandomizeAvatar = () => {
-    const randomSeed = `${username || "user"}_${Math.random().toString(36).substring(2, 7)}`;
-    setAvatarSeedState(randomSeed);
-    setAvatarSeed(randomSeed);
-  };
 
   const themes: { key: Theme; label: string; icon: typeof Sun }[] = [
     { key: "light", label: "light", icon: Sun },
@@ -112,227 +82,92 @@ function SettingsPage() {
     { key: "system", label: "system", icon: Monitor },
   ];
 
+  if (!hydrated) return null;
+
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
+    <div className="mx-auto max-w-3xl px-4 sm:px-6 py-8 sm:py-10">
       <p className="font-display text-marker text-xl lowercase italic">your little corner —</p>
       <h1 className="mt-2 font-display text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
         settings.
       </h1>
 
-      {/* Profile */}
-      <section className="paper-card mt-8 p-6">
-        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
-          <div className="relative group">
+      {/* Profile summary */}
+      <section className="mt-8">
+        <Link 
+          to="/profile" 
+          className="paper-card p-4 sm:p-6 flex items-center justify-between group transition hover:-translate-y-1 hover:shadow-lg"
+        >
+          <div className="flex items-center gap-4">
             <UserAvatar
               username={username}
               seed={avatarSeed || username}
               style={avatarStyle}
-              size="2xl"
-              className="h-20 w-20 shadow-md ring-2 ring-cobalt-pop/30"
+              size="lg"
+              className="h-16 w-16 shadow-sm ring-2 ring-cobalt-pop/20"
             />
-            <button
-              onClick={handleRandomizeAvatar}
-              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-cobalt-pop text-white shadow-md transition-transform hover:scale-110 active:scale-95"
-              title="Roll random avatar variation"
-              aria-label="Randomize avatar"
-            >
-              <RefreshCw className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <div className="text-center sm:text-left flex-1">
-            <div className="flex items-center justify-center sm:justify-start gap-2 font-display text-2xl lowercase text-cocoa dark:text-cream">
-              @{username}
-              {hasUnlocked("badge_verified") && <BadgeCheck className="h-6 w-6 text-blue-500" />}
-            </div>
-            <div className="text-sm text-marker">a reels reader</div>
-            <div className="mt-1 text-xs text-charcoal/60 dark:text-cream/60">
-              dropped from universe
-            </div>
-          </div>
-        </div>
-
-        {/* DiceBear Avatar Style Selector */}
-        <div className="mt-6 border-t border-charcoal/10 dark:border-cream/10 pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-              choose avatar style
-            </span>
-            <button
-              onClick={handleRandomizeAvatar}
-              className="flex items-center gap-1.5 text-xs font-semibold text-cobalt-pop hover:underline"
-            >
-              <Sparkles className="h-3.5 w-3.5" />
-              randomize
-            </button>
-          </div>
-          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
-            {DICEBEAR_STYLES.map((st) => {
-              const active = avatarStyle === st.id;
-              return (
-                <button
-                  key={st.id}
-                  onClick={() => handleStyleChange(st.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${
-                    active
-                      ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
-                      : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
-                >
-                  <UserAvatar
-                    username={username}
-                    seed={avatarSeed || username}
-                    style={st.id}
-                    size="sm"
-                    className="h-8 w-8"
-                  />
-                  <span className="text-[10px] font-medium truncate max-w-[60px] text-cocoa dark:text-cream">
-                    {st.label}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        <div className="mt-6 flex flex-col gap-3">
-          {/* Email */}
-          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
-            <div>
-              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-                login username
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 font-display text-2xl lowercase text-cocoa dark:text-cream">
+                @{username}
+                {hasUnlocked("badge_verified") && <BadgeCheck className="h-5 w-5 text-blue-500" />}
               </div>
-              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
-                {email ? email.split('@')[0] : "loading..."}
+              <div className="mt-1 flex items-center gap-2 text-xs text-charcoal/60 dark:text-cream/60">
+                <span>a reels reader</span>
+                <span>•</span>
+                <span className="flex items-center text-orange-500 font-medium">
+                  <Flame className="h-3 w-3 mr-0.5" /> {streak}
+                </span>
               </div>
             </div>
           </div>
-
-          {/* Password */}
-          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
-            <div>
-              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-                password
-              </div>
-              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
-                {showPassword ? password : "••••••••"}
-              </div>
-            </div>
-            <button
-              onClick={() => setShowPassword((s) => !s)}
-              className="text-charcoal/70 hover:text-cocoa dark:text-cream/70 dark:hover:text-cream"
-              aria-label="Toggle Password visibility"
-            >
-              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
+          <div className="flex items-center justify-center h-10 w-10 rounded-full bg-dew dark:bg-secondary text-cocoa dark:text-cream group-hover:bg-marker group-hover:text-white transition-colors">
+            <ChevronRight className="h-5 w-5" />
           </div>
-
-          {/* PIN */}
-          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
-            <div>
-              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-                pin
-              </div>
-              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
-                {showPin ? "000111" : "••••••"}
-              </div>
-            </div>
-            <button
-              onClick={() => setShowPin((s) => !s)}
-              className="text-charcoal/70 hover:text-cocoa dark:text-cream/70 dark:hover:text-cream"
-              aria-label="Toggle PIN visibility"
-            >
-              {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-            </button>
-          </div>
-        </div>
+        </Link>
       </section>
 
-      {/* Stats */}
-      <section className="mt-4 grid grid-cols-2 gap-3">
-        <div className="paper-card p-5">
-          <div className="font-display text-4xl text-cocoa dark:text-cream">{likedCount}</div>
-          <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            liked reels
-          </div>
-        </div>
-        <div className="paper-card p-5">
-          <div className="font-display text-4xl text-cocoa dark:text-cream">{savedCount}</div>
-          <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            saved reels
-          </div>
-        </div>
-        <div className="paper-card p-5">
-          <div className="font-display text-4xl text-cocoa dark:text-cream">{watched}</div>
-          <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            reels watched
-          </div>
-        </div>
-        <div className="paper-card p-5">
-          <div className="flex items-center gap-2">
-            <div className="font-display text-4xl text-cocoa dark:text-cream">{coins}</div>
-            <Coins className="h-6 w-6 text-yellow-500" />
-          </div>
-          <div className="mt-1 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            coins earned
-          </div>
-        </div>
-      </section>
-
-      {/* Theme */}
-      <section className="paper-card mt-4 p-6">
-        <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-          appearance
+      {/* Preferences */}
+      <section className="mt-8">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/50 dark:text-cream/50 mb-3 px-2">
+          Preferences
         </h2>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {themes.map((t) => {
-            const Icon = t.icon;
-            const active = theme === t.key;
-            return (
-              <button
-                key={t.key}
-                onClick={() => setTheme(t.key)}
-                className={`flex flex-col items-center gap-2 rounded-lg border-[1.5px] px-3 py-4 text-sm lowercase transition ${active
-                  ? "border-charcoal bg-dew font-medium text-cocoa dark:border-cream dark:bg-secondary dark:text-cream"
-                  : "border-charcoal/30 text-charcoal/70 hover:bg-dew dark:border-cream/30 dark:text-cream/70 dark:hover:bg-secondary"
-                  }`}
-              >
-                <Icon className="h-5 w-5" />
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
-      </section>
+        
+        <div className="paper-card p-4 sm:p-6 flex flex-col gap-6">
+          {/* Theme */}
+          <div>
+            <div className="font-display text-lg lowercase text-cocoa dark:text-cream mb-3">
+              appearance
+            </div>
+            <div className="grid grid-cols-3 gap-2">
+              {themes.map((t) => {
+                const Icon = t.icon;
+                const active = theme === t.key;
+                return (
+                  <button
+                    key={t.key}
+                    onClick={() => setTheme(t.key)}
+                    className={`flex flex-col items-center gap-2 rounded-lg border-[1.5px] px-3 py-3 text-sm lowercase transition ${
+                      active
+                        ? "border-charcoal bg-dew font-medium text-cocoa dark:border-cream dark:bg-secondary dark:text-cream"
+                        : "border-charcoal/30 text-charcoal/70 hover:bg-dew dark:border-cream/30 dark:text-cream/70 dark:hover:bg-secondary"
+                    }`}
+                  >
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
+                    {t.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
 
-      {/* Activity */}
-      <section className="paper-card mt-4 p-6">
-        <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-          activity
-        </h2>
-        <div className="mt-3 flex flex-col gap-2">
-          <Link
-            to="/history"
-            className="flex items-center gap-3 rounded-lg border-[1.5px] border-charcoal/30 px-4 py-3 text-sm text-cocoa transition hover:bg-dew dark:border-cream/30 dark:text-cream dark:hover:bg-secondary"
-          >
-            <Eye className="h-5 w-5" />
-            Watched History
-          </Link>
-        </div>
-      </section>
+          <hr className="border-charcoal/10 dark:border-cream/10" />
 
-      {/* Playback & Display */}
-      <section className="mt-4">
-        <div className="paper-card p-6 flex flex-col gap-6">
-          <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            playback & display
-          </h2>
-          
+          {/* Random Mode */}
           <div className="flex items-center justify-between">
             <div>
               <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
                 show random reels
               </div>
-              <div className="text-sm text-charcoal/70 dark:text-cream/70">
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
                 mix all sources randomly across tabs.
               </div>
             </div>
@@ -342,193 +177,238 @@ function SettingsPage() {
                 setRandomModeState(next);
                 setRandomMode(next);
               }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${randomMode ? "bg-marker" : "bg-charcoal/20 dark:bg-cream/20"
-                }`}
+              className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                randomMode ? "bg-marker" : "bg-charcoal/20 dark:bg-cream/20"
+              }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${randomMode ? "translate-x-6" : "translate-x-1"
-                  }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                  randomMode ? "translate-x-6" : "translate-x-1"
+                }`}
               />
             </button>
           </div>
 
+          {/* Install App */}
+          {canInstall && (
+            <>
+              <hr className="border-charcoal/10 dark:border-cream/10" />
+              <button
+                onClick={() => install()}
+                className="flex w-full items-center justify-between text-left group"
+              >
+                <div>
+                  <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                    install app
+                  </div>
+                  <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                    add to home screen for a better experience.
+                  </div>
+                </div>
+                <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+              </button>
+            </>
+          )}
         </div>
       </section>
 
-      {/* App */}
-      {canInstall && (
-        <section className="mt-4">
-          <button
-            onClick={() => install()}
-            className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
+      {/* Your Content */}
+      <section className="mt-8">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/50 dark:text-cream/50 mb-3 px-2">
+          Your Content
+        </h2>
+        
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/liked"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
           >
             <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-                install app
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                liked reels
               </div>
-              <div className="text-sm text-charcoal/70 dark:text-cream/70">
-                add to home screen for a better experience.
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                view your {likedCount} liked reels.
               </div>
             </div>
-            <Download className="h-5 w-5 text-cocoa dark:text-cream" />
+            <Heart className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <Link
+            to="/saved"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                saved reels
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                view your {savedCount} saved reels.
+              </div>
+            </div>
+            <Bookmark className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <Link
+            to="/favorites"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                favorites
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                view your {favoritesCount} favorite creators.
+              </div>
+            </div>
+            <Users className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+          
+          <Link
+            to="/history"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                watch history
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                revisit reels you've watched ({watched}).
+              </div>
+            </div>
+            <Eye className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <Link
+            to="/downloaded"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                downloads
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                manage offline reels and download more.
+              </div>
+            </div>
+            <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Community & Rewards */}
+      <section className="mt-8">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/50 dark:text-cream/50 mb-3 px-2">
+          Community & Rewards
+        </h2>
+        
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/leaderboard"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                leaderboard
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                see the top creators and rankings.
+              </div>
+            </div>
+            <Trophy className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <Link
+            to="/shop"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                shop
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                browse the store and redeem your coins.
+              </div>
+            </div>
+            <ShoppingBag className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+          
+          <Link
+            to="/redeem"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md border-magenta-haze/30 bg-magenta-haze/5 dark:border-periwinkle-sky/30 dark:bg-periwinkle-sky/5 group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity">
+                earnings
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                you have {coins} coins. redeem them for rewards.
+              </div>
+            </div>
+            <Gift className="h-6 w-6 text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity" />
+          </Link>
+        </div>
+      </section>
+
+      {/* General & Account */}
+      <section className="mt-8">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/50 dark:text-cream/50 mb-3 px-2">
+          General & Account
+        </h2>
+        
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/about"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                about us
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                learn more about this app.
+              </div>
+            </div>
+            <Info className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <button
+            onClick={() => setShowResetConfirm(true)}
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-red-500 transition-colors">
+                reset all stats
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                clear all liked, saved, coins and watched reels.
+              </div>
+            </div>
+            <Trash2 className="h-5 w-5 text-charcoal/60 dark:text-cream/60 group-hover:text-red-500 transition-colors" />
           </button>
-        </section>
-      )}
-
-      {/* Downloads */}
-      <section className="mt-4">
-        <Link
-          to="/downloaded"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              downloads
+          
+          <button
+            onClick={() => {
+              logout();
+              navigate({ to: "/login" });
+            }}
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-marker">log out</div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                sign out of this device.
+              </div>
             </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              manage offline reels and download more.
-            </div>
-          </div>
-          <Download className="h-5 w-5 text-cocoa dark:text-cream" />
-        </Link>
-      </section>
-
-      {/* Shop */}
-      <section className="mt-4">
-        <Link
-          to="/shop"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">shop</div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              browse the store and redeem your coins.
-            </div>
-          </div>
-          <ShoppingBag className="h-5 w-5 text-cocoa dark:text-cream" />
-        </Link>
-      </section>
-
-      {/* Bookmarks & Likes */}
-      <section className="mt-4 space-y-3">
-        <Link
-          to="/liked"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              liked reels
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              view your {likedCount} liked reels.
-            </div>
-          </div>
-          <Heart className="h-5 w-5 text-cocoa dark:text-cream" />
-        </Link>
-
-        <Link
-          to="/saved"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              saved reels
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              view your {savedCount} saved reels.
-            </div>
-          </div>
-          <Bookmark className="h-5 w-5 text-cocoa dark:text-cream" />
-        </Link>
-
-        <Link
-          to="/favorites"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              favorites
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              view your {favoritesCount} favorite creators.
-            </div>
-          </div>
-          <Users className="h-5 w-5 text-cocoa dark:text-cream" />
-        </Link>
-      </section>
-
-      {/*Earnings */}
-      <section className="mt-4">
-        <Link
-          to="/redeem"
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew border-magenta-haze/30 bg-magenta-haze/5 dark:hover:bg-secondary dark:border-periwinkle-sky/30 dark:bg-periwinkle-sky/5"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-magenta-haze dark:text-periwinkle-sky">
-              earnings
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              you have {coins} coins. redeem them for rewards.
-            </div>
-          </div>
-          <Gift className="h-6 w-6 text-magenta-haze dark:text-periwinkle-sky" />
-        </Link>
-      </section>
-
-      {/* About */}
-      <section className="mt-4">
-        <button
-          onClick={() => navigate({ to: "/about" })}
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              about us
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              learn more about this app.
-            </div>
-          </div>
-        </button>
-      </section>
-
-      {/* Danger */}
-      <section className="mt-4 space-y-2">
-        <button
-          onClick={() => setShowResetConfirm(true)}
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              reset all stats
-            </div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              clear all liked, saved, coins and watched reels.
-            </div>
-          </div>
-          <Trash2 className="h-5 w-5 text-charcoal/60 dark:text-cream/60" />
-        </button>
-        <button
-          onClick={() => {
-            logout();
-            navigate({ to: "/login" });
-          }}
-          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
-        >
-          <div>
-            <div className="font-display text-lg lowercase text-marker">log out</div>
-            <div className="text-sm text-charcoal/70 dark:text-cream/70">
-              sign out of this device.
-            </div>
-          </div>
-          <LogOut className="h-5 w-5 text-marker" />
-        </button>
+            <LogOut className="h-5 w-5 text-marker" />
+          </button>
+        </div>
       </section>
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="paper-card max-w-sm w-full p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 animate-in fade-in duration-200">
+          <div className="paper-card max-w-sm w-full p-6 animate-in zoom-in-95 duration-200">
             <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
               reset all stats?
             </h2>

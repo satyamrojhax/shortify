@@ -27,6 +27,7 @@ export const KEYS = {
   avatarStyle: "ig.avatar_style",
   avatarSeed: "ig.avatar_seed",
   memeSounds: "ig.meme_sounds",
+  streak: "ig.streak",
 } as const;
 
 export const isBrowser = () => typeof window !== "undefined";
@@ -273,6 +274,51 @@ export function setMemeSoundsEnabled(value: boolean): void {
   if (typeof localStorage !== "undefined") {
     localStorage.setItem("ig.meme_sounds", String(value));
   }
+}
+
+export interface StreakData {
+  current: number;
+  lastActive: string;
+  best: number;
+}
+
+export function getStreak(): StreakData {
+  return get<StreakData>(KEYS.streak, { current: 0, lastActive: "", best: 0 });
+}
+
+export function updateStreak(): { updated: boolean, streak: StreakData } {
+  const currentStreak = getStreak();
+  const today = new Date().toISOString().split("T")[0];
+  
+  if (currentStreak.lastActive === today) {
+    return { updated: false, streak: currentStreak };
+  }
+  
+  let newCurrent = currentStreak.current;
+  
+  if (currentStreak.lastActive) {
+    const lastDate = new Date(currentStreak.lastActive);
+    const currDate = new Date(today);
+    const diffTime = Math.abs(currDate.getTime() - lastDate.getTime());
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) {
+      newCurrent += 1;
+    } else {
+      newCurrent = 1; // Streak broken, reset to 1 (since they are active today)
+    }
+  } else {
+    newCurrent = 1;
+  }
+  
+  const newStreak = {
+    current: newCurrent,
+    lastActive: today,
+    best: Math.max(currentStreak.best || 0, newCurrent)
+  };
+  
+  set(KEYS.streak, newStreak);
+  return { updated: true, streak: newStreak };
 }
 
 export async function clearAllStats() {

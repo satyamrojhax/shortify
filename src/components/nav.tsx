@@ -24,13 +24,13 @@ import {
   Search,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import { hasUnlocked, getAvatarStyle, getAvatarSeed } from "@/lib/storage";
+import { hasUnlocked, getAvatarStyle, getAvatarSeed, getStreak } from "@/lib/storage";
 import { UserAvatar } from "@/components/ui/user-avatar";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const CourseIcon = ({ className }: { className?: string; strokeWidth?: number }) => (
   <img
-    src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzMiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMyAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTcuMTY0MDYgNy45NTAyQzcuNDY3NjggNy45NTAyIDcuNzEzODcgOC4xOTYzOSA3LjcxMzg3IDguNUM3LjcxMzg3IDguODAzNjEgNy40Njc2OCA5LjA0OTggNy4xNjQwNiA5LjA0OThINi4xNjQwNkM1LjkxNTY4IDkuMDQ5OCA1LjcxMzg3IDkuMjUxNjEgNS43MTM4NyA5LjVWMjIuNUM1LjcxMzg3IDIyLjc0ODQgNS45MTU2OCAyMi45NTAyIDYuMTY0MDYgMjIuOTUwMkgyNy4xNjQxQzI3LjQxMjQgMjIuOTUwMiAyNy42MTQzIDIyLjc0ODQgMjcuNjE0MyAyMi41VjkuNUMyNy42MTQzIDkuMjUxNjEgMjcuNDEyNCA5LjA0OTggMjcuMTY0MSA5LjA0OThIMjYuMTY0MUMyNS44NjA0IDkuMDQ5OCAyNS42MTQzIDguODAzNjEgMjUuNjE0MyA4LjVDMjUuNjE0MyA4LjE5NjM5IDI1Ljg2MDQgNy45NTAyIDI2LjE2NDEgNy45NTAySDI3LjE2NDFDMjguMDE4NyA3Ljk1MDIgMjguNzEzOSA4LjY0NTM5IDI4LjcxMzkgOS41VjIyLjVDMjguNzEzOSAyMy4zNTQ2IDI4LjAxODcgMjQuMDQ5OCAyNy4xNjQxIDI0LjA0OThIMTguNzEzOVYyNi45NTAySDIxLjE2NDFDMjEuNDY3NyAyNi45NTAyIDIxLjcxMzkgMjcuMTk2NCAyMS43MTM5IDI3LjVDMjEuNzEzOSAyNy44MDM2IDIxLjQ2NzcgMjguMDQ5OCAyMS4xNjQxIDI4LjA0OThIMTIuMTY0MUMxMS44NjA0IDI4LjA0OTggMTEuNjE0MyAyNy44MDM2IDExLjYxNDMgMjcuNUMxMS42MTQzIDI3LjE5NjQgMTEuODYwNCAyNi45NTAyIDEyLjE2NDEgMjYuOTUwMkgxNC42MTQzVjI0LjA0OThINi4xNjQwNkM1LjMwOTQ1IDI0LjA0OTggNC42MTQyNiAyMy4zNTQ2IDQuNjE0MjYgMjIuNVY5LjVDNC42MTQyNiA4LjY0NTM5IDUuMzA5NDUgNy45NTAyIDYuMTY0MDYgNy45NTAySDcuMTY0MDZaTTE1LjcxMzkgMjYuOTUwMkgxNy42MTQzVjI0LjA0OThIMTUuNzEzOVYyNi45NTAyWiIgZmlsbD0iIzQxNDM0NyIgc3Ryb2tlPSIjNDE0MzQ3IiBzdHJva2Utd2lkdGg9IjAuMSIvPgo8cGF0aCBkPSJNMTYuNDMzNiA0LjAwMDk4QzE2LjU4IDMuOTMyNzMgMTYuNzQ5MSAzLjkzMjczIDE2Ljg5NTUgNC4wMDA5OEgxNi44OTQ1TDIzLjM5NDUgNy4wMDA5OEgyMy4zOTU1QzIzLjU5IDcuMDkxMjMgMjMuNzEzOSA3LjI4NjYyIDIzLjcxMzkgNy41MDA5OEMyMy43MTM3IDcuNzE1MyAyMy41ODkxIDcuOTA5OSAyMy4zOTM2IDhMMjEuNzEzOSA4Ljc3NTM5VjExLjQ0MzRDMjEuNzEzOSAxMS45ODk0IDIxLjQzMDEgMTIuNDk4MiAyMC45NzI3IDEyLjc3MjVDMTkuNTQ1MSAxMy42MjM0IDE4LjEwNTQgMTQuMDUwOCAxNi42NjQxIDE0LjA1MDhDMTUuMjIyNyAxNC4wNTA4IDEzLjc4MyAxMy42MjM0IDEyLjM1NTUgMTIuNzcyNUMxMS44OTggMTIuNDk4MiAxMS42MTQzIDExLjk4OTQgMTEuNjE0MyAxMS40NDM0VjguNzc1MzlMOS45MzQ1NyA4QzkuNzM4OTkgNy45MDk5IDkuNjE0NDQgNy43MTUzIDkuNjE0MjYgNy41MDA5OEM5LjYxNDI2IDcuMjg2NDcgOS43Mzg4NCA3LjA5MTE0IDkuOTM0NTcgNy4wMDA5OEwxNi40MzM2IDQuMDAwOThaTTE2Ljg5MzYgMTAuOTk5QzE2LjgyMDYgMTEuMDMzMiAxNi43NDE5IDExLjA1MDggMTYuNjY0MSAxMS4wNTA4QzE2LjU4NjEgMTEuMDUwOCAxNi41MDY2IDExLjAzNDMgMTYuNDMzNiAxMUwxMi43MTM5IDkuMjgyMjNWMTEuNDQzNEMxMi43MTM5IDExLjYwMzYgMTIuNzk2NyAxMS43NTQxIDEyLjkxOTkgMTEuODI3MUMxNC4xODIyIDEyLjU3OTkgMTUuNDIzOSAxMi45NTUxIDE2LjY2NDEgMTIuOTU1MUMxNy45MDQyIDEyLjk1NTEgMTkxLjQ2IDEyLjU3OTkgMjAuNDA4MiAxMS44MjcxQzIwLjUzMTQgMTEuNzU0MSAyMC42MTQzIDExLjYwMzYgMjAuNjE0MyAxMS40NDM0VjkuMjgyMjNMMTYuODkzNiAxMC45OTlaTTExLjQ3NTYgNy41TDE2LjY2NDEgOS44OTQ1M0wyMS44NTE2IDcuNUwxNi42NjQxIDUuMTA1NDdMMTEuNDc1NiA3LjVaIiBmaWxsPSIjNjE3MkYzIiBzdHJva2U9IiM2MTcyRjMiIHN0cm9rZS13aWR0aD0iMC4xIi8+Cjwvc3ZnPgo="
+    src="https://d2bps9p1kiy4ka.cloudfront.net/5eb393ee95fab7468a79d189/162d2968-abb3-44e0-a6e9-65704b722ce0.png"
     alt="Courses"
     className={className}
   />
@@ -199,9 +199,14 @@ export function Footer() {
 
 export function MobileHeader({ username }: { username?: string | null }) {
   const [open, setOpen] = useState(false);
+  const [streak, setStreak] = useState(0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const avatarStyle = getAvatarStyle();
   const avatarSeed = getAvatarSeed(username || "");
+
+  useEffect(() => {
+    setStreak(getStreak().current);
+  }, []);
 
   return (
     <>
@@ -210,8 +215,14 @@ export function MobileHeader({ username }: { username?: string | null }) {
           <BrandMark size={24} />
         </Link>
         <div className="flex items-center gap-2.5">
+          {streak > 0 && (
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 text-xs font-bold mr-1">
+              <Flame className="h-3.5 w-3.5" />
+              {streak}
+            </div>
+          )}
           {username && (
-            <Link to="/settings" aria-label="Settings and Profile">
+            <Link to="/profile" aria-label="Profile">
               <UserAvatar
                 username={username}
                 style={avatarStyle}
@@ -248,7 +259,7 @@ export function MobileHeader({ username }: { username?: string | null }) {
             </div>
             {username && (
               <Link
-                to="/settings"
+                to="/profile"
                 onClick={() => setOpen(false)}
                 className="mb-6 flex items-center gap-3 rounded-lg border border-slate-mist bg-cream-linen p-3 dark:border-periwinkle-sky/40 dark:bg-secondary"
               >
