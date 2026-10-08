@@ -15,6 +15,7 @@ import {
   ToggleLeft,
   ToggleRight,
   ThumbsDown,
+  MessageCircle,
 } from "lucide-react";
 import {
   isLiked as checkLiked,
@@ -47,6 +48,18 @@ type Props = {
 
 const BUFFERING_DELAY_MS = 250;
 
+const renderTextWithLinks = (text: string) => {
+  if (!text) return text;
+  const urlRegex = /(https?:\/\/[^\s]+)/g;
+  const parts = text.split(urlRegex);
+  return parts.map((part, i) => {
+    if (part.match(urlRegex)) {
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cobalt-pop hover:underline" onClick={(e) => e.stopPropagation()}>{part}</a>;
+    }
+    return part;
+  });
+};
+
 const Timeline = memo(({ videoRef, active }: { videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean }) => {
   const [progress, setProgress] = useState(0);
 
@@ -75,6 +88,26 @@ const Timeline = memo(({ videoRef, active }: { videoRef: React.RefObject<HTMLVid
   );
 });
 
+const ProfileAvatar = memo(({ name, size = "h-8 w-8", textClass = "text-xs" }: { name: string, size?: string, textClass?: string }) => {
+  const [error, setError] = useState(false);
+  return (
+    <div className={`relative shrink-0 ${size} rounded-full overflow-hidden`}>
+      {!error ? (
+        <img
+          src={`https://love.viraly.wtf/profileImages/${name}.jpg`}
+          alt={name}
+          className="h-full w-full object-cover bg-muted"
+          onError={() => setError(true)}
+        />
+      ) : (
+        <div className={`ig-gradient-bg flex h-full w-full items-center justify-center font-bold text-white ${textClass}`}>
+          {name[0]?.toUpperCase()}
+        </div>
+      )}
+    </div>
+  );
+});
+
 export const ReelPlayer = memo(function ReelPlayer({
   reel,
   active,
@@ -95,6 +128,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   const [paused, setPaused] = useState(false);
   const [volume, setVolume] = useState(getVolume);
   const [showMenu, setShowMenu] = useState(false);
+  const [showComments, setShowComments] = useState(false);
   const [autoScroll, setAutoScrollState] = useState(true);
   const [isBuffering, setIsBuffering] = useState(false);
   const [volumeHovered, setVolumeHovered] = useState(false);
@@ -114,7 +148,9 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, [videoRatio]);
 
   const [isFav, setIsFav] = useState(false);
-
+  const showProfile = feedType !== "search";
+  const showCommentsBtn = feedType === "latest" || feedType?.startsWith("category_") || feedType?.startsWith("explore_");
+  
   const bufferingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const coinsAwarded = useRef(false);
   const holdTimer = useRef<number | null>(null);
@@ -411,9 +447,10 @@ export const ReelPlayer = memo(function ReelPlayer({
         onMouseEnter={onVolumeAreaEnter}
         onMouseLeave={onVolumeAreaLeave}
       >
-        <div
-          className="overflow-hidden transition-all duration-300 ease-out relative flex items-center justify-center touch-none cursor-pointer"
-          style={{ height: showVolumeSlider ? 88 : 0, width: 28 }}
+        {isDesktop && (
+          <div
+            className="overflow-hidden transition-all duration-300 ease-out relative flex items-center justify-center touch-none cursor-pointer"
+            style={{ height: showVolumeSlider ? 88 : 0, width: 28 }}
           onPointerDown={(e) => {
             e.stopPropagation();
             (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
@@ -464,6 +501,7 @@ export const ReelPlayer = memo(function ReelPlayer({
             style={{ bottom: 8 + (muted ? 0 : volume) * 72 - 6 }}
           />
         </div>
+        )}
         <button
           onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full hover:bg-white/20 transition-colors"
@@ -508,35 +546,34 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="overflow-y-auto">
               {/* Video details */}
               <div className="px-4 pt-2 pb-3 border-b border-border">
-                {showFollowButton ? (
-                  <Link
-                    to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-                    className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
-                  >
-                    <div className="ig-gradient-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                      {(reel.username || reel.source)[0]?.toUpperCase()}
+                {showProfile && (
+                  showFollowButton ? (
+                    <Link
+                      to="/creator/$username" 
+                      params={{ username: reel.username || reel.source }}
+                      className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <ProfileAvatar name={reel.username || reel.source} size="h-8 w-8" textClass="text-xs" />
+                      <span className="text-sm font-semibold text-card-foreground truncate">
+                        {reel.username || `${reel.source}_reels`}
+                      </span>
+                    </Link>
+                  ) : (
+                    <div className="flex items-center gap-3 mb-2 w-fit">
+                      <ProfileAvatar name={reel.username || reel.source} size="h-8 w-8" textClass="text-xs" />
+                      <span className="text-sm font-semibold text-card-foreground truncate">
+                        {reel.username || `${reel.source}_reels`}
+                      </span>
                     </div>
-                    <span className="text-sm font-semibold text-card-foreground truncate">
-                      {reel.username || `${reel.source}_reels`}
-                    </span>
-                  </Link>
-                ) : (
-                  <div className="flex items-center gap-3 mb-2 w-fit">
-                    <div className="ig-gradient-bg flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white">
-                      {(reel.username || reel.source)[0]?.toUpperCase()}
-                    </div>
-                    <span className="text-sm font-semibold text-card-foreground truncate">
-                      {reel.username || `${reel.source}_reels`}
-                    </span>
-                  </div>
+                  )
                 )}
                 {reel.title && <p className="text-sm text-card-foreground font-medium leading-snug">{reel.title}</p>}
-                {reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">{reel.description}</p>}
+                {showProfile && reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">{reel.description}</p>}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
+                  {showProfile && finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
                   {reel.views && <span>{formatCount(reel.views)} views</span>}
-                  {reel.likes && <span>{formatCount(reel.likes)} likes</span>}
-                  {reel.timeAgo && <span>{reel.timeAgo}</span>}
+                  {showProfile && reel.likes && <span>{formatCount(reel.likes)} likes</span>}
+                  {showProfile && reel.timeAgo && <span>{reel.timeAgo}</span>}
                 </div>
               </div>
               {/* Action buttons */}
@@ -575,35 +612,34 @@ export const ReelPlayer = memo(function ReelPlayer({
           <div className="relative w-64 rounded-2xl bg-popover border border-border shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 pointer-events-auto">
             {/* Video details */}
             <div className="px-4 py-3 border-b border-border bg-muted/30">
-              {showFollowButton ? (
-                <Link
-                  to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-                  className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
-                >
-                  <div className="ig-gradient-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-                    {(reel.username || reel.source)[0]?.toUpperCase()}
+              {showProfile && (
+                showFollowButton ? (
+                  <Link
+                    to="/creator/$username" 
+                    params={{ username: reel.username || reel.source }}
+                    className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
+                  >
+                    <ProfileAvatar name={reel.username || reel.source} size="h-9 w-9" textClass="text-sm" />
+                    <span className="text-sm font-semibold text-foreground truncate">
+                      {reel.username || `${reel.source}_reels`}
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="flex items-center gap-3 mb-2 w-fit">
+                    <ProfileAvatar name={reel.username || reel.source} size="h-9 w-9" textClass="text-sm" />
+                    <span className="text-sm font-semibold text-foreground truncate">
+                      {reel.username || `${reel.source}_reels`}
+                    </span>
                   </div>
-                  <span className="text-sm font-semibold text-foreground truncate">
-                    {reel.username || `${reel.source}_reels`}
-                  </span>
-                </Link>
-              ) : (
-                <div className="flex items-center gap-3 mb-2 w-fit">
-                  <div className="ig-gradient-bg flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-                    {(reel.username || reel.source)[0]?.toUpperCase()}
-                  </div>
-                  <span className="text-sm font-semibold text-foreground truncate">
-                    {reel.username || `${reel.source}_reels`}
-                  </span>
-                </div>
+                )
               )}
               {reel.title && <p className="text-sm text-foreground font-medium leading-snug">{reel.title}</p>}
-              {reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{reel.description}</p>}
+              {showProfile && reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{reel.description}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                {finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
+                {showProfile && finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
                 {reel.views && <span>· {formatCount(reel.views)} views</span>}
-                {reel.likes && <span>· {formatCount(reel.likes)} likes</span>}
-                {reel.timeAgo && <span>· {reel.timeAgo}</span>}
+                {showProfile && reel.likes && <span>· {formatCount(reel.likes)} likes</span>}
+                {showProfile && reel.timeAgo && <span>· {reel.timeAgo}</span>}
               </div>
             </div>
 
@@ -640,46 +676,45 @@ export const ReelPlayer = memo(function ReelPlayer({
   };
 
   // ── Profile info ──────────────────────────────────────────────────────────
-  const showFollowButton = feedType === "latest" || feedType?.startsWith("category");
+  const showFollowButton = feedType !== "offline" && reel.source !== "local" && showProfile;
 
   const ProfileInfo = ({ overlay }: { overlay: boolean }) => (
     <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
-      <div className="flex items-center gap-3 w-full max-w-full">
-        {showFollowButton ? (
-          <Link
-            to={`/creator/${encodeURIComponent(reel.username || reel.source)}` as any}
-            className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
-          >
-            <div className="ig-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-              {(reel.username || reel.source)[0]?.toUpperCase()}
+      {showProfile && (
+        <div className="flex items-center gap-3 w-full max-w-full">
+          {showFollowButton ? (
+            <Link
+              to="/creator/$username" 
+              params={{ username: reel.username || reel.source }}
+              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
+            >
+              <ProfileAvatar name={reel.username || reel.source} size="h-10 w-10" textClass="text-sm" />
+              <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+                {reel.username || `${reel.source}_reels`}
+              </span>
+            </Link>
+          ) : (
+            <div className="flex items-center gap-2 min-w-0 shrink">
+              <ProfileAvatar name={reel.username || reel.source} size="h-10 w-10" textClass="text-sm" />
+              <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+                {reel.username || `${reel.source}_reels`}
+              </span>
             </div>
-            <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
-              {reel.username || `${reel.source}_reels`}
-            </span>
-          </Link>
-        ) : (
-          <div className="flex items-center gap-2 min-w-0 shrink">
-            <div className="ig-gradient-bg flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold text-white">
-              {(reel.username || reel.source)[0]?.toUpperCase()}
-            </div>
-            <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
-              {reel.username || `${reel.source}_reels`}
-            </span>
-          </div>
-        )}
-        {showFollowButton && reel.source !== "local" && (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              const fav = toggleFavorite(reel.username || reel.source);
-              setIsFav(fav);
-            }}
-            className={`ml-1 shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-white/20 border-white/30 text-white hover:bg-white/30" : "bg-muted border-border text-foreground hover:bg-muted/80") : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90"}`}
-          >
-            {isFav ? "Following" : "Follow"}
-          </button>
-        )}
-      </div>
+          )}
+          {showFollowButton && reel.source !== "local" && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                const fav = toggleFavorite(reel.username || reel.source);
+                setIsFav(fav);
+              }}
+              className={`ml-1 shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-black/50 border-white/30 text-white hover:bg-black/60" : "bg-charcoal/10 border-charcoal/20 text-charcoal dark:bg-cream/10 dark:border-cream/20 dark:text-cream hover:opacity-80") : "bg-[#0095f6] border-[#0095f6] text-white hover:bg-[#0077c5]"}`}
+            >
+              {isFav ? "Following" : "Follow"}
+            </button>
+          )}
+        </div>
+      )}
       {reel.title && (
         <p className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}>
           {reel.title}
@@ -717,7 +752,7 @@ export const ReelPlayer = memo(function ReelPlayer({
           style={{
             height: "calc(100vh - 100px)",
             maxHeight: 850,
-            maxWidth: "calc(100vw - 200px)",
+            maxWidth: showComments && isDesktop ? "calc(100vw - 600px)" : "calc(100vw - 200px)",
             aspectRatio: videoRatio,
           }}
         >
@@ -770,6 +805,18 @@ export const ReelPlayer = memo(function ReelPlayer({
               </span>
             </button>
 
+            {/* Comments */}
+            {showCommentsBtn && (
+              <button onClick={() => setShowComments(!showComments)} className="flex flex-col items-center gap-1 group">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                  <MessageCircle className={`h-6 w-6 transition ${showComments ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={2} />
+                </div>
+                <span className="text-xs font-semibold text-foreground">
+                  {reel.comments?.length ? formatCount(reel.comments.length) : "Comment"}
+                </span>
+              </button>
+            )}
+
             {/* Share */}
             <button onClick={share} className="flex flex-col items-center gap-1 group">
               <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
@@ -796,13 +843,123 @@ export const ReelPlayer = memo(function ReelPlayer({
             </button>
           </div>
         )}
+
+        {/* Right — Comments Sidebar (Desktop) */}
+        {!isOffline && showComments && isDesktop && (
+          <div 
+            className="flex flex-col shrink-0 w-[350px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
+            style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
+          >
+            <div className="px-4 py-3 border-b border-border bg-muted/30 flex justify-between items-center">
+              <h3 className="font-bold text-foreground">Comments</h3>
+              <button onClick={() => setShowComments(false)} className="p-1.5 rounded-full hover:bg-muted text-foreground transition">
+                <span className="sr-only">Close</span>
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto p-4 flex-1">
+              {reel.comments?.map((c: any, i: number) => (
+                <MobileCommentItem key={i} c={c} />
+              ))}
+              {!reel.comments?.length && (
+                <div className="text-center text-muted-foreground py-8 text-sm">No comments yet.</div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     );
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-  // MOBILE LAYOUT
-  // Full-screen video with overlaid UI elements
+
+  const MobileCommentItem = ({ c, isReply }: { c: any, isReply?: boolean }) => {
+    const [showReplies, setShowReplies] = useState(false);
+  
+    return (
+      <div className="flex gap-3 mb-5 group">
+        <ProfileAvatar name={c.user || c.repliedUser || "unknown"} size="h-8 w-8 shrink-0" textClass="text-xs" />
+        <div className="flex-1 text-sm min-w-0">
+          <Link to="/creator/$username" params={{ username: c.user || c.repliedUser || "unknown" }} className="font-semibold text-card-foreground hover:underline mr-2">
+            {c.user || c.repliedUser}
+          </Link>
+          <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
+            {renderTextWithLinks(c.comment || c.reply || c.repliedComment)}
+          </span>
+          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
+            {c.likes > 0 && <span>{c.likes} likes</span>}
+          </div>
+          {c.replies?.length > 0 && (
+            <div className="mt-3 pl-2 border-l border-muted-foreground/20">
+              <button 
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
+              >
+                <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
+                {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
+              </button>
+              
+              {showReplies && (
+                <div className="mt-4 flex flex-col gap-4">
+                  {c.replies.map((r: any, idx: number) => (
+                    <MobileCommentItem key={idx} c={r} isReply={true} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {!isReply && (
+          <button className="self-center p-2 opacity-0 group-hover:opacity-100 transition">
+            <Heart className="w-3 h-3 text-muted-foreground hover:text-card-foreground" />
+          </button>
+        )}
+      </div>
+    );
+  };
+  
+  const CommentsModal = () => {
+    if (!showComments) return null;
+
+    return (
+      <>
+        {/* MOBILE Backdrop */}
+        <div
+          className="absolute inset-0 z-[200] bg-black/40 md:hidden backdrop-blur-sm"
+          onClick={() => setShowComments(false)}
+          onTouchEnd={() => setShowComments(false)}
+        />
+
+        {/* MOBILE: bottom sheet */}
+        <div
+          className="fixed inset-x-0 bottom-0 z-[201] md:hidden"
+          style={{ animation: "slideUp 0.22s cubic-bezier(0.32,0.72,0,1)" }}
+        >
+          <div className="w-full h-[60vh] flex flex-col rounded-t-2xl bg-card border-t border-border shadow-2xl">
+            {/* Drag handle */}
+            <div className="flex shrink-0 justify-center pt-2.5 pb-1" onClick={() => setShowComments(false)}>
+              <div className="h-[3px] w-9 rounded-full bg-muted-foreground/25" />
+            </div>
+            
+            <div className="px-4 py-2 border-b border-border flex justify-between items-center">
+              <h3 className="font-bold text-card-foreground">Comments</h3>
+              <span className="text-xs text-muted-foreground">{reel.comments?.length || 0} comments</span>
+            </div>
+
+            {/* Scrollable content */}
+            <div className="overflow-y-auto p-4 flex-1">
+              {reel.comments?.map((c: any, i: number) => (
+                <MobileCommentItem key={i} c={c} />
+              ))}
+              {!reel.comments?.length && (
+                <div className="text-center text-muted-foreground py-8 text-sm">No comments yet.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
   // ─────────────────────────────────────────────────────────────────────────
   const isOffline = feedType === "offline";
 
@@ -838,6 +995,16 @@ export const ReelPlayer = memo(function ReelPlayer({
             </span>
           </button>
 
+          {/* Comments */}
+          {showCommentsBtn && (
+            <button onClick={() => setShowComments(true)} className="flex flex-col items-center gap-1">
+              <MessageCircle className="h-8 w-8 text-white" strokeWidth={2} />
+              <span className="text-xs font-medium text-white drop-shadow">
+                {reel.comments?.length ? formatCount(reel.comments.length) : ""}
+              </span>
+            </button>
+          )}
+
           {/* Share */}
           <button onClick={share} className="flex flex-col items-center gap-1">
             <Share2 className="h-8 w-8 text-white" strokeWidth={2} />
@@ -859,8 +1026,11 @@ export const ReelPlayer = memo(function ReelPlayer({
         </div>
       )}
 
-      {/* MenuModal rendered at root level — outside overflow containers so it's never clipped */}
+      {/* MenuModal rendered at root level */}
       {!isOffline && <MenuModal />}
+      
+      {/* CommentsModal rendered at root level */}
+      {!isOffline && <CommentsModal />}
 
       {/* Bottom caption */}
       {!isOffline && (

@@ -14,6 +14,8 @@ export type Reel = {
   dislikes?: number;
   timeAgo?: string;
   username?: string;
+  creator_image?: string;
+  comments?: any[];
 };
 
 type XvideoItem = {
@@ -254,7 +256,7 @@ export const CATEGORIES = [
   "Ebony",
   "Interracial",
   "Amateur",
-  "Al",
+  "AI",
   "MILF",
   "Anal",
   "Mature",

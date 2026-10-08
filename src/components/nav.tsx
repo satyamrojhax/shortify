@@ -1,36 +1,40 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { Home, Film, Heart, Bookmark, Settings, ShoppingBag, BadgeCheck, Compass, PlaySquare, Menu, X, Mic, Instagram, WandSparkles, Users, Download, Clapperboard, Flame } from "lucide-react";
+import { Home, Film, Heart, Bookmark, Settings, ShoppingBag, BadgeCheck, Compass, PlaySquare, Menu, X, Mic, Instagram, WandSparkles, Users, Download, Clapperboard, Flame, GraduationCap, Wrench, AudioLines, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { hasUnlocked } from "@/lib/storage";
 import { useState } from "react";
 
-const bottomItems: { to: any; label: string; icon: LucideIcon }[] = [
+const CourseIcon = ({ className }: { className?: string; strokeWidth?: number }) => (
+  <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzMiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMyAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTcuMTY0MDYgNy45NTAyQzcuNDY3NjggNy45NTAyIDcuNzEzODcgOC4xOTYzOSA3LjcxMzg3IDguNUM3LjcxMzg3IDguODAzNjEgNy40Njc2OCA5LjA0OTggNy4xNjQwNiA5LjA0OThINi4xNjQwNkM1LjkxNTY4IDkuMDQ5OCA1LjcxMzg3IDkuMjUxNjEgNS43MTM4NyA5LjVWMjIuNUM1LjcxMzg3IDIyLjc0ODQgNS45MTU2OCAyMi45NTAyIDYuMTY0MDYgMjIuOTUwMkgyNy4xNjQxQzI3LjQxMjQgMjIuOTUwMiAyNy42MTQzIDIyLjc0ODQgMjcuNjE0MyAyMi41VjkuNUMyNy42MTQzIDkuMjUxNjEgMjcuNDEyNCA5LjA0OTggMjcuMTY0MSA5LjA0OThIMjYuMTY0MUMyNS44NjA0IDkuMDQ5OCAyNS42MTQzIDguODAzNjEgMjUuNjE0MyA4LjVDMjUuNjE0MyA4LjE5NjM5IDI1Ljg2MDQgNy45NTAyIDI2LjE2NDEgNy45NTAySDI3LjE2NDFDMjguMDE4NyA3Ljk1MDIgMjguNzEzOSA4LjY0NTM5IDI4LjcxMzkgOS41VjIyLjVDMjguNzEzOSAyMy4zNTQ2IDI4LjAxODcgMjQuMDQ5OCAyNy4xNjQxIDI0LjA0OThIMTguNzEzOVYyNi45NTAySDIxLjE2NDFDMjEuNDY3NyAyNi45NTAyIDIxLjcxMzkgMjcuMTk2NCAyMS43MTM5IDI3LjVDMjEuNzEzOSAyNy44MDM2IDIxLjQ2NzcgMjguMDQ5OCAyMS4xNjQxIDI4LjA0OThIMTIuMTY0MUMxMS44NjA0IDI4LjA0OTggMTEuNjE0MyAyNy44MDM2IDExLjYxNDMgMjcuNUMxMS42MTQzIDI3LjE5NjQgMTEuODYwNCAyNi45NTAyIDEyLjE2NDEgMjYuOTUwMkgxNC42MTQzVjI0LjA0OThINi4xNjQwNkM1LjMwOTQ1IDI0LjA0OTggNC42MTQyNiAyMy4zNTQ2IDQuNjE0MjYgMjIuNVY5LjVDNC42MTQyNiA4LjY0NTM5IDUuMzA5NDUgNy45NTAyIDYuMTY0MDYgNy45NTAySDcuMTY0MDZaTTE1LjcxMzkgMjYuOTUwMkgxNy42MTQzVjI0LjA0OThIMTUuNzEzOVYyNi45NTAyWiIgZmlsbD0iIzQxNDM0NyIgc3Ryb2tlPSIjNDE0MzQ3IiBzdHJva2Utd2lkdGg9IjAuMSIvPgo8cGF0aCBkPSJNMTYuNDMzNiA0LjAwMDk4QzE2LjU4IDMuOTMyNzMgMTYuNzQ5MSAzLjkzMjczIDE2Ljg5NTUgNC4wMDA5OEgxNi44OTQ1TDIzLjM5NDUgNy4wMDA5OEgyMy4zOTU1QzIzLjU5IDcuMDkxMjMgMjMuNzEzOSA3LjI4NjYyIDIzLjcxMzkgNy41MDA5OEMyMy43MTM3IDcuNzE1MyAyMy41ODkxIDcuOTA5OSAyMy4zOTM2IDhMMjEuNzEzOSA4Ljc3NTM5VjExLjQ0MzRDMjEuNzEzOSAxMS45ODk0IDIxLjQzMDEgMTIuNDk4MiAyMC45NzI3IDEyLjc3MjVDMTkuNTQ1MSAxMy42MjM0IDE4LjEwNTQgMTQuMDUwOCAxNi42NjQxIDE0LjA1MDhDMTUuMjIyNyAxNC4wNTA4IDEzLjc4MyAxMy42MjM0IDEyLjM1NTUgMTIuNzcyNUMxMS44OTggMTIuNDk4MiAxMS42MTQzIDExLjk4OTQgMTEuNjE0MyAxMS40NDM0VjguNzc1MzlMOS45MzQ1NyA4QzkuNzM4OTkgNy45MDk5IDkuNjE0NDQgNy43MTUzIDkuNjE0MjYgNy41MDA5OEM5LjYxNDI2IDcuMjg2NDcgOS43Mzg4NCA3LjA5MTE0IDkuOTM0NTcgNy4wMDA5OEwxNi40MzM2IDQuMDAwOThaTTE2Ljg5MzYgMTAuOTk5QzE2LjgyMDYgMTEuMDMzMiAxNi43NDE5IDExLjA1MDggMTYuNjY0MSAxMS4wNTA4QzE2LjU4NjEgMTEuMDUwOCAxNi41MDY2IDExLjAzNDMgMTYuNDMzNiAxMUwxMi43MTM5IDkuMjgyMjNWMTEuNDQzNEMxMi43MTM5IDExLjYwMzYgMTIuNzk2NyAxMS43NTQxIDEyLjkxOTkgMTEuODI3MUMxNC4xODIyIDEyLjU3OTkgMTUuNDIzOSAxMi45NTUxIDE2LjY2NDEgMTIuOTU1MUMxNy45MDQyIDEyLjk1NTEgMTkxLjQ2IDEyLjU3OTkgMjAuNDA4MiAxMS44MjcxQzIwLjUzMTQgMTEuNzU0MSAyMC42MTQzIDExLjYwMzYgMjAuNjE0MyAxMS40NDM0VjkuMjgyMjNMMTYuODkzNiAxMC45OTlaTTExLjQ3NTYgNy41TDE2LjY2NDEgOS44OTQ1M0wyMS44NTE2IDcuNUwxNi42NjQxIDUuMTA1NDdMMTEuNDc1NiA3LjVaIiBmaWxsPSIjNjE3MkYzIiBzdHJva2U9IiM2MTcyRjMiIHN0cm9rZS13aWR0aD0iMC4xIi8+Cjwvc3ZnPgo=" alt="Courses" className={className} />
+);
+
+const bottomItems: { to: any; label: string; icon: any }[] = [
   { to: "/home", label: "home", icon: Home },
-  { to: "/reels", label: "reels", icon: Clapperboard },
-  { to: "/skills", label: "skills", icon: Compass },
-  { to: "/my-courses", label: "courses", icon: PlaySquare },
+  { to: "/explore", label: "search", icon: Search },
+  { to: "/reels", label: "reels", icon: PlaySquare },
+  { to: "/skills", label: "skills", icon: Wrench },
   { to: "/settings", label: "settings", icon: Settings },
 ];
 
-const sidebarItems: { to: any; label: string; icon: LucideIcon }[] = [
+const sidebarItems: { to: any; label: string; icon: any }[] = [
   { to: "/home", label: "home", icon: Home },
+  { to: "/reels", label: "reels", icon: PlaySquare },
   { to: "/category", label: "instant reels", icon: Flame },
-  { to: "/reels", label: "reels", icon: Clapperboard },
-  { to: "/favorites", label: "favorites", icon: Users },
-  { to: "/skills", label: "skills", icon: Compass },
-  { to: "/english-course", label: "speaking", icon: Mic },
-  { to: "/my-courses", label: "my courses", icon: PlaySquare },
+  { to: "/explore", label: "search", icon: Search },
+  { to: "/skills", label: "skills", icon: Wrench },
+  { to: "/english-course", label: "speaking", icon: AudioLines },
+  { to: "/my-courses", label: "my courses", icon: CourseIcon },
   { to: "/settings", label: "settings", icon: Settings },
 ];
 
 const allItems = [
   { to: "/home", label: "home", icon: Home },
+  { to: "/reels", label: "reels", icon: PlaySquare },
   { to: "/category", label: "instant reels", icon: Flame },
-  { to: "/reels", label: "reels", icon: Clapperboard },
-  { to: "/skills", label: "skills", icon: Compass },
-  { to: "/english-course", label: "speaking", icon: Mic },
-  { to: "/my-courses", label: "my courses", icon: PlaySquare },
-  { to: "/favorites", label: "favorites", icon: Users },
+  { to: "/explore", label: "search", icon: Search },
+  { to: "/skills", label: "skills", icon: Wrench },
+  { to: "/english-course", label: "speaking", icon: AudioLines },
+  { to: "/my-courses", label: "my courses", icon: CourseIcon },
   { to: "/settings", label: "settings", icon: Settings },
 ];
 

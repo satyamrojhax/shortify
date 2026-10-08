@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Link } from "@tanstack/react-router"; 
+import { Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme, type Theme } from "@/hooks/use-theme";
@@ -11,6 +11,7 @@ import {
   set,
   setLiked,
   setSaved,
+  getFavorites,
   setFavorites,
   getCoins,
   hasUnlocked,
@@ -33,7 +34,8 @@ import {
   Gift,
   Heart,
   Bookmark,
-  ShoppingBag
+  ShoppingBag,
+  Users
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -50,6 +52,7 @@ function SettingsPage() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [likedCount, setLikedCount] = useState(0);
   const [savedCount, setSavedCount] = useState(0);
+  const [favoritesCount, setFavoritesCount] = useState(0);
   const [watched, setWatched] = useState(0);
   const [coins, setCoins] = useState(0);
   const [randomMode, setRandomModeState] = useState(false);
@@ -58,6 +61,7 @@ function SettingsPage() {
     if (!hydrated) return;
     setLikedCount(getLiked().length);
     setSavedCount(getSaved().length);
+    setFavoritesCount(getFavorites().length);
     setWatched(get<number>(KEYS.watched, 0));
     setCoins(getCoins());
     setRandomModeState(getRandomMode());
@@ -153,11 +157,10 @@ function SettingsPage() {
               <button
                 key={t.key}
                 onClick={() => setTheme(t.key)}
-                className={`flex flex-col items-center gap-2 rounded-lg border-[1.5px] px-3 py-4 text-sm lowercase transition ${
-                  active
-                    ? "border-charcoal bg-dew font-medium text-cocoa dark:border-cream dark:bg-secondary dark:text-cream"
-                    : "border-charcoal/30 text-charcoal/70 hover:bg-dew dark:border-cream/30 dark:text-cream/70 dark:hover:bg-secondary"
-                }`}
+                className={`flex flex-col items-center gap-2 rounded-lg border-[1.5px] px-3 py-4 text-sm lowercase transition ${active
+                  ? "border-charcoal bg-dew font-medium text-cocoa dark:border-cream dark:bg-secondary dark:text-cream"
+                  : "border-charcoal/30 text-charcoal/70 hover:bg-dew dark:border-cream/30 dark:text-cream/70 dark:hover:bg-secondary"
+                  }`}
               >
                 <Icon className="h-5 w-5" />
                 {t.label}
@@ -204,14 +207,12 @@ function SettingsPage() {
                 setRandomModeState(next);
                 setRandomMode(next);
               }}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                randomMode ? "bg-marker" : "bg-charcoal/20 dark:bg-cream/20"
-              }`}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${randomMode ? "bg-marker" : "bg-charcoal/20 dark:bg-cream/20"
+                }`}
             >
               <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  randomMode ? "translate-x-6" : "translate-x-1"
-                }`}
+                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${randomMode ? "translate-x-6" : "translate-x-1"
+                  }`}
               />
             </button>
           </div>
@@ -305,9 +306,24 @@ function SettingsPage() {
           </div>
           <Bookmark className="h-5 w-5 text-cocoa dark:text-cream" />
         </Link>
+
+        <Link
+          to="/favorites"
+          className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
+        >
+          <div>
+            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
+              favorites
+            </div>
+            <div className="text-sm text-charcoal/70 dark:text-cream/70">
+              view your {favoritesCount} favorite creators.
+            </div>
+          </div>
+          <Users className="h-5 w-5 text-cocoa dark:text-cream" />
+        </Link>
       </section>
 
-      {/* Skills & Earnings */}
+      {/*Earnings */}
       <section className="mt-4">
         <Link
           to="/redeem"
@@ -315,7 +331,7 @@ function SettingsPage() {
         >
           <div>
             <div className="font-display text-lg lowercase text-magenta-haze dark:text-periwinkle-sky">
-              skills & earnings
+              earnings
             </div>
             <div className="text-sm text-charcoal/70 dark:text-cream/70">
               you have {coins} coins. redeem them for rewards.
@@ -403,6 +419,7 @@ function SettingsPage() {
                   set(KEYS.coins, 0);
                   setLikedCount(0);
                   setSavedCount(0);
+                  setFavoritesCount(0);
                   setWatched(0);
                   setCoins(0);
                   setShowResetConfirm(false);

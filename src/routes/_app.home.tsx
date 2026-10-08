@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { Play, Compass, Heart, Settings, Sparkles, Mic, WandSparkles, Clapperboard, Flame } from "lucide-react";
+import { Play, Compass, Heart, Settings, Sparkles, Mic, WandSparkles, PlaySquare, Flame, Wrench, AudioLines } from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -25,7 +25,7 @@ function HomePage() {
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link to="/reels" className="btn-pill">
-            <Clapperboard className="h-4 w-4" strokeWidth={2.25} />
+            <PlaySquare className="h-4 w-4" strokeWidth={2.25} />
             watch reels
           </Link>
           <Link to="/category" className="btn-pill">
@@ -33,11 +33,11 @@ function HomePage() {
             instant reels
           </Link>
           <Link to="/skills" className="btn-pill">
-            <Compass className="h-4 w-4" strokeWidth={2.25} />
+            <Wrench className="h-4 w-4" strokeWidth={2.25} />
             learn skills
           </Link>
           <Link to="/english-course" className="btn-pill">
-            <Mic className="h-4 w-4" strokeWidth={2.25} />
+            <AudioLines className="h-4 w-4" strokeWidth={2.25} />
             speaking
           </Link>
         </div>

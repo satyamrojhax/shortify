@@ -302,7 +302,7 @@ function CategoryPage() {
                 onToggleMute={toggleMute}
                 onEnded={handleReelEnd}
                 onWatched={bumpWatched}
-                feedType={filter}
+                feedType={`category_${filter}`}
               />
             ) : (
               <div key={`ph::${r.id}`} className="h-full w-full bg-background">

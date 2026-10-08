@@ -18,6 +18,7 @@ import { Route as PinSetupRouteImport } from './routes/pin-setup'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
 import { Route as AppCategoryRouteImport } from './routes/_app.category'
 import { Route as AppDownloadedRouteImport } from './routes/_app.downloaded'
+import { Route as AppExploreRouteImport } from './routes/_app.explore'
 import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
@@ -26,6 +27,7 @@ import { Route as AppMyCoursesRouteImport } from './routes/_app.my-courses'
 import { Route as AppRedeemRouteImport } from './routes/_app.redeem'
 import { Route as AppReelsRouteImport } from './routes/_app.reels'
 import { Route as AppSavedRouteImport } from './routes/_app.saved'
+import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShopRouteImport } from './routes/_app.shop'
 import { Route as AppSkillsRouteImport } from './routes/_app.skills'
@@ -78,6 +80,11 @@ const AppDownloadedRoute = AppDownloadedRouteImport.update({
   path: '/downloaded',
   getParentRoute: () => AppRoute,
 } as any)
+const AppExploreRoute = AppExploreRouteImport.update({
+  id: '/explore',
+  path: '/explore',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFavoritesRoute = AppFavoritesRouteImport.update({
   id: '/favorites',
   path: '/favorites',
@@ -116,6 +123,11 @@ const AppReelsRoute = AppReelsRouteImport.update({
 const AppSavedRoute = AppSavedRouteImport.update({
   id: '/saved',
   path: '/saved',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSearchRoute = AppSearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => AppRoute,
 } as any)
 const AppSettingsRoute = AppSettingsRouteImport.update({
@@ -164,6 +176,7 @@ export interface FileRoutesByFullPath {
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
   '/downloaded': typeof AppDownloadedRoute
+  '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
@@ -172,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/redeem': typeof AppRedeemRoute
   '/reels': typeof AppReelsRoute
   '/saved': typeof AppSavedRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
@@ -189,6 +203,7 @@ export interface FileRoutesByTo {
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
   '/downloaded': typeof AppDownloadedRoute
+  '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
@@ -197,6 +212,7 @@ export interface FileRoutesByTo {
   '/redeem': typeof AppRedeemRoute
   '/reels': typeof AppReelsRoute
   '/saved': typeof AppSavedRoute
+  '/search': typeof AppSearchRoute
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
@@ -216,6 +232,7 @@ export interface FileRoutesById {
   '/_app/about': typeof AppAboutRoute
   '/_app/category': typeof AppCategoryRoute
   '/_app/downloaded': typeof AppDownloadedRoute
+  '/_app/explore': typeof AppExploreRoute
   '/_app/favorites': typeof AppFavoritesRoute
   '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
@@ -224,6 +241,7 @@ export interface FileRoutesById {
   '/_app/redeem': typeof AppRedeemRoute
   '/_app/reels': typeof AppReelsRoute
   '/_app/saved': typeof AppSavedRoute
+  '/_app/search': typeof AppSearchRoute
   '/_app/settings': typeof AppSettingsRoute
   '/_app/shop': typeof AppShopRoute
   '/_app/skills': typeof AppSkillsRoute
@@ -243,6 +261,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/category'
     | '/downloaded'
+    | '/explore'
     | '/favorites'
     | '/history'
     | '/home'
@@ -251,6 +270,7 @@ export interface FileRouteTypes {
     | '/redeem'
     | '/reels'
     | '/saved'
+    | '/search'
     | '/settings'
     | '/shop'
     | '/skills'
@@ -268,6 +288,7 @@ export interface FileRouteTypes {
     | '/about'
     | '/category'
     | '/downloaded'
+    | '/explore'
     | '/favorites'
     | '/history'
     | '/home'
@@ -276,6 +297,7 @@ export interface FileRouteTypes {
     | '/redeem'
     | '/reels'
     | '/saved'
+    | '/search'
     | '/settings'
     | '/shop'
     | '/skills'
@@ -294,6 +316,7 @@ export interface FileRouteTypes {
     | '/_app/about'
     | '/_app/category'
     | '/_app/downloaded'
+    | '/_app/explore'
     | '/_app/favorites'
     | '/_app/history'
     | '/_app/home'
@@ -302,6 +325,7 @@ export interface FileRouteTypes {
     | '/_app/redeem'
     | '/_app/reels'
     | '/_app/saved'
+    | '/_app/search'
     | '/_app/settings'
     | '/_app/shop'
     | '/_app/skills'
@@ -385,6 +409,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppDownloadedRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/explore': {
+      id: '/_app/explore'
+      path: '/explore'
+      fullPath: '/explore'
+      preLoaderRoute: typeof AppExploreRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/favorites': {
       id: '/_app/favorites'
       path: '/favorites'
@@ -439,6 +470,13 @@ declare module '@tanstack/react-router' {
       path: '/saved'
       fullPath: '/saved'
       preLoaderRoute: typeof AppSavedRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/search': {
+      id: '/_app/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof AppSearchRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/settings': {
@@ -497,6 +535,7 @@ interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppCategoryRoute: typeof AppCategoryRoute
   AppDownloadedRoute: typeof AppDownloadedRoute
+  AppExploreRoute: typeof AppExploreRoute
   AppFavoritesRoute: typeof AppFavoritesRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
@@ -505,6 +544,7 @@ interface AppRouteChildren {
   AppRedeemRoute: typeof AppRedeemRoute
   AppReelsRoute: typeof AppReelsRoute
   AppSavedRoute: typeof AppSavedRoute
+  AppSearchRoute: typeof AppSearchRoute
   AppSettingsRoute: typeof AppSettingsRoute
   AppShopRoute: typeof AppShopRoute
   AppSkillsRoute: typeof AppSkillsRoute
@@ -518,6 +558,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppAboutRoute: AppAboutRoute,
   AppCategoryRoute: AppCategoryRoute,
   AppDownloadedRoute: AppDownloadedRoute,
+  AppExploreRoute: AppExploreRoute,
   AppFavoritesRoute: AppFavoritesRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
@@ -526,6 +567,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppRedeemRoute: AppRedeemRoute,
   AppReelsRoute: AppReelsRoute,
   AppSavedRoute: AppSavedRoute,
+  AppSearchRoute: AppSearchRoute,
   AppSettingsRoute: AppSettingsRoute,
   AppShopRoute: AppShopRoute,
   AppSkillsRoute: AppSkillsRoute,

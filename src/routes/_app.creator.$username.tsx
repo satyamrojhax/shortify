@@ -5,7 +5,7 @@ import { fetchCreatorReelsPage, type Reel } from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
 import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite } from "@/lib/storage";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
-import { AlertTriangle, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Play, Heart, ImageOff } from "lucide-react";
+import { AlertTriangle, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Play, Heart, ImageOff, MessageCircle } from "lucide-react";
 
 export const Route = createFileRoute("/_app/creator/$username")({
   component: CreatorPage,
@@ -247,8 +247,8 @@ function CreatorPage() {
         <div className="flex flex-col items-center w-full max-w-lg mt-2">
           {/* Avatar with gradient border */}
           <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-tr from-cobalt-pop via-periwinkle-sky to-magenta-haze p-1 shadow-xl">
-            <div className="h-full w-full rounded-full bg-background flex items-center justify-center border-[4px] border-background">
-               <span className="text-4xl font-black uppercase text-foreground">{username?.[0]}</span>
+            <div className="h-full w-full rounded-full bg-background flex items-center justify-center border-[4px] border-background overflow-hidden">
+               <CreatorProfileImage username={username!} />
             </div>
           </div>
           
@@ -367,10 +367,14 @@ function CreatorPage() {
 
                 {/* PC Hover Overlay: Likes & Title */}
                 <div className="absolute inset-0 hidden md:flex flex-col p-3 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none z-10">
-                  <div className="flex-1 flex items-center justify-center">
-                    <div className="flex items-center gap-1.5 text-white font-bold text-base drop-shadow-lg">
-                      <Heart className="h-5 w-5 fill-white" />
+                  <div className="flex-1 flex flex-wrap gap-4 items-center justify-center p-2">
+                    <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
+                      <Heart className="h-4 w-4 md:h-5 md:w-5 fill-white" />
                       <span>{reel.likes ? formatViews(reel.likes) : "0"}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
+                      <MessageCircle className="h-4 w-4 md:h-5 md:w-5 fill-white" />
+                      <span>{reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}</span>
                     </div>
                   </div>
                   {reel.title && (
@@ -434,6 +438,26 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
             setLoaded(true);
           }
         }}
+      />
+    </>
+  );
+}
+
+function CreatorProfileImage({ username }: { username: string }) {
+  const [error, setError] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  if (error) {
+    return <span className="text-4xl font-black uppercase text-foreground">{username?.[0]}</span>;
+  }
+  return (
+    <>
+      {!loaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
+      <img
+        src={`https://love.viraly.wtf/profileImages/${username}.jpg`}
+        alt={username}
+        className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
+        onError={() => setError(true)}
+        onLoad={() => setLoaded(true)}
       />
     </>
   );
