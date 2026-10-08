@@ -104,7 +104,9 @@ export function subscribeOffline(listener: () => void): () => void {
 export async function getAllOfflineMeta(): Promise<OfflineMeta[]> {
   const db = await getDb();
   const metas = await reqToPromise(
-    db.transaction(META_STORE, "readonly").objectStore(META_STORE).getAll() as IDBRequest<OfflineMeta[]>,
+    db.transaction(META_STORE, "readonly").objectStore(META_STORE).getAll() as IDBRequest<
+      OfflineMeta[]
+    >,
   );
   urlIndex = new Set(metas.map((m) => m.url));
   return metas;

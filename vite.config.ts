@@ -42,6 +42,15 @@ function videoProxyDev(): Plugin {
 }
 
 export default defineConfig({
+  server: {
+    proxy: {
+      '/shortify': {
+        target: 'https://mcrhjyszrxbtiizhgacn.supabase.co',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/shortify/, '')
+      }
+    }
+  },
   plugins: [TanStackRouterVite(), react(), tailwindcss(), videoProxyDev()],
   // Vite 8+ natively supports tsconfig path aliases — no plugin needed
   resolve: {

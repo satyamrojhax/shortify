@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { get, set } from "@/lib/storage";
 
 export type EnrolledCourse = {
   slug: string;
@@ -13,10 +14,8 @@ export function useEnrolledCourses() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem("enrolled_courses");
-      if (stored) {
-        setEnrolled(JSON.parse(stored));
-      }
+      const stored = get<EnrolledCourse[]>("enrolled_courses", []);
+      setEnrolled(stored);
     } catch (e) {
       console.error("Failed to parse enrolled courses", e);
     }
@@ -25,7 +24,7 @@ export function useEnrolledCourses() {
   const enroll = (course: EnrolledCourse) => {
     const newEnrolled = [...enrolled, course];
     setEnrolled(newEnrolled);
-    localStorage.setItem("enrolled_courses", JSON.stringify(newEnrolled));
+    set("enrolled_courses", newEnrolled);
   };
 
   const isEnrolled = (slug: string) => {
@@ -35,7 +34,7 @@ export function useEnrolledCourses() {
   const unenroll = (slug: string) => {
     const newEnrolled = enrolled.filter((c) => c.slug !== slug);
     setEnrolled(newEnrolled);
-    localStorage.setItem("enrolled_courses", JSON.stringify(newEnrolled));
+    set("enrolled_courses", newEnrolled);
   };
 
   return { enrolled, enroll, unenroll, isEnrolled };

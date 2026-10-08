@@ -144,9 +144,7 @@ function DownloadedPage() {
     getLocalCatalog()
       .then(setCatalog)
       .catch((e: unknown) =>
-        setCatalogError(
-          e instanceof Error ? e.message : "Could not load the reels database.",
-        ),
+        setCatalogError(e instanceof Error ? e.message : "Could not load the reels database."),
       );
   };
 
@@ -171,13 +169,17 @@ function DownloadedPage() {
   const totalCount = catalog?.length ?? null;
   const percent = totalCount ? Math.min(100, (items.length / totalCount) * 100) : 0;
 
-  const estimate = useStorageEstimate(Math.floor(items.length / 5) + (dl.status === "idle" ? 0 : 1));
+  const estimate = useStorageEstimate(
+    Math.floor(items.length / 5) + (dl.status === "idle" ? 0 : 1),
+  );
   const freeBytes = estimate ? Math.max(0, estimate.quota - estimate.usage) : null;
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 md:py-10">
       <div className="mb-6 md:mb-8">
-        <p className="font-display text-marker text-lg md:text-xl lowercase italic opacity-80">your offline collection —</p>
+        <p className="font-display text-marker text-lg md:text-xl lowercase italic opacity-80">
+          your offline collection —
+        </p>
         <h1 className="mt-1 font-display text-[40px] sm:text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
           downloaded <span className="text-marker">({items.length})</span>
         </h1>
@@ -261,14 +263,20 @@ function StatTile(props: {
   return (
     <div className="group relative overflow-hidden rounded-3xl border border-border/10 bg-card p-5 transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:border-cobalt-pop/30 dark:bg-card/50 dark:backdrop-blur-sm">
       <div className="absolute -right-6 -top-6 h-32 w-32 rounded-full bg-gradient-to-br from-transparent to-black/5 opacity-0 transition-opacity duration-500 group-hover:opacity-100 dark:to-white/5" />
-      <div className={`relative flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 ${TONES[props.tone]}`}>
+      <div
+        className={`relative flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm transition-transform duration-300 group-hover:scale-110 ${TONES[props.tone]}`}
+      >
         {props.icon}
       </div>
       <div className="relative mt-5 text-3xl font-black tabular-nums tracking-tight text-foreground md:text-4xl lg:text-[40px]">
         {props.value}
       </div>
-      <div className="relative mt-2 text-xs font-bold uppercase tracking-wider text-foreground/70">{props.label}</div>
-      <div className="relative mt-1 truncate text-[12px] font-medium text-muted-foreground">{props.hint}</div>
+      <div className="relative mt-2 text-xs font-bold uppercase tracking-wider text-foreground/70">
+        {props.label}
+      </div>
+      <div className="relative mt-1 truncate text-[12px] font-medium text-muted-foreground">
+        {props.hint}
+      </div>
     </div>
   );
 }
@@ -296,7 +304,9 @@ function TabButton(props: {
       {props.count != null && (
         <span
           className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] sm:text-[11px] font-bold tabular-nums transition-colors duration-300 ${
-            props.active ? "bg-black/10 text-black dark:bg-cocoa/10 dark:text-cocoa" : "bg-foreground/10 text-foreground"
+            props.active
+              ? "bg-black/10 text-black dark:bg-cocoa/10 dark:text-cocoa"
+              : "bg-foreground/10 text-foreground"
           }`}
         >
           {nf.format(props.count)}
@@ -306,7 +316,15 @@ function TabButton(props: {
   );
 }
 
-function ProgressBar({ value, tone = "bg-cobalt-pop", indeterminate }: { value: number; tone?: string; indeterminate?: boolean }) {
+function ProgressBar({
+  value,
+  tone = "bg-cobalt-pop",
+  indeterminate,
+}: {
+  value: number;
+  tone?: string;
+  indeterminate?: boolean;
+}) {
   return (
     <div className="relative h-2.5 overflow-hidden rounded-full bg-muted">
       <div
@@ -315,9 +333,7 @@ function ProgressBar({ value, tone = "bg-cobalt-pop", indeterminate }: { value: 
         }`}
         style={indeterminate ? undefined : { width: `${Math.max(0, Math.min(100, value))}%` }}
       />
-      {indeterminate && (
-        <div className="absolute inset-0 bg-white/20 shimmer-effect" />
-      )}
+      {indeterminate && <div className="absolute inset-0 bg-white/20 shimmer-effect" />}
     </div>
   );
 }
@@ -433,7 +449,9 @@ function DownloadTab({
                     : "border-border/15 hover:border-cobalt-pop/50 hover:bg-muted"
                 }`}
               >
-                <div className="text-lg sm:text-xl font-bold tabular-nums text-foreground">{big}</div>
+                <div className="text-lg sm:text-xl font-bold tabular-nums text-foreground">
+                  {big}
+                </div>
                 <div className="text-[10px] sm:text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
                   {small}
                 </div>
@@ -496,7 +514,11 @@ function DownloadTab({
             className="inline-flex items-center justify-center gap-2 rounded-full bg-cobalt-pop px-6 py-3 text-sm font-bold text-white shadow-md transition hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
           >
             <Download className="h-4 w-4" />
-            {busy ? "Download in progress" : count > 0 ? `Download ${nf.format(count)}` : "Download"}
+            {busy
+              ? "Download in progress"
+              : count > 0
+                ? `Download ${nf.format(count)}`
+                : "Download"}
           </button>
         </div>
       </section>
@@ -782,7 +804,10 @@ function LibraryTab({
         >
           <Download className="h-4 w-4" /> Start downloading
         </button>
-        <Link to="/reels" className="mt-3 text-xs font-medium text-muted-foreground hover:underline">
+        <Link
+          to="/reels"
+          className="mt-3 text-xs font-medium text-muted-foreground hover:underline"
+        >
           or browse reels online
         </Link>
       </div>
@@ -882,7 +907,10 @@ function LibraryTab({
                 </div>
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); removeOne(r); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  removeOne(r);
+                }}
                 className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border border-cream bg-charcoal/70 text-cream backdrop-blur z-10"
                 aria-label="Remove"
               >
@@ -957,7 +985,10 @@ function LazyThumb({ url }: { url: string }) {
           />
           {duration !== null && (
             <div className="absolute left-2 top-2 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white z-10 pointer-events-none backdrop-blur-sm">
-              {Math.floor(duration / 60)}:{(Math.floor(duration % 60)).toString().padStart(2, "0")}
+              {Math.floor(duration / 60)}:
+              {Math.floor(duration % 60)
+                .toString()
+                .padStart(2, "0")}
             </div>
           )}
         </>

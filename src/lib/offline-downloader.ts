@@ -120,7 +120,18 @@ function buildSnapshot(): DownloadState {
     etaSeconds = Math.round((remaining * (elapsed / completed)) / 1000);
   }
 
-  return { status, total, completed, failed, bytes, speedBps, etaSeconds, active, message, autoPaused };
+  return {
+    status,
+    total,
+    completed,
+    failed,
+    bytes,
+    speedBps,
+    etaSeconds,
+    active,
+    message,
+    autoPaused,
+  };
 }
 
 function publish(immediate = false) {

@@ -13,6 +13,24 @@ function apply(t: Theme) {
   document.documentElement.classList.toggle("dark", isDark);
   document.documentElement.classList.toggle("neon", t === "neon");
   document.documentElement.classList.toggle("matrix", t === "matrix");
+
+  const bgColor = isDark
+    ? t === "neon"
+      ? "#0d0221"
+      : t === "matrix"
+        ? "#000000"
+        : "#0a0a3a"
+    : "#fffcef";
+
+  document.documentElement.style.backgroundColor = bgColor;
+  if (document.body) {
+    document.body.style.backgroundColor = bgColor;
+  }
+
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+  if (metaThemeColor) {
+    metaThemeColor.setAttribute("content", bgColor);
+  }
 }
 
 export function useTheme() {

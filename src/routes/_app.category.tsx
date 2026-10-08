@@ -213,7 +213,11 @@ function CategoryPage() {
       <div className="relative h-[100dvh] w-full bg-background overflow-hidden flex items-center justify-center">
         <div className="flex gap-2">
           {[0, 150, 300].map((d) => (
-            <div key={d} className="h-3 w-3 animate-bounce rounded-full bg-foreground shadow-lg" style={{ animationDelay: `${d}ms` }} />
+            <div
+              key={d}
+              className="h-3 w-3 animate-bounce rounded-full bg-foreground shadow-lg"
+              style={{ animationDelay: `${d}ms` }}
+            />
           ))}
         </div>
       </div>
@@ -243,8 +247,17 @@ function CategoryPage() {
             ))}
           </select>
           <div className="pointer-events-none absolute right-3 flex items-center justify-center text-foreground/70">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-              <path d="m6 9 6 6 6-6"/>
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="m6 9 6 6 6-6" />
             </svg>
           </div>
         </div>
@@ -278,57 +291,65 @@ function CategoryPage() {
         ref={containerRef}
         className="no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-scroll"
       >
+        {reels.map((r, i) => {
+          const near = Math.abs(i - activeIdx) <= 3;
+          const composite = `reel::${r.source}::${r.id}::${i}`;
+          return (
+            <section
+              key={composite}
+              data-idx={i}
+              data-reel-id={r.id}
+              ref={(el) => {
+                slideRefs.current[i] = el;
+              }}
+              className="relative h-[100dvh] w-full snap-start snap-always"
+            >
+              {near ? (
+                <ReelPlayer
+                  key={`player::${r.id}`}
+                  reel={r}
+                  active={i === activeIdx}
+                  distance={Math.abs(i - activeIdx)}
+                  muted={muted}
+                  onToggleMute={toggleMute}
+                  onEnded={handleReelEnd}
+                  onWatched={bumpWatched}
+                  feedType={`category_${filter}`}
+                />
+              ) : (
+                <div key={`ph::${r.id}`} className="h-full w-full bg-background">
+                  {r.thumbnail && (
+                    <img
+                      src={r.thumbnail}
+                      alt=""
+                      className="h-full w-full object-cover opacity-40"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
 
-      {reels.map((r, i) => {
-        const near = Math.abs(i - activeIdx) <= 3;
-        const composite = `reel::${r.source}::${r.id}::${i}`;
-        return (
-          <section
-            key={composite}
-            data-idx={i}
-            data-reel-id={r.id}
-            ref={(el) => {
-              slideRefs.current[i] = el;
-            }}
-            className="relative h-[100dvh] w-full snap-start snap-always"
-          >
-            {near ? (
-              <ReelPlayer
-                key={`player::${r.id}`}
-                reel={r}
-                active={i === activeIdx}
-                distance={Math.abs(i - activeIdx)}
-                muted={muted}
-                onToggleMute={toggleMute}
-                onEnded={handleReelEnd}
-                onWatched={bumpWatched}
-                feedType={`category_${filter}`}
+        {isFetchingNextPage && (
+          <div className="flex h-24 items-center justify-center bg-background">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "0ms" }}
               />
-            ) : (
-              <div key={`ph::${r.id}`} className="h-full w-full bg-background">
-                {r.thumbnail && (
-                  <img
-                    src={r.thumbnail}
-                    alt=""
-                    className="h-full w-full object-cover opacity-40"
-                    loading="lazy"
-                  />
-                )}
-              </div>
-            )}
-          </section>
-        );
-      })}
-
-      {isFetchingNextPage && (
-        <div className="flex h-24 items-center justify-center bg-background">
-          <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "0ms" }} />
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "150ms" }} />
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "300ms" }} />
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "150ms" }}
+              />
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "300ms" }}
+              />
+            </div>
           </div>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

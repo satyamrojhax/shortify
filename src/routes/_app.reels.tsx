@@ -1,12 +1,40 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useInfiniteQuery, useQueryClient, type InfiniteData, useQuery } from "@tanstack/react-query";
+import {
+  useInfiniteQuery,
+  useQueryClient,
+  type InfiniteData,
+  useQuery,
+} from "@tanstack/react-query";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { fetchReelsPage, warmAllFilters, CATEGORIES, type Reel, type FeedFilter } from "@/lib/reels";
+import {
+  fetchReelsPage,
+  warmAllFilters,
+  CATEGORIES,
+  type Reel,
+  type FeedFilter,
+} from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
-import { KEYS, get, set, getCoins, getAutoScroll, getLiked, getSaved, getHistory } from "@/lib/storage";
+import {
+  KEYS,
+  get,
+  set,
+  getCoins,
+  getAutoScroll,
+  getLiked,
+  getSaved,
+  getHistory,
+} from "@/lib/storage";
 import { warmCacheOnStartup } from "@/lib/video-cache";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
-import { AlertTriangle, RefreshCw, RotateCcw, X, Coins, ChevronUp, ChevronDown } from "lucide-react";
+import {
+  AlertTriangle,
+  RefreshCw,
+  RotateCcw,
+  X,
+  Coins,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 
 type ReelsSearch = { start?: string; tabs?: FeedFilter };
 
@@ -286,7 +314,11 @@ function ReelsPage() {
       <div className="relative h-[100dvh] w-full bg-background overflow-hidden flex items-center justify-center">
         <div className="flex gap-2">
           {[0, 150, 300].map((d) => (
-            <div key={d} className="h-3 w-3 animate-bounce rounded-full bg-foreground shadow-lg" style={{ animationDelay: `${d}ms` }} />
+            <div
+              key={d}
+              className="h-3 w-3 animate-bounce rounded-full bg-foreground shadow-lg"
+              style={{ animationDelay: `${d}ms` }}
+            />
           ))}
         </div>
       </div>
@@ -303,7 +335,9 @@ function ReelsPage() {
           {(["all", "latest", "local", "trending"] as string[]).map((f) => (
             <button
               key={f}
-              onClick={() => navigate({ search: (prev) => ({ ...prev, tabs: f as FeedFilter }), replace: true })}
+              onClick={() =>
+                navigate({ search: (prev) => ({ ...prev, tabs: f as FeedFilter }), replace: true })
+              }
               className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition sm:px-4 sm:text-xs ${
                 filter === f
                   ? "bg-foreground text-background"
@@ -344,100 +378,106 @@ function ReelsPage() {
         ref={containerRef}
         className="no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-scroll"
       >
+        {/* Resume watching banner */}
+        {resumeTarget && (
+          <div className="pointer-events-none fixed left-1/2 top-4 z-30 w-[min(92vw,420px)] -translate-x-1/2 md:top-6">
+            <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-twilight-navy bg-cloud-white px-4 py-2 shadow-[0_2px_18px_rgba(10,10,58,0.25)]">
+              <RotateCcw className="h-4 w-4 text-cobalt-pop" />
+              <div className="min-w-0 flex-1 text-sm text-twilight-navy">
+                <span className="font-medium">resume watching</span>
+                <span className="ml-1 text-slate-mist">— pick up where you left off</span>
+              </div>
+              <button
+                onClick={jumpToResume}
+                className="rounded-full border border-twilight-navy bg-transparent px-3 py-1 text-xs font-medium uppercase tracking-wider text-twilight-navy transition hover:bg-periwinkle-sky"
+              >
+                jump back
+              </button>
+              <button
+                onClick={() => setResumeTarget(null)}
+                aria-label="Dismiss"
+                className="text-slate-mist hover:text-twilight-navy"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        )}
 
+        {reels.map((r, i) => {
+          // Render the player for reels within distance 3; beyond that show thumbnail placeholder
+          const near = Math.abs(i - activeIdx) <= 3;
+          const composite = `reel::${r.source}::${r.id}::${i}`;
+          return (
+            <section
+              key={composite}
+              data-idx={i}
+              data-reel-id={r.id}
+              ref={(el) => {
+                slideRefs.current[i] = el;
+              }}
+              className="relative h-[100dvh] w-full snap-start snap-always"
+            >
+              {near ? (
+                <ReelPlayer
+                  key={`player::${r.id}`}
+                  reel={r}
+                  active={i === activeIdx}
+                  distance={Math.abs(i - activeIdx)}
+                  muted={muted}
+                  onToggleMute={toggleMute}
+                  onEnded={handleReelEnd}
+                  onWatched={bumpWatched}
+                  feedType={filter}
+                />
+              ) : (
+                <div key={`ph::${r.id}`} className="h-full w-full bg-background">
+                  {r.thumbnail && (
+                    <img
+                      src={r.thumbnail}
+                      alt=""
+                      className="h-full w-full object-cover opacity-40"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+              )}
+            </section>
+          );
+        })}
 
-
-      {/* Resume watching banner */}
-      {resumeTarget && (
-        <div className="pointer-events-none fixed left-1/2 top-4 z-30 w-[min(92vw,420px)] -translate-x-1/2 md:top-6">
-          <div className="pointer-events-auto flex items-center gap-3 rounded-full border border-twilight-navy bg-cloud-white px-4 py-2 shadow-[0_2px_18px_rgba(10,10,58,0.25)]">
-            <RotateCcw className="h-4 w-4 text-cobalt-pop" />
-            <div className="min-w-0 flex-1 text-sm text-twilight-navy">
-              <span className="font-medium">resume watching</span>
-              <span className="ml-1 text-slate-mist">— pick up where you left off</span>
+        {isFetchingNextPage && (
+          <div className="flex h-24 items-center justify-center bg-background">
+            <div className="flex items-center gap-1.5">
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "0ms" }}
+              />
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "150ms" }}
+              />
+              <div
+                className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky"
+                style={{ animationDelay: "300ms" }}
+              />
+            </div>
+          </div>
+        )}
+        {isError && reels.length > 0 && (
+          <div className="flex h-24 flex-col items-center justify-center gap-2 bg-background px-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-cream-linen" />
+              <span>Couldn't load more reels.</span>
             </div>
             <button
-              onClick={jumpToResume}
-              className="rounded-full border border-twilight-navy bg-transparent px-3 py-1 text-xs font-medium uppercase tracking-wider text-twilight-navy transition hover:bg-periwinkle-sky"
+              onClick={() => fetchNextPage()}
+              className="inline-flex items-center gap-1 rounded-full border border-periwinkle-sky/60 px-3 py-1 text-cream-linen hover:bg-periwinkle-sky/20"
             >
-              jump back
-            </button>
-            <button
-              onClick={() => setResumeTarget(null)}
-              aria-label="Dismiss"
-              className="text-slate-mist hover:text-twilight-navy"
-            >
-              <X className="h-4 w-4" />
+              <RefreshCw className="h-3 w-3" /> Retry
             </button>
           </div>
-        </div>
-      )}
-
-      {reels.map((r, i) => {
-        // Render the player for reels within distance 3; beyond that show thumbnail placeholder
-        const near = Math.abs(i - activeIdx) <= 3;
-        const composite = `reel::${r.source}::${r.id}::${i}`;
-        return (
-          <section
-            key={composite}
-            data-idx={i}
-            data-reel-id={r.id}
-            ref={(el) => {
-              slideRefs.current[i] = el;
-            }}
-            className="relative h-[100dvh] w-full snap-start snap-always"
-          >
-            {near ? (
-              <ReelPlayer
-                key={`player::${r.id}`}
-                reel={r}
-                active={i === activeIdx}
-                distance={Math.abs(i - activeIdx)}
-                muted={muted}
-                onToggleMute={toggleMute}
-                onEnded={handleReelEnd}
-                onWatched={bumpWatched}
-                feedType={filter}
-              />
-            ) : (
-              <div key={`ph::${r.id}`} className="h-full w-full bg-background">
-                {r.thumbnail && (
-                  <img
-                    src={r.thumbnail}
-                    alt=""
-                    className="h-full w-full object-cover opacity-40"
-                    loading="lazy"
-                  />
-                )}
-              </div>
-            )}
-          </section>
-        );
-      })}
-
-      {isFetchingNextPage && (
-        <div className="flex h-24 items-center justify-center bg-background">
-          <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "0ms" }} />
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "150ms" }} />
-            <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-periwinkle-sky" style={{ animationDelay: "300ms" }} />
-          </div>
-        </div>
-      )}
-      {isError && reels.length > 0 && (
-        <div className="flex h-24 flex-col items-center justify-center gap-2 bg-background px-6 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-cream-linen" />
-            <span>Couldn't load more reels.</span>
-          </div>
-          <button
-            onClick={() => fetchNextPage()}
-            className="inline-flex items-center gap-1 rounded-full border border-periwinkle-sky/60 px-3 py-1 text-cream-linen hover:bg-periwinkle-sky/20"
-          >
-            <RefreshCw className="h-3 w-3" /> Retry
-          </button>
-        </div>
-      )}
+        )}
       </div>
     </div>
   );

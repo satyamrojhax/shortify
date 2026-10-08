@@ -18,8 +18,8 @@ function ExplorePage() {
   const [trendingReels, setTrendingReels] = useState<Reel[]>(cachedTrendingReels);
   const [loading, setLoading] = useState(!cachedForYouReels.length);
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
-  const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
 
   useEffect(() => {
@@ -77,7 +77,7 @@ function ExplorePage() {
           }
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0.1 },
     );
     if (observerTarget.current) {
       observer.observe(observerTarget.current);
@@ -89,11 +89,10 @@ function ExplorePage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-10">
-      
       {/* Search Header */}
       <div className="mb-6 flex items-center justify-between gap-4">
-        <Link 
-          to="/search" 
+        <Link
+          to="/search"
           className="flex-1 max-w-xl flex items-center gap-3 bg-dew dark:bg-secondary rounded-xl px-4 py-3 text-charcoal/60 dark:text-cream/60 transition hover:bg-charcoal/5 dark:hover:bg-cream/5"
         >
           <Search className="w-5 h-5" />
@@ -103,18 +102,18 @@ function ExplorePage() {
 
       {/* Tabs */}
       <div className="flex items-center gap-6 mb-8 border-b border-charcoal/10 dark:border-cream/10">
-        <button 
+        <button
           onClick={() => setActiveTab("foryou")}
-          className={`pb-4 text-lg font-display lowercase transition-colors relative ${activeTab === "foryou" ? 'text-cocoa dark:text-cream' : 'text-charcoal/50 dark:text-cream/50'}`}
+          className={`pb-4 text-lg font-display lowercase transition-colors relative ${activeTab === "foryou" ? "text-cocoa dark:text-cream" : "text-charcoal/50 dark:text-cream/50"}`}
         >
           For you
           {activeTab === "foryou" && (
             <div className="absolute bottom-0 left-0 w-full h-[2px] bg-cocoa dark:bg-cream" />
           )}
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab("trending")}
-          className={`pb-4 text-lg font-display lowercase transition-colors relative ${activeTab === "trending" ? 'text-cocoa dark:text-cream' : 'text-charcoal/50 dark:text-cream/50'}`}
+          className={`pb-4 text-lg font-display lowercase transition-colors relative ${activeTab === "trending" ? "text-cocoa dark:text-cream" : "text-charcoal/50 dark:text-cream/50"}`}
         >
           Trending now
           {activeTab === "trending" && (
@@ -127,23 +126,26 @@ function ExplorePage() {
       {loading && currentReels.length === 0 ? (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
           {[...Array(12)].map((_, i) => (
-            <div key={i} className="aspect-[9/16] bg-dew dark:bg-secondary animate-pulse rounded-md" />
+            <div
+              key={i}
+              className="aspect-[9/16] bg-dew dark:bg-secondary animate-pulse rounded-md"
+            />
           ))}
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
           {currentReels.map((reel) => (
-            <div 
-              key={reel.id} 
+            <div
+              key={reel.id}
               className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
               onClick={() => setSelectedReel(reel)}
             >
-              <img 
-                src={reel.thumbnail} 
-                alt={reel.title || "Reel"} 
+              <img
+                src={reel.thumbnail}
+                alt={reel.title || "Reel"}
                 className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
               />
-              
+
               {/* Default View Count (Bottom Left) */}
               <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
                 <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
@@ -159,7 +161,9 @@ function ExplorePage() {
                   </div>
                   <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
                     <MessageCircle className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                    <span>{reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}</span>
+                    <span>
+                      {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
+                    </span>
                   </div>
                 </div>
                 {reel.title && (
@@ -181,29 +185,32 @@ function ExplorePage() {
           {loading && currentReels.length > 0 && (
             <div className="flex gap-2">
               {[0, 150, 300].map((d) => (
-                <div key={d} className="h-2 w-2 md:h-3 md:w-3 animate-bounce rounded-full bg-charcoal/50 dark:bg-cream/50 shadow-lg" style={{ animationDelay: `${d}ms` }} />
+                <div
+                  key={d}
+                  className="h-2 w-2 md:h-3 md:w-3 animate-bounce rounded-full bg-charcoal/50 dark:bg-cream/50 shadow-lg"
+                  style={{ animationDelay: `${d}ms` }}
+                />
               ))}
             </div>
           )}
         </div>
       )}
 
-      {selectedReel && (
-        isMobile ? (
-          <ExtraReelsPlayer 
-            reels={currentReels} 
-            initialIndex={currentReels.findIndex(r => r.id === selectedReel.id)} 
-            onClose={() => setSelectedReel(null)} 
+      {selectedReel &&
+        (isMobile ? (
+          <ExtraReelsPlayer
+            reels={currentReels}
+            initialIndex={currentReels.findIndex((r) => r.id === selectedReel.id)}
+            onClose={() => setSelectedReel(null)}
             feedType={`explore_${activeTab}`}
           />
         ) : (
-          <ReelModal 
-            reels={currentReels} 
-            initialIndex={currentReels.findIndex(r => r.id === selectedReel.id)} 
-            onClose={() => setSelectedReel(null)} 
+          <ReelModal
+            reels={currentReels}
+            initialIndex={currentReels.findIndex((r) => r.id === selectedReel.id)}
+            onClose={() => setSelectedReel(null)}
           />
-        )
-      )}
+        ))}
     </div>
   );
 }

@@ -1,170 +1,262 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { Heart, Shield, Zap, Smartphone, Moon, Award, Play, Bookmark, Coins, Gauge } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Heart,
+  Shield,
+  Zap,
+  Smartphone,
+  Moon,
+  Award,
+  Play,
+  Bookmark,
+  Coins,
+  Gauge,
+  Sparkles,
+  Cloud,
+  Layers,
+  Terminal,
+  Tv,
+  Music,
+  ExternalLink,
+  Gift,
+  Flame,
+  CheckCircle2,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/about")({
   component: AboutPage,
 });
 
 function AboutPage() {
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className="mx-auto max-w-3xl px-6 py-10">
-      {/* App Header */}
-      <div className="flex items-center gap-4 mb-2">
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl ig-gradient-bg shadow-lg">
-          <Play className="h-7 w-7 fill-white text-white" />
+    <div className="mx-auto max-w-4xl px-6 py-10 pb-28">
+      {/* Hero Header */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 border-b border-charcoal/10 dark:border-cream/10 pb-8">
+        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl ig-gradient-bg shadow-xl ring-4 ring-twilight-navy/10 dark:ring-cream-linen/10">
+          <Play className="h-10 w-10 fill-white text-white ml-1" />
         </div>
-        <div>
-          <h1 className="font-display text-4xl lowercase text-cocoa dark:text-cream">
+        <div className="text-center sm:text-left flex-1">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-cobalt-pop/30 bg-cobalt-pop/10 px-3 py-1 text-xs font-semibold text-cobalt-pop mb-2">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span>Next-Gen Video Platform</span>
+          </div>
+          <h1 className="font-display text-4xl sm:text-5xl lowercase text-cocoa dark:text-cream leading-tight">
             Shortify
           </h1>
-          <p className="text-sm text-charcoal/60 dark:text-cream/60 mt-0.5">
-            Your ultimate short video platform
+          <p className="mt-1 text-base text-charcoal/70 dark:text-cream/70 max-w-xl">
+            An ultra-fast, immersive short video platform built with modern web technologies,
+            cloud persistence, and zero interruptions.
           </p>
         </div>
       </div>
 
+      {/* Stats Quick Bar */}
+      <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="paper-card p-4 text-center">
+          <div className="font-display text-2xl text-cocoa dark:text-cream">100%</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
+            Ad-Free
+          </div>
+        </div>
+        <div className="paper-card p-4 text-center">
+          <div className="font-display text-2xl text-cocoa dark:text-cream">Cloud</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
+            Supabase DB
+          </div>
+        </div>
+        <div className="paper-card p-4 text-center">
+          <div className="font-display text-2xl text-cocoa dark:text-cream">DiceBear</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
+            Vector Avatars
+          </div>
+        </div>
+        <div className="paper-card p-4 text-center">
+          <div className="font-display text-2xl text-cocoa dark:text-cream">PWA</div>
+          <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
+            Offline Ready
+          </div>
+        </div>
+      </div>
+
       <section className="mt-8 space-y-6">
-        {/* What is Shortify */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">
-            what is Shortify?
-          </h2>
-          <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            Shortify is your ultimate destination for watching premium short video content.
-            We provide a seamless, ad-free experience with a curated collection of high-quality
-            reels from various creators and sources. Our platform is designed to be blazing fast,
-            fully responsive, and incredibly easy to use — giving you instant access to the best
-            content right at your fingertips. Whether you're on mobile or desktop, Shortify
-            delivers a buttery-smooth viewing experience every time.
+        {/* Mission / Overview */}
+        <div className="paper-card p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Flame className="h-5 w-5 text-marker" />
+            <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
+              what is Shortify?
+            </h2>
+          </div>
+          <p className="text-sm sm:text-base text-charcoal/70 dark:text-cream/70 leading-relaxed">
+            Shortify is crafted to redefine how you experience short-form videos. Built from the
+            ground up without bloated trackers or invasive ads, it provides instant playback,
+            continuous auto-scrolling, high-definition streaming, and rich creator discovery. Every
+            interaction is optimized for lightning speed, whether you are browsing on mobile,
+            tablet, or desktop.
           </p>
         </div>
 
-        {/* Features */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">features</h2>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2">
-            <FeatureItem icon={<Play className="h-4 w-4" />} text="Watch unlimited reels from multiple sources" />
-            <FeatureItem icon={<Bookmark className="h-4 w-4" />} text="Save & like your favorite reels" />
-            <FeatureItem icon={<Coins className="h-4 w-4" />} text="Earn coins while watching & unlock rewards" />
-            <FeatureItem icon={<Gauge className="h-4 w-4" />} text="Auto-scroll for continuous viewing" />
-            <FeatureItem icon={<Shield className="h-4 w-4" />} text="Secure PIN protection for your privacy" />
-            <FeatureItem icon={<Moon className="h-4 w-4" />} text="Dark/Light/Neon/Matrix theme support" />
-            <FeatureItem icon={<Smartphone className="h-4 w-4" />} text="Progressive Web App (PWA) — install it!" />
-            <FeatureItem icon={<Zap className="h-4 w-4" />} text="Hold to 2× speed, double-tap to like" />
-            <FeatureItem icon={<Heart className="h-4 w-4" />} text="Browse creator profiles & their reels" />
-            <FeatureItem icon={<Award className="h-4 w-4" />} text="Redeem coins for exclusive effects & perks" />
+        {/* Core Capabilities */}
+        <div className="paper-card p-6 sm:p-8">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
+              featured highlights
+            </h2>
+            <span className="text-xs text-marker font-mono uppercase tracking-wider">v2.4</span>
+          </div>
+
+          <div className="grid gap-3 sm:grid-cols-2">
+            <FeatureCard
+              icon={<Play className="h-4 w-4" />}
+              title="Endless Reel Feeds"
+              desc="Browse categories, trending feeds, creator pages, and random discovery."
+            />
+            <FeatureCard
+              icon={<Sparkles className="h-4 w-4" />}
+              title="DiceBear Avatars"
+              desc="Deterministic vector avatars with 9 selectable artistic collections."
+            />
+            <FeatureCard
+              icon={<Cloud className="h-4 w-4" />}
+              title="Cloud Database Sync"
+              desc="Likes, bookmarks, coins, and settings securely synced across your devices."
+            />
+            <FeatureCard
+              icon={<Coins className="h-4 w-4" />}
+              title="Coin Earnings & Shop"
+              desc="Earn coins by watching and unlock exclusive badges, themes, and sound effects."
+            />
+            <FeatureCard
+              icon={<Tv className="h-4 w-4" />}
+              title="Retro CRT Filter"
+              desc="Transform your player into a vintage retro TV with authentic scanlines."
+            />
+            <FeatureCard
+              icon={<Music className="h-4 w-4" />}
+              title="Meme Soundboard"
+              desc="Add fun auditory feedback and confetti bursts to your likes."
+            />
+            <FeatureCard
+              icon={<Zap className="h-4 w-4" />}
+              title="2× Speed & Gestures"
+              desc="Press and hold for 2× playback speed, double-tap to like, and instant mute toggle."
+            />
+            <FeatureCard
+              icon={<Gift className="h-4 w-4" />}
+              title="Redemption Tracking"
+              desc="Submit real rewards redemptions with live database status history."
+            />
+            <FeatureCard
+              icon={<Shield className="h-4 w-4" />}
+              title="Secure PIN Protection"
+              desc="Biometric / DOB-derived security verification keeping your account private."
+            />
+            <FeatureCard
+              icon={<Smartphone className="h-4 w-4" />}
+              title="Progressive Web App"
+              desc="Install directly onto iOS, Android, and Desktop with offline video cache."
+            />
           </div>
         </div>
 
-        {/* Privacy & Security */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">
-            privacy & security
-          </h2>
-          <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            Your privacy is our top priority. All your data — including liked reels, saved reels,
-            and personal preferences — is stored locally on your device. We don't collect or store
-            any personal data on our servers. Your PIN and preferences are encrypted and stored
-            securely in your browser's local storage. No tracking, no ads, no data selling — just
-            pure content enjoyment.
+        {/* Security & Cloud Architecture */}
+        <div className="paper-card p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Shield className="h-5 w-5 text-cobalt-pop" />
+            <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
+              security & privacy
+            </h2>
+          </div>
+          <p className="text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
+            Your data and privacy are paramount. Authentication and relational user data are secured
+            by enterprise-grade PostgreSQL via Supabase with row-level security. Client credentials
+            and sensitive tokens remain shielded behind internal middle-proxy endpoints, ensuring
+            no backend URLs or confidential tokens are ever exposed to the public web.
           </p>
-        </div>
-
-        {/* Open Source */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">
-            open source
-          </h2>
-          <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            Shortify is completely open source! Anyone can contribute, use, and modify the code. We believe in building together with the community. Check out our GitHub repository to get involved, submit issues, or create pull requests.
-          </p>
-        </div>
-
-        {/* Credits */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">credits</h2>
-
-          {/* LFRDCA Technologies Attribution */}
-          <div className="mt-2">
-            <p className="text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-              This application is designed and developed by{" "}
-              <a
-                href="https://lfrdcatechnologies.cc.cd"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-bold text-cobalt-pop hover:text-cobalt-pop/80 transition-colors underline underline-offset-2 decoration-cobalt-pop/30 hover:decoration-cobalt-pop/60"
-              >
-                LFRDCA Technologies
-              </a>
-              . Built with modern web technologies including React, TypeScript, and TailwindCSS to provide the best possible user experience.
-            </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Badge label="Encrypted Session Token" />
+            <Badge label="Proxied Backend Endpoints" />
+            <Badge label="Zero Third-Party Trackers" />
+            <Badge label="Row-Level Security" />
           </div>
         </div>
 
-        {/* Contact */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">contact</h2>
-          <p className="mt-3 text-sm text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            For any questions, feedback, or support, please reach out directly on Telegram:
+        {/* Tech Stack */}
+        <div className="paper-card p-6 sm:p-8">
+          <div className="flex items-center gap-2 mb-3">
+            <Layers className="h-5 w-5 text-cocoa dark:text-cream" />
+            <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
+              technology stack
+            </h2>
+          </div>
+          <p className="text-sm text-charcoal/70 dark:text-cream/70 mb-4">
+            Engineered with the modern JavaScript ecosystem for maximum performance and fluid animations:
           </p>
-          <a
-            href="https://t.me/kritilfrdca"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-2 rounded-full bg-[#0088cc] px-6 py-2.5 text-sm font-medium text-white shadow-md shadow-[#0088cc]/20 transition hover:bg-[#0077b5] active:scale-95"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-5 w-5 fill-current"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <TechItem label="React 18" sub="UI Framework" />
+            <TechItem label="TypeScript" sub="Type Safety" />
+            <TechItem label="TanStack Router" sub="Type-Safe Routing" />
+            <TechItem label="Supabase" sub="PostgreSQL DB & Auth" />
+            <TechItem label="Tailwind CSS" sub="Design System" />
+            <TechItem label="DiceBear API" sub="Dynamic Avatars" />
+          </div>
+        </div>
+
+        {/* Credits & Developer Attribution */}
+        <div className="paper-card p-6 sm:p-8 border-cobalt-pop/30 bg-cobalt-pop/5 dark:bg-secondary/40">
+          <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream mb-2">
+            development & credits
+          </h2>
+          <p className="text-sm text-charcoal/80 dark:text-cream/80 leading-relaxed">
+            Shortify is designed, architected, and maintained by{" "}
+            <a
+              href="https://lfrdcatechnologies.cc.cd"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-bold text-cobalt-pop underline underline-offset-2 decoration-cobalt-pop/40 hover:text-cobalt-pop/80 transition-colors"
             >
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.08-.19-.09-.05-.21-.02-.3.01-.13.04-2.26 1.45-6.38 4.23-.6.41-1.14.61-1.63.6-.53-.01-1.54-.3-2.29-.54-.92-.3-1.64-.46-1.59-.97.03-.26.41-.53 1.15-.81 4.53-1.97 7.55-3.27 9.05-3.89 4.3-1.78 5.2 2.08 5.16 2.09z" />
-            </svg>
-            Contact Us
-          </a>
-        </div>
-
-        {/* Version & Tech */}
-        <div className="paper-card p-6">
-          <h2 className="font-display text-xl lowercase text-cocoa dark:text-cream">app info</h2>
-          <div className="mt-3 space-y-2 text-sm text-charcoal/70 dark:text-cream/70">
-            <div className="flex justify-between">
-              <span>App Name</span>
-              <span className="font-semibold text-cocoa dark:text-cream">Shortify</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Type</span>
-              <span className="font-semibold text-cocoa dark:text-cream">Progressive Web App</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Built With</span>
-              <span className="font-semibold text-cocoa dark:text-cream">React + TypeScript</span>
-            </div>
-
-            <div className="flex justify-between">
-              <span>Company</span>
-              <a
-                href="https://lfrdcatechnologies.cc.cd"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-cobalt-pop hover:underline"
-              >
-                LFRDCA Technologies
-              </a>
-            </div>
+              LFRDCA Technologies
+            </a>
+            . We believe in providing open, accessible, and delightful digital experiences.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <a
+              href="https://lfrdcatechnologies.cc.cd"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl border border-charcoal/20 bg-background px-4 py-2 text-xs font-semibold text-cocoa dark:text-cream shadow-sm hover:border-cobalt-pop transition-all"
+            >
+              <span>Visit LFRDCA Technologies</span>
+              <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+            <a
+              href="https://t.me/kritilfrdca"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#0088cc] px-4 py-2 text-xs font-semibold text-white shadow-md shadow-[#0088cc]/20 hover:bg-[#0077b5] active:scale-95 transition-all"
+            >
+              <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.08-.19-.09-.05-.21-.02-.3.01-.13.04-2.26 1.45-6.38 4.23-.6.41-1.14.61-1.63.6-.53-.01-1.54-.3-2.29-.54-.92-.3-1.64-.46-1.59-.97.03-.26.41-.53 1.15-.81 4.53-1.97 7.55-3.27 9.05-3.89 4.3-1.78 5.2 2.08 5.16 2.09z" />
+              </svg>
+              <span>Telegram Support</span>
+            </a>
           </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="mt-10 pb-8 text-center">
-        <p className="text-xs text-charcoal/40 dark:text-cream/40">
-          © {new Date().getFullYear()} Shortify · A Product By{" "}
+      <footer className="mt-12 text-center text-xs text-charcoal/50 dark:text-cream/50 space-y-2">
+        <p>
+          © {currentYear} Shortify · All rights reserved.
+        </p>
+        <p>
+          Developed with ❤️ by{" "}
           <a
             href="https://lfrdcatechnologies.cc.cd"
             target="_blank"
             rel="noopener noreferrer"
-            className="hover:text-cobalt-pop transition-colors"
+            className="hover:text-cobalt-pop font-medium transition-colors"
           >
             LFRDCA Technologies
           </a>
@@ -174,15 +266,42 @@ function AboutPage() {
   );
 }
 
-function FeatureItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+function FeatureCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
-    <div className="flex items-start gap-3 rounded-lg bg-background/50 p-3 transition-colors hover:bg-muted/50">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-cobalt-pop/10 text-cobalt-pop">
+    <div className="flex items-start gap-3 rounded-xl border border-charcoal/10 bg-background/60 p-3.5 transition-all hover:border-cobalt-pop/40 hover:bg-background dark:border-cream/10">
+      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-cobalt-pop/10 text-cobalt-pop">
         {icon}
       </div>
-      <span className="text-sm text-charcoal/70 dark:text-cream/70 leading-snug pt-1">
-        {text}
-      </span>
+      <div className="min-w-0">
+        <h4 className="text-sm font-bold text-cocoa dark:text-cream">{title}</h4>
+        <p className="mt-0.5 text-xs text-charcoal/70 dark:text-cream/70 leading-snug">{desc}</p>
+      </div>
     </div>
+  );
+}
+
+function TechItem({ label, sub }: { label: string; sub: string }) {
+  return (
+    <div className="rounded-lg border border-charcoal/10 bg-background/50 p-2.5 text-center dark:border-cream/10">
+      <div className="text-xs font-bold text-cocoa dark:text-cream">{label}</div>
+      <div className="text-[10px] text-charcoal/60 dark:text-cream/60">{sub}</div>
+    </div>
+  );
+}
+
+function Badge({ label }: { label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-md border border-charcoal/15 bg-background/60 px-2.5 py-1 text-[11px] font-medium text-cocoa dark:border-cream/15 dark:text-cream">
+      <CheckCircle2 className="h-3 w-3 text-green-500" />
+      {label}
+    </span>
   );
 }

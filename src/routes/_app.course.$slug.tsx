@@ -65,7 +65,7 @@ function CourseDetailsPage() {
       setShowAutoplayCountdown(false);
       return;
     }
-    const timer = setTimeout(() => setAutoplayCountdown(c => c - 1), 1000);
+    const timer = setTimeout(() => setAutoplayCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [showAutoplayCountdown, autoplayCountdown]); // nextLesson intentionally omitted from deps to avoid bugs if it changes
 
@@ -78,39 +78,105 @@ function CourseDetailsPage() {
       try {
         const courseFolderMap: Record<string, string[]> = {
           "AI & ML": [
-            "aitools.json", "aivideogen.json", "deeplearning.json", "genai.json", "llm.json", "machinelearning.json", "nlp.json"
+            "aitools.json",
+            "aivideogen.json",
+            "deeplearning.json",
+            "genai.json",
+            "llm.json",
+            "machinelearning.json",
+            "nlp.json",
           ],
-          "Cyber Security": [
-            "cybersecurity.json", "ethicalhacking.json"
-          ],
-          "DSA": [
-            "competitiveprogramming.json", "datastructure.json", "dsawithjava.json", "dsawithpython.json"
+          "Cyber Security": ["cybersecurity.json", "ethicalhacking.json"],
+          DSA: [
+            "competitiveprogramming.json",
+            "datastructure.json",
+            "dsawithjava.json",
+            "dsawithpython.json",
           ],
           "Data Science & Analytics": [
-            "businessanalytics.json", "dataanalytics.json", "dataengineering.json", "datascience.json", "excel.json", "powerbi.json", "sql.json", "tableau.json"
+            "businessanalytics.json",
+            "dataanalytics.json",
+            "dataengineering.json",
+            "datascience.json",
+            "excel.json",
+            "powerbi.json",
+            "sql.json",
+            "tableau.json",
           ],
-          "Design": [
-            "affinitystudio.json", "blender.json", "canva.json", "graphicdesign.json", "graphicdesignwithai.json", "illustrator.json", "indesign.json", "photoshop.json", "uiux.json", "uxresearch.json"
+          Design: [
+            "affinitystudio.json",
+            "blender.json",
+            "canva.json",
+            "graphicdesign.json",
+            "graphicdesignwithai.json",
+            "illustrator.json",
+            "indesign.json",
+            "photoshop.json",
+            "uiux.json",
+            "uxresearch.json",
           ],
           "DevOps & Cloud": [
-            "awspractitioner.json", "cloudcomputing.json", "devops.json", "dockerandkubernetes.json", "iac.json", "linux.json", "n8n.json", "terraform.json"
+            "awspractitioner.json",
+            "cloudcomputing.json",
+            "devops.json",
+            "dockerandkubernetes.json",
+            "iac.json",
+            "linux.json",
+            "n8n.json",
+            "terraform.json",
           ],
-          "Finance": [
-            "financialanalysis.json", "financialmodelling.json", "fundamentalanalysis.json", "riskmanagement.json", "technicalanalysis.json"
+          Finance: [
+            "financialanalysis.json",
+            "financialmodelling.json",
+            "fundamentalanalysis.json",
+            "riskmanagement.json",
+            "technicalanalysis.json",
           ],
-          "Marketing": [
-            "copywriting.json", "d2cbrandbuilding.json", "digitalmarketing.json", "growthhacking.json", "hrmanagement.json", "instagramcreator.json", "performancemarketing.json", "seo.json", "ugc.json"
+          Marketing: [
+            "copywriting.json",
+            "d2cbrandbuilding.json",
+            "digitalmarketing.json",
+            "growthhacking.json",
+            "hrmanagement.json",
+            "instagramcreator.json",
+            "performancemarketing.json",
+            "seo.json",
+            "ugc.json",
           ],
           "Software Development": [
-            "3dgamedevelopment.json", "appdevelopment.json", "blockchain.json", "cpp.json", "dbms.json", "flutter.json", "java.json", "mernstack.json", "nestjs.json", "nextjs.json", "python.json", "reactjs.json", "reactnative.json", "systemdesign.json", "unrealengine.json", "web3.json", "webdevelopment.json", "wordpress.json"
+            "3dgamedevelopment.json",
+            "appdevelopment.json",
+            "blockchain.json",
+            "cpp.json",
+            "dbms.json",
+            "flutter.json",
+            "java.json",
+            "mernstack.json",
+            "nestjs.json",
+            "nextjs.json",
+            "python.json",
+            "reactjs.json",
+            "reactnative.json",
+            "systemdesign.json",
+            "unrealengine.json",
+            "web3.json",
+            "webdevelopment.json",
+            "wordpress.json",
           ],
           "Video Editing": [
-            "aftereffects.json", "davinciresolve.json", "motiongraphics.json", "premierepro.json", "vfx.json", "videoediting.json", "vnvideoediting.json", "youtubecreator.json"
-          ]
+            "aftereffects.json",
+            "davinciresolve.json",
+            "motiongraphics.json",
+            "premierepro.json",
+            "vfx.json",
+            "videoediting.json",
+            "vnvideoediting.json",
+            "youtubecreator.json",
+          ],
         };
 
         let mappedFolder = search.folder || "Software Development";
-        
+
         // Exact lookup: Check which folder contains the requested course
         for (const [folder, files] of Object.entries(courseFolderMap)) {
           if (files.includes(`${slug}.json`)) {
@@ -119,7 +185,9 @@ function CourseDetailsPage() {
           }
         }
 
-        let res = await fetch(`https://skills.shortify.cc.cd/${encodeURIComponent(mappedFolder)}/${slug}.json`);
+        let res = await fetch(
+          `https://skills.shortify.cc.cd/${encodeURIComponent(mappedFolder)}/${slug}.json`,
+        );
 
         if (!res.ok) throw new Error("Course not found");
         const json = await res.json();
@@ -148,8 +216,8 @@ function CourseDetailsPage() {
   const [courseImage, setCourseImage] = useState<string>("");
   useEffect(() => {
     fetch("https://skills.shortify.cc.cd/courses.json")
-      .then(res => res.json())
-      .then(json => {
+      .then((res) => res.json())
+      .then((json) => {
         const c = json.data?.courses?.find((c: any) => c.slug === slug);
         if (c?.courseimage) setCourseImage(c.courseimage);
       })
@@ -159,7 +227,7 @@ function CourseDetailsPage() {
   const handleResume = () => {
     if (!course) return;
     let targetLesson: Lecture | null = null;
-    const sections = course.content.filter(c => c.type === "section") as Section[];
+    const sections = course.content.filter((c) => c.type === "section") as Section[];
 
     // Find first uncompleted lesson
     for (const sec of sections) {
@@ -188,13 +256,13 @@ function CourseDetailsPage() {
         slug: course.slug,
         folder: search.folder || "Software Development",
         title: course.courseName,
-        enrolledAt: new Date().toISOString()
+        enrolledAt: new Date().toISOString(),
       });
     }
   };
 
   const toggleSection = (index: number) => {
-    setOpenSections(prev => ({ ...prev, [index]: !prev[index] }));
+    setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
   const markCompleted = (lectureId: string) => {
@@ -210,7 +278,9 @@ function CourseDetailsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <span className="animate-pulse text-lg font-bold text-magenta-haze dark:text-periwinkle-sky">Loading course...</span>
+        <span className="animate-pulse text-lg font-bold text-magenta-haze dark:text-periwinkle-sky">
+          Loading course...
+        </span>
       </div>
     );
   }
@@ -220,13 +290,15 @@ function CourseDetailsPage() {
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <h2 className="mb-4 text-2xl font-bold text-red-500">Error</h2>
         <p className="text-twilight-navy dark:text-cream-linen">{error || "Course not found"}</p>
-        <Link to="/skills" className="mt-6 text-magenta-haze underline">Back to Courses</Link>
+        <Link to="/skills" className="mt-6 text-magenta-haze underline">
+          Back to Courses
+        </Link>
       </div>
     );
   }
 
-  const sections = course.content.filter(c => c.type === "section") as Section[];
-  const assignments = course.content.filter(c => c.type === "assignment") as Assignment[];
+  const sections = course.content.filter((c) => c.type === "section") as Section[];
+  const assignments = course.content.filter((c) => c.type === "assignment") as Assignment[];
 
   // Find current section and next lesson
   let currentSection: Section | null = null;
@@ -236,7 +308,7 @@ function CourseDetailsPage() {
     let foundCurrent = false;
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
-      if (sec.lectures.some(l => l.lectureId === activeVideo.lectureId)) {
+      if (sec.lectures.some((l) => l.lectureId === activeVideo.lectureId)) {
         currentSection = sec;
         if (i + 1 < sections.length) {
           nextSection = sections[i + 1];
@@ -265,7 +337,11 @@ function CourseDetailsPage() {
             <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center text-center md:text-left">
               <div className="mx-auto md:mx-0 h-32 w-32 shrink-0 overflow-hidden rounded-2xl bg-white/10 shadow-lg border border-white/20 backdrop-blur-sm">
                 {courseImage ? (
-                  <img src={courseImage} alt={course.courseName} className="h-full w-full object-cover" />
+                  <img
+                    src={courseImage}
+                    alt={course.courseName}
+                    className="h-full w-full object-cover"
+                  />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center text-4xl font-black text-white">
                     {course.courseName.charAt(0)}
@@ -335,11 +411,18 @@ function CourseDetailsPage() {
 
               {showAutoplayCountdown && nextLesson && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm rounded-xl animate-in fade-in p-2 sm:p-4">
-                  <h3 className="mb-1 text-sm font-bold text-white sm:text-base md:mb-2 md:text-xl">Up Next</h3>
-                  <p className="mb-2 px-2 text-center text-sm text-cream-linen line-clamp-2 sm:text-base md:mb-6 md:text-2xl">{nextLesson.name}</p>
+                  <h3 className="mb-1 text-sm font-bold text-white sm:text-base md:mb-2 md:text-xl">
+                    Up Next
+                  </h3>
+                  <p className="mb-2 px-2 text-center text-sm text-cream-linen line-clamp-2 sm:text-base md:mb-6 md:text-2xl">
+                    {nextLesson.name}
+                  </p>
 
                   <div className="relative mb-2 flex h-10 w-10 items-center justify-center sm:h-12 sm:w-12 md:mb-6 md:h-16 md:w-16">
-                    <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
+                    <svg
+                      className="absolute h-full w-full -rotate-90 transform"
+                      viewBox="0 0 36 36"
+                    >
                       <path
                         className="text-white/20"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -356,7 +439,9 @@ function CourseDetailsPage() {
                         strokeWidth="2"
                       />
                     </svg>
-                    <span className="text-sm font-bold text-white sm:text-lg md:text-xl">{autoplayCountdown}</span>
+                    <span className="text-sm font-bold text-white sm:text-lg md:text-xl">
+                      {autoplayCountdown}
+                    </span>
                   </div>
 
                   <div className="flex gap-2 sm:gap-4">
@@ -395,10 +480,11 @@ function CourseDetailsPage() {
                   <button
                     onClick={() => markCompleted(activeVideo.lectureId)}
                     disabled={completedLectures[activeVideo.lectureId]}
-                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${completedLectures[activeVideo.lectureId]
+                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${
+                      completedLectures[activeVideo.lectureId]
                         ? "bg-green-500/10 text-green-600 dark:text-green-400"
                         : "bg-magenta-haze/10 text-magenta-haze hover:bg-magenta-haze hover:text-white"
-                      }`}
+                    }`}
                   >
                     <CheckCircle className="h-5 w-5" />
                     {completedLectures[activeVideo.lectureId] ? "Completed" : "Mark as completed"}
@@ -416,7 +502,9 @@ function CourseDetailsPage() {
                     <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
                       Up Next in {currentSection.name}
                     </h3>
-                    <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${isCurrentSectionOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${isCurrentSectionOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {isCurrentSectionOpen && (
@@ -428,14 +516,19 @@ function CourseDetailsPage() {
                           <button
                             key={lecture.lectureId}
                             onClick={() => setActiveVideo(lecture)}
-                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
+                              isActive
                                 ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
                                 : "hover:bg-slate-mist/10 dark:hover:bg-secondary border border-transparent"
-                              }`}
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <PlayCircle className={`h-5 w-5 shrink-0 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
-                              <span className={`font-medium line-clamp-1 ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
+                              <PlayCircle
+                                className={`h-5 w-5 shrink-0 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`}
+                              />
+                              <span
+                                className={`font-medium line-clamp-1 ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}
+                              >
                                 {lecture.name}
                               </span>
                             </div>
@@ -452,10 +545,11 @@ function CourseDetailsPage() {
                   )}
 
                   {/* Suggest Next Section */}
-                  {nextSection && nextLesson && (
-                    (currentSection.lectures.every(l => completedLectures[l.lectureId]) ||
-                      activeVideo.lectureId === currentSection.lectures[currentSection.lectures.length - 1].lectureId)
-                  ) && (
+                  {nextSection &&
+                    nextLesson &&
+                    (currentSection.lectures.every((l) => completedLectures[l.lectureId]) ||
+                      activeVideo.lectureId ===
+                        currentSection.lectures[currentSection.lectures.length - 1].lectureId) && (
                       <div className="mt-6 border-t border-twilight-navy/10 pt-6 dark:border-periwinkle-sky/10 animate-in fade-in slide-in-from-bottom-2">
                         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-twilight-navy/60 dark:text-cream-linen/60">
                           Up Next Section
@@ -482,7 +576,10 @@ function CourseDetailsPage() {
             </h2>
             <div className="flex flex-col gap-4">
               {sections.map((section, index) => (
-                <div key={index} className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo">
+                <div
+                  key={index}
+                  className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo"
+                >
                   <button
                     onClick={() => toggleSection(index)}
                     className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-mist/5"
@@ -490,7 +587,9 @@ function CourseDetailsPage() {
                     <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
                       {section.name}
                     </h3>
-                    <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {openSections[index] && (
@@ -505,14 +604,19 @@ function CourseDetailsPage() {
                               if (enrolled) setActiveVideo(lecture);
                               // Do nothing if unenrolled. User must use Enroll Now button.
                             }}
-                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
+                              isActive
                                 ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
                                 : "hover:bg-cloud-white dark:hover:bg-dusk-indigo border border-transparent"
-                              }`}
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <PlayCircle className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
-                              <span className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
+                              <PlayCircle
+                                className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`}
+                              />
+                              <span
+                                className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}
+                              >
                                 {lecture.name}
                               </span>
                             </div>

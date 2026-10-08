@@ -1,6 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { getCoins, spendCoins, getUnlocks, unlockItem, hasUnlocked, set } from "@/lib/storage";
+import {
+  getCoins,
+  spendCoins,
+  getUnlocks,
+  unlockItem,
+  hasUnlocked,
+  set,
+  isCrtEnabled,
+  setCrtEnabled,
+  isMemeSoundsEnabled,
+  setMemeSoundsEnabled,
+} from "@/lib/storage";
 import {
   ShoppingBag,
   CheckCircle,
@@ -78,8 +89,8 @@ const ITEMS: ShopItem[] = [
     icon: Tv,
     cost: 500,
     onApply: () => {
-      const current = localStorage.getItem("ig.crt") === "true";
-      set("ig.crt", !current);
+      const current = isCrtEnabled();
+      setCrtEnabled(!current);
       window.dispatchEvent(new Event("effects-change"));
     },
   },
@@ -90,8 +101,8 @@ const ITEMS: ShopItem[] = [
     icon: Music,
     cost: 750,
     onApply: () => {
-      const current = localStorage.getItem("ig.meme_sounds") === "true";
-      set("ig.meme_sounds", !current);
+      const current = isMemeSoundsEnabled();
+      setMemeSoundsEnabled(!current);
       window.dispatchEvent(new Event("effects-change"));
     },
   },
@@ -111,8 +122,8 @@ function ShopPage() {
     setUnlocks(getUnlocks());
     const raw = localStorage.getItem("ig.theme");
     setActiveTheme(raw ? JSON.parse(raw) : "system");
-    setActiveCrt(localStorage.getItem("ig.crt") === "true");
-    setActiveMeme(localStorage.getItem("ig.meme_sounds") === "true");
+    setActiveCrt(isCrtEnabled());
+    setActiveMeme(isMemeSoundsEnabled());
 
     const handleCoinsChange = () => setCoins(getCoins());
     const handleThemeChange = () => {
@@ -120,8 +131,8 @@ function ShopPage() {
       setActiveTheme(current ? JSON.parse(current) : "system");
     };
     const handleEffectsChange = () => {
-      setActiveCrt(localStorage.getItem("ig.crt") === "true");
-      setActiveMeme(localStorage.getItem("ig.meme_sounds") === "true");
+      setActiveCrt(isCrtEnabled());
+      setActiveMeme(isMemeSoundsEnabled());
     };
 
     window.addEventListener("coins-change", handleCoinsChange);

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { getFavorites, toggleFavorite, type FavoriteCreator } from "@/lib/storage";
 import { Users, UserMinus, Play } from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 export const Route = createFileRoute("/_app/favorites")({
   component: FavoritesPage,
@@ -26,9 +27,7 @@ function FavoritesPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
       <div className="mb-8">
-        <p className="font-display text-marker text-xl lowercase italic">
-          your favorites —
-        </p>
+        <p className="font-display text-marker text-xl lowercase italic">your favorites —</p>
         <h1 className="mt-2 font-display text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
           creators <span className="text-marker">({items.length})</span>
         </h1>
@@ -52,16 +51,21 @@ function FavoritesPage() {
               key={fav.username}
               className="group flex items-center justify-between p-4 rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream dark:bg-dusk-indigo"
             >
-              <Link 
+              <Link
                 to={`/creator/${encodeURIComponent(fav.username)}` as any}
                 className="flex items-center gap-4 flex-1 overflow-hidden cursor-pointer"
               >
-                <div className="ig-gradient-bg flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-lg font-bold text-white">
-                  {fav.username[0]?.toUpperCase()}
-                </div>
+                <UserAvatar
+                  username={fav.username}
+                  src={`https://love.viraly.wtf/profileImages/${fav.username}.jpg`}
+                  size="lg"
+                  className="h-12 w-12"
+                />
                 <div className="flex-1 min-w-0">
                   <p className="text-base font-bold text-cream truncate">{fav.username}</p>
-                  <p className="text-[10px] text-cream/60 mt-0.5">since {new Date(fav.timestamp).toLocaleDateString()}</p>
+                  <p className="text-[10px] text-cream/60 mt-0.5">
+                    since {new Date(fav.timestamp).toLocaleDateString()}
+                  </p>
                 </div>
               </Link>
               <button

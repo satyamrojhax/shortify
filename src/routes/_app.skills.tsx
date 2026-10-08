@@ -19,26 +19,94 @@ function getCategoryForCourse(title: string, slug: string): string {
   const t = title.toLowerCase();
   const s = slug.toLowerCase();
 
-  const has = (word: string) => t.includes(word) || s.includes(word.replace(/\s+/g, ''));
-  const hasWord = (word: string) => new RegExp(`\\b${word}\\b`).test(t) || s.includes(word.replace(/\s+/g, ''));
+  const has = (word: string) => t.includes(word) || s.includes(word.replace(/\s+/g, ""));
+  const hasWord = (word: string) =>
+    new RegExp(`\\b${word}\\b`).test(t) || s.includes(word.replace(/\s+/g, ""));
 
-  if (has("finance") || has("financial") || has("fundamental") || has("technical analysis") || has("risk management")) return "Finance";
+  if (
+    has("finance") ||
+    has("financial") ||
+    has("fundamental") ||
+    has("technical analysis") ||
+    has("risk management")
+  )
+    return "Finance";
 
-  if (has("dsa") || has("data structure") || has("competitive programming")) return "DSA & Competitive Programming";
+  if (has("dsa") || has("data structure") || has("competitive programming"))
+    return "DSA & Competitive Programming";
 
-  if (has("data") || has("analytics") || has("power bi") || has("tableau") || has("sql") || has("excel")) return "Data Science & Analytics";
+  if (
+    has("data") ||
+    has("analytics") ||
+    has("power bi") ||
+    has("tableau") ||
+    has("sql") ||
+    has("excel")
+  )
+    return "Data Science & Analytics";
 
-  if (hasWord("ai") || has("machine learning") || has("deep learning") || has("llm") || has("nlp") || has("genai") || has("generative")) return "AI & ML";
+  if (
+    hasWord("ai") ||
+    has("machine learning") ||
+    has("deep learning") ||
+    has("llm") ||
+    has("nlp") ||
+    has("genai") ||
+    has("generative")
+  )
+    return "AI & ML";
 
-  if (has("video") || has("premiere") || has("aftereffects") || has("davinci") || has("vfx") || has("motion graphics")) return "Video Editing & VFX";
+  if (
+    has("video") ||
+    has("premiere") ||
+    has("aftereffects") ||
+    has("davinci") ||
+    has("vfx") ||
+    has("motion graphics")
+  )
+    return "Video Editing & VFX";
 
-  if (has("design") || hasWord("ui") || hasWord("ux") || has("photoshop") || has("illustrator") || has("indesign") || has("canva") || has("affinity") || has("blender")) return "Design & UI/UX";
+  if (
+    has("design") ||
+    hasWord("ui") ||
+    hasWord("ux") ||
+    has("photoshop") ||
+    has("illustrator") ||
+    has("indesign") ||
+    has("canva") ||
+    has("affinity") ||
+    has("blender")
+  )
+    return "Design & UI/UX";
 
-  if (has("cyber") || has("security") || has("hacker") || has("ethical hacking")) return "Cyber Security";
+  if (has("cyber") || has("security") || has("hacker") || has("ethical hacking"))
+    return "Cyber Security";
 
-  if (has("market") || has("seo") || has("copywriting") || has("d2c") || has("growth hacking") || has("content creation") || has("youtube") || has("instagram") || has("ugc")) return "Marketing & Content Creation";
+  if (
+    has("market") ||
+    has("seo") ||
+    has("copywriting") ||
+    has("d2c") ||
+    has("growth hacking") ||
+    has("content creation") ||
+    has("youtube") ||
+    has("instagram") ||
+    has("ugc")
+  )
+    return "Marketing & Content Creation";
 
-  if (has("devops") || has("cloud") || has("aws") || has("docker") || has("kubernetes") || has("terraform") || has("linux") || has("iac") || has("infrastructure")) return "DevOps & Cloud";
+  if (
+    has("devops") ||
+    has("cloud") ||
+    has("aws") ||
+    has("docker") ||
+    has("kubernetes") ||
+    has("terraform") ||
+    has("linux") ||
+    has("iac") ||
+    has("infrastructure")
+  )
+    return "DevOps & Cloud";
 
   if (has("web3") || has("blockchain")) return "Web3 & Blockchain";
 
@@ -61,7 +129,7 @@ export const Route = createFileRoute("/_app/skills")({
       console.error("Failed to fetch courses", e);
       return { courses: [] };
     }
-  }
+  },
 });
 
 const CATEGORIES = [
@@ -78,7 +146,7 @@ const CATEGORIES = [
   "Cyber Security",
   "Web3 & Blockchain",
   "Business & Management",
-  "Game Development"
+  "Game Development",
 ];
 
 function SkillsPage() {
@@ -123,12 +191,16 @@ function SkillsPage() {
             className="flex items-center gap-2 rounded-full border border-twilight-navy/20 bg-cloud-white px-4 py-2 text-sm font-medium text-twilight-navy shadow-sm transition-colors hover:bg-slate-mist/20 dark:border-periwinkle-sky/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
           >
             <Filter className="h-4 w-4 shrink-0" />
-            <span className="max-w-[140px] truncate">{activeCategory !== "All" ? activeCategory : "All Filters"}</span>
+            <span className="max-w-[140px] truncate">
+              {activeCategory !== "All" ? activeCategory : "All Filters"}
+            </span>
           </button>
         </div>
 
         {/* Categories (Pills) */}
-        <div className={`mb-8 ${showMobileFilters ? 'flex' : 'hidden'} md:flex flex-wrap justify-center gap-2 pb-2 transition-all duration-300`}>
+        <div
+          className={`mb-8 ${showMobileFilters ? "flex" : "hidden"} md:flex flex-wrap justify-center gap-2 pb-2 transition-all duration-300`}
+        >
           {CATEGORIES.map((cat) => (
             <button
               key={cat}
@@ -136,10 +208,11 @@ function SkillsPage() {
                 setActiveCategory(cat);
                 setShowMobileFilters(false);
               }}
-              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${activeCategory === cat
+              className={`rounded-full border px-4 py-2 text-sm font-medium transition-colors ${
+                activeCategory === cat
                   ? "border-magenta-haze text-magenta-haze dark:border-periwinkle-sky dark:text-periwinkle-sky"
                   : "border-twilight-navy/20 text-twilight-navy hover:bg-slate-mist/20 dark:border-cream-linen/20 dark:text-cream-linen dark:hover:bg-secondary"
-                }`}
+              }`}
             >
               {cat}
             </button>

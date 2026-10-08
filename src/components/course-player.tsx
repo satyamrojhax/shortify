@@ -37,7 +37,7 @@ export function CoursePlayer({ videoUrl, posterUrl, title, onEnded }: CoursePlay
     // Automatically switch to landscape when fullscreen on mobile
     const handleFullscreenChange = async () => {
       const isNative = Capacitor.isNativePlatform();
-      
+
       if (document.fullscreenElement) {
         if (isNative) {
           try {

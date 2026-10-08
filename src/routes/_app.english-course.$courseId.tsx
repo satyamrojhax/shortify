@@ -66,7 +66,7 @@ function EnglishCourseDetailsPage() {
       setShowAutoplayCountdown(false);
       return;
     }
-    const timer = setTimeout(() => setAutoplayCountdown(c => c - 1), 1000);
+    const timer = setTimeout(() => setAutoplayCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
   }, [showAutoplayCountdown, autoplayCountdown]);
 
@@ -97,16 +97,18 @@ function EnglishCourseDetailsPage() {
             lectureLength: "Video", // No length provided in API
             videoUrl: lesson.video_url,
             resources: lesson.resources || [],
-            info: lesson.info || ""
-          }))
+            info: lesson.info || "",
+          })),
         }));
 
         const transformedCourse: CourseDetails = {
           _id: `english_${courseId}`,
           slug: `english_${courseId}`,
           courseName: isBonus ? "Bonus Videos" : "Speak English with Aleena",
-          courseImage: isBonus ? "https://rolexcoderz.com/pics/bonus.webp" : "https://rolexcoderz.com/pics/course.webp",
-          content: transformedContent
+          courseImage: isBonus
+            ? "https://rolexcoderz.com/pics/bonus.webp"
+            : "https://rolexcoderz.com/pics/course.webp",
+          content: transformedContent,
         };
 
         setCourse(transformedCourse);
@@ -158,13 +160,13 @@ function EnglishCourseDetailsPage() {
         folder: "Speaking",
         title: course.courseName,
         courseimage: course.courseImage,
-        enrolledAt: new Date().toISOString()
+        enrolledAt: new Date().toISOString(),
       });
     }
   };
 
   const toggleSection = (index: number) => {
-    setOpenSections(prev => ({ ...prev, [index]: !prev[index] }));
+    setOpenSections((prev) => ({ ...prev, [index]: !prev[index] }));
   };
 
   const markCompleted = (lectureId: string) => {
@@ -180,7 +182,9 @@ function EnglishCourseDetailsPage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center p-4">
-        <span className="animate-pulse text-lg font-bold text-magenta-haze dark:text-periwinkle-sky">Loading course...</span>
+        <span className="animate-pulse text-lg font-bold text-magenta-haze dark:text-periwinkle-sky">
+          Loading course...
+        </span>
       </div>
     );
   }
@@ -190,7 +194,9 @@ function EnglishCourseDetailsPage() {
       <div className="flex min-h-screen flex-col items-center justify-center p-4">
         <h2 className="mb-4 text-2xl font-bold text-red-500">Error</h2>
         <p className="text-twilight-navy dark:text-cream-linen">{error || "Course not found"}</p>
-        <Link to="/english-course" className="mt-6 text-magenta-haze underline">Back to Courses</Link>
+        <Link to="/english-course" className="mt-6 text-magenta-haze underline">
+          Back to Courses
+        </Link>
       </div>
     );
   }
@@ -205,7 +211,7 @@ function EnglishCourseDetailsPage() {
     let foundCurrent = false;
     for (let i = 0; i < sections.length; i++) {
       const sec = sections[i];
-      if (sec.lectures.some(l => l.lectureId === activeVideo.lectureId)) {
+      if (sec.lectures.some((l) => l.lectureId === activeVideo.lectureId)) {
         currentSection = sec;
         if (i + 1 < sections.length) {
           nextSection = sections[i + 1];
@@ -234,7 +240,11 @@ function EnglishCourseDetailsPage() {
 
             <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center text-center md:text-left">
               <div className="mx-auto md:mx-0 aspect-[16/9] w-full max-w-[240px] shrink-0 overflow-hidden rounded-2xl bg-white/10 shadow-lg border border-white/20 backdrop-blur-sm">
-                <img src={course.courseImage} alt={course.courseName} className="h-full w-full object-cover" />
+                <img
+                  src={course.courseImage}
+                  alt={course.courseName}
+                  className="h-full w-full object-cover"
+                />
               </div>
               <div className="flex-1 flex flex-col items-center md:items-start justify-center">
                 <h1 className="mb-4 text-3xl font-black text-white md:text-4xl drop-shadow-md">
@@ -299,11 +309,18 @@ function EnglishCourseDetailsPage() {
 
               {showAutoplayCountdown && nextLesson && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm rounded-xl animate-in fade-in p-2 sm:p-4">
-                  <h3 className="mb-1 text-sm font-bold text-white sm:text-base md:mb-2 md:text-xl">Up Next</h3>
-                  <p className="mb-2 px-2 text-center text-sm text-cream-linen line-clamp-2 sm:text-base md:mb-6 md:text-2xl">{nextLesson.name}</p>
+                  <h3 className="mb-1 text-sm font-bold text-white sm:text-base md:mb-2 md:text-xl">
+                    Up Next
+                  </h3>
+                  <p className="mb-2 px-2 text-center text-sm text-cream-linen line-clamp-2 sm:text-base md:mb-6 md:text-2xl">
+                    {nextLesson.name}
+                  </p>
 
                   <div className="relative mb-2 flex h-10 w-10 items-center justify-center sm:h-12 sm:w-12 md:mb-6 md:h-16 md:w-16">
-                    <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
+                    <svg
+                      className="absolute h-full w-full -rotate-90 transform"
+                      viewBox="0 0 36 36"
+                    >
                       <path
                         className="text-white/20"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -320,7 +337,9 @@ function EnglishCourseDetailsPage() {
                         strokeWidth="2"
                       />
                     </svg>
-                    <span className="text-sm font-bold text-white sm:text-lg md:text-xl">{autoplayCountdown}</span>
+                    <span className="text-sm font-bold text-white sm:text-lg md:text-xl">
+                      {autoplayCountdown}
+                    </span>
                   </div>
 
                   <div className="flex gap-2 sm:gap-4">
@@ -359,10 +378,11 @@ function EnglishCourseDetailsPage() {
                   <button
                     onClick={() => markCompleted(activeVideo.lectureId)}
                     disabled={completedLectures[activeVideo.lectureId]}
-                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${completedLectures[activeVideo.lectureId]
+                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${
+                      completedLectures[activeVideo.lectureId]
                         ? "bg-green-500/10 text-green-600 dark:text-green-400"
                         : "bg-magenta-haze/10 text-magenta-haze hover:bg-magenta-haze hover:text-white"
-                      }`}
+                    }`}
                   >
                     <CheckCircle className="h-5 w-5" />
                     {completedLectures[activeVideo.lectureId] ? "Completed" : "Mark as completed"}
@@ -385,7 +405,11 @@ function EnglishCourseDetailsPage() {
                         rel="noreferrer"
                         className="flex items-center gap-2 rounded-xl border border-twilight-navy/10 bg-cloud-white px-4 py-2 text-sm font-semibold text-twilight-navy shadow-sm transition-colors hover:bg-slate-mist/20 dark:border-periwinkle-sky/10 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
                       >
-                        {res.download ? <Download className="h-4 w-4 text-red-500" /> : <FileText className="h-4 w-4 text-red-500" />}
+                        {res.download ? (
+                          <Download className="h-4 w-4 text-red-500" />
+                        ) : (
+                          <FileText className="h-4 w-4 text-red-500" />
+                        )}
                         {res.title}
                       </a>
                     ))}
@@ -403,7 +427,9 @@ function EnglishCourseDetailsPage() {
                     <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
                       Up Next in {currentSection.name}
                     </h3>
-                    <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${isCurrentSectionOpen ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${isCurrentSectionOpen ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {isCurrentSectionOpen && (
@@ -415,14 +441,19 @@ function EnglishCourseDetailsPage() {
                           <button
                             key={lecture.lectureId}
                             onClick={() => setActiveVideo(lecture)}
-                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
+                              isActive
                                 ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
                                 : "hover:bg-slate-mist/10 dark:hover:bg-secondary border border-transparent"
-                              }`}
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <PlayCircle className={`h-5 w-5 shrink-0 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
-                              <span className={`font-medium line-clamp-1 ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
+                              <PlayCircle
+                                className={`h-5 w-5 shrink-0 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`}
+                              />
+                              <span
+                                className={`font-medium line-clamp-1 ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}
+                              >
                                 {lecture.name}
                               </span>
                             </div>
@@ -436,10 +467,11 @@ function EnglishCourseDetailsPage() {
                   )}
 
                   {/* Suggest Next Section */}
-                  {nextSection && nextLesson && (
-                    (currentSection.lectures.every(l => completedLectures[l.lectureId]) ||
-                      activeVideo.lectureId === currentSection.lectures[currentSection.lectures.length - 1].lectureId)
-                  ) && (
+                  {nextSection &&
+                    nextLesson &&
+                    (currentSection.lectures.every((l) => completedLectures[l.lectureId]) ||
+                      activeVideo.lectureId ===
+                        currentSection.lectures[currentSection.lectures.length - 1].lectureId) && (
                       <div className="mt-6 border-t border-twilight-navy/10 pt-6 dark:border-periwinkle-sky/10 animate-in fade-in slide-in-from-bottom-2">
                         <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-twilight-navy/60 dark:text-cream-linen/60">
                           Up Next Section
@@ -466,7 +498,10 @@ function EnglishCourseDetailsPage() {
             </h2>
             <div className="flex flex-col gap-4">
               {sections.map((section, index) => (
-                <div key={index} className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo">
+                <div
+                  key={index}
+                  className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo"
+                >
                   <button
                     onClick={() => toggleSection(index)}
                     className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-mist/5"
@@ -474,7 +509,9 @@ function EnglishCourseDetailsPage() {
                     <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
                       {section.name}
                     </h3>
-                    <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`} />
+                    <ChevronDown
+                      className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`}
+                    />
                   </button>
 
                   {openSections[index] && (
@@ -489,14 +526,19 @@ function EnglishCourseDetailsPage() {
                               if (enrolled) setActiveVideo(lecture);
                               // Do nothing if unenrolled. User must use Enroll Now button.
                             }}
-                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
+                              isActive
                                 ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
                                 : "hover:bg-cloud-white dark:hover:bg-dusk-indigo border border-transparent"
-                              }`}
+                            }`}
                           >
                             <div className="flex items-center gap-3">
-                              <PlayCircle className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
-                              <span className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
+                              <PlayCircle
+                                className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`}
+                              />
+                              <span
+                                className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}
+                              >
                                 {lecture.name}
                               </span>
                             </div>
@@ -513,7 +555,6 @@ function EnglishCourseDetailsPage() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );

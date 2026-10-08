@@ -41,14 +41,14 @@ export function ExtraReelsPlayer({
 
   return (
     <div className="fixed inset-0 z-[100] bg-black flex flex-col">
-      <button 
-        onClick={onClose} 
+      <button
+        onClick={onClose}
         className="absolute top-4 left-4 z-[110] p-2 text-white drop-shadow-md transition"
       >
         <ChevronLeft className="w-8 h-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]" />
       </button>
 
-      <div 
+      <div
         ref={containerRef}
         className="flex-1 overflow-y-scroll snap-y snap-mandatory no-scrollbar relative"
         onScroll={handleScroll}

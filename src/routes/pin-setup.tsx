@@ -70,12 +70,12 @@ function PinSetupPage() {
     e.preventDefault();
     setError("");
     if (!checked) return setError("please read and accept the consent check.");
-    const trimmed = name.trim();
-    if (trimmed.length < 2) return setError("please enter your real name.");
 
     const v = isValidDob(dob);
     if (!v.ok) return setError(v.reason ?? "invalid date.");
-    const code = await savePinSetup(trimmed, dob);
+
+    // We pass empty string for name since we don't collect it here anymore
+    const code = await savePinSetup("", dob);
     setGenerated(code);
     setRevealed(true);
   };
@@ -137,23 +137,10 @@ function PinSetupPage() {
           let's make your <span className="marker-underline">pin.</span>
         </h1>
         <p className="mt-4 text-[17px] text-foreground/80">
-          tell us your real name and date of birth. everything stays on this device. must be 18+.
+          tell us your date of birth. your data is securely stored in our database. must be 18+.
         </p>
 
         <form onSubmit={submit} className="mt-8 space-y-4">
-          <label className="block">
-            <span className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-              real name
-            </span>
-            <input
-              autoFocus
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. LFRDCA"
-              maxLength={80}
-              className="w-full rounded-lg border-[1.5px] border-foreground/30 bg-background px-4 py-3 text-lg text-foreground placeholder:text-foreground/40 outline-none transition focus:bg-muted"
-            />
-          </label>
           <label className="block">
             <span className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
               date of birth
@@ -176,7 +163,7 @@ function PinSetupPage() {
               className="mt-1 h-5 w-5 shrink-0 rounded border-foreground/30 accent-foreground"
             />
             <span className="text-sm text-foreground/90">
-              I swear on my parents that I am 18+, and I accept that I might see adult content here.
+              I swear on my friend that I am 18+, and I accept that I might see adult content here.
             </span>
           </label>
 

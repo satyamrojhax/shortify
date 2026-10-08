@@ -106,7 +106,9 @@ export function OfflinePlayer({ items, startIndex, catalog, onClose }: Props) {
             aria-label={autoNext ? "Auto-next on" : "Loop current reel"}
             title={autoNext ? "Auto-next: on" : "Looping current reel"}
             className={`pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full backdrop-blur transition border ${
-              autoNext ? "bg-foreground text-background border-foreground" : "bg-background/80 border-border/50 text-foreground hover:bg-muted"
+              autoNext
+                ? "bg-foreground text-background border-foreground"
+                : "bg-background/80 border-border/50 text-foreground hover:bg-muted"
             }`}
           >
             {autoNext ? <ChevronsDown className="h-5 w-5" /> : <Repeat1 className="h-5 w-5" />}
@@ -130,7 +132,6 @@ export function OfflinePlayer({ items, startIndex, catalog, onClose }: Props) {
 
       {/* Desktop right sidebar - Arrows only */}
       <div className="absolute right-8 top-1/2 z-40 hidden -translate-y-1/2 flex-col items-center gap-4 md:flex">
-
         {/* Navigation Arrows */}
         <button
           onClick={() => goTo(active - 1)}

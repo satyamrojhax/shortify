@@ -70,7 +70,13 @@ export async function proxyVideo(request: Request): Promise<Response> {
   const out = new Headers();
   // The CDN labels videos as application/octet-stream — force a playable type.
   out.set("Content-Type", "video/mp4");
-  for (const name of ["content-length", "content-range", "accept-ranges", "etag", "last-modified"]) {
+  for (const name of [
+    "content-length",
+    "content-range",
+    "accept-ranges",
+    "etag",
+    "last-modified",
+  ]) {
     const value = upstream.headers.get(name);
     if (value) out.set(name, value);
   }

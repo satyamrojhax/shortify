@@ -34,11 +34,11 @@ export async function warmAppShell(): Promise<boolean> {
       .querySelectorAll<HTMLScriptElement>("script[src]")
       .forEach((el) => add(el.getAttribute("src")));
     document
-      .querySelectorAll<HTMLLinkElement>("link[rel=stylesheet][href], link[rel=modulepreload][href]")
+      .querySelectorAll<HTMLLinkElement>(
+        "link[rel=stylesheet][href], link[rel=modulepreload][href]",
+      )
       .forEach((el) => add(el.getAttribute("href")));
-    performance
-      .getEntriesByType("resource")
-      .forEach((entry) => add(entry.name));
+    performance.getEntriesByType("resource").forEach((entry) => add(entry.name));
 
     let allCached = true;
     await Promise.all(

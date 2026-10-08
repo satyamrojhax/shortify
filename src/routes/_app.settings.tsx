@@ -17,9 +17,16 @@ import {
   hasUnlocked,
   getRandomMode,
   setRandomMode,
+  getAvatarStyle,
+  setAvatarStyle,
+  getAvatarSeed,
+  setAvatarSeed,
 } from "@/lib/storage";
+import { fetchUserProfile } from "@/lib/db";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { usePwa } from "@/hooks/use-pwa";
+import { DICEBEAR_STYLES } from "@/lib/avatar";
+import { UserAvatar } from "@/components/ui/user-avatar";
 import {
   Eye,
   EyeOff,
@@ -35,7 +42,9 @@ import {
   Heart,
   Bookmark,
   ShoppingBag,
-  Users
+  Users,
+  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_app/settings")({
@@ -57,6 +66,13 @@ function SettingsPage() {
   const [coins, setCoins] = useState(0);
   const [randomMode, setRandomModeState] = useState(false);
 
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
+  const [avatarStyle, setAvatarStyleState] = useState<string>("avataaars");
+  const [avatarSeed, setAvatarSeedState] = useState<string>("");
+
   useEffect(() => {
     if (!hydrated) return;
     setLikedCount(getLiked().length);
@@ -65,7 +81,30 @@ function SettingsPage() {
     setWatched(get<number>(KEYS.watched, 0));
     setCoins(getCoins());
     setRandomModeState(getRandomMode());
-  }, [hydrated]);
+    setAvatarStyleState(getAvatarStyle());
+    setAvatarSeedState(getAvatarSeed(username || ""));
+
+    const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
+    if (uid) {
+      fetchUserProfile(uid)
+        .then(data => {
+          setEmail(data.email || "");
+          setPassword(data.password || "");
+        })
+        .catch(console.error);
+    }
+  }, [hydrated, username]);
+
+  const handleStyleChange = (newStyle: string) => {
+    setAvatarStyleState(newStyle);
+    setAvatarStyle(newStyle);
+  };
+
+  const handleRandomizeAvatar = () => {
+    const randomSeed = `${username || "user"}_${Math.random().toString(36).substring(2, 7)}`;
+    setAvatarSeedState(randomSeed);
+    setAvatarSeed(randomSeed);
+  };
 
   const themes: { key: Theme; label: string; icon: typeof Sun }[] = [
     { key: "light", label: "light", icon: Sun },
@@ -82,34 +121,129 @@ function SettingsPage() {
 
       {/* Profile */}
       <section className="paper-card mt-8 p-6">
-        <div className="flex items-center gap-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full border-[1.5px] border-charcoal bg-dew font-display text-2xl text-cocoa dark:border-cream dark:bg-secondary dark:text-cream">
-            {username?.[0]?.toUpperCase()}
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5">
+          <div className="relative group">
+            <UserAvatar
+              username={username}
+              seed={avatarSeed || username}
+              style={avatarStyle}
+              size="2xl"
+              className="h-20 w-20 shadow-md ring-2 ring-cobalt-pop/30"
+            />
+            <button
+              onClick={handleRandomizeAvatar}
+              className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-cobalt-pop text-white shadow-md transition-transform hover:scale-110 active:scale-95"
+              title="Roll random avatar variation"
+              aria-label="Randomize avatar"
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
           </div>
-          <div>
-            <div className="flex items-center gap-2 font-display text-2xl lowercase text-cocoa dark:text-cream">
+          <div className="text-center sm:text-left flex-1">
+            <div className="flex items-center justify-center sm:justify-start gap-2 font-display text-2xl lowercase text-cocoa dark:text-cream">
               @{username}
               {hasUnlocked("badge_verified") && <BadgeCheck className="h-6 w-6 text-blue-500" />}
             </div>
             <div className="text-sm text-marker">a reels reader</div>
+            <div className="mt-1 text-xs text-charcoal/60 dark:text-cream/60">
+              dropped from universe
+            </div>
           </div>
         </div>
-        <div className="mt-6 flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
-          <div>
-            <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-              pin
-            </div>
-            <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
-              {showPin ? "000111" : "••••••"}
+
+        {/* DiceBear Avatar Style Selector */}
+        <div className="mt-6 border-t border-charcoal/10 dark:border-cream/10 pt-4">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
+              choose avatar style
+            </span>
+            <button
+              onClick={handleRandomizeAvatar}
+              className="flex items-center gap-1.5 text-xs font-semibold text-cobalt-pop hover:underline"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              randomize
+            </button>
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-9 gap-2">
+            {DICEBEAR_STYLES.map((st) => {
+              const active = avatarStyle === st.id;
+              return (
+                <button
+                  key={st.id}
+                  onClick={() => handleStyleChange(st.id)}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${
+                    active
+                      ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
+                      : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
+                >
+                  <UserAvatar
+                    username={username}
+                    seed={avatarSeed || username}
+                    style={st.id}
+                    size="sm"
+                    className="h-8 w-8"
+                  />
+                  <span className="text-[10px] font-medium truncate max-w-[60px] text-cocoa dark:text-cream">
+                    {st.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col gap-3">
+          {/* Email */}
+          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
+                email
+              </div>
+              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
+                {email || "loading..."}
+              </div>
             </div>
           </div>
-          <button
-            onClick={() => setShowPin((s) => !s)}
-            className="text-charcoal/70 hover:text-cocoa dark:text-cream/70 dark:hover:text-cream"
-            aria-label="Toggle PIN visibility"
-          >
-            {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-          </button>
+
+          {/* Password */}
+          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
+                password
+              </div>
+              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
+                {showPassword ? password : "••••••••"}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPassword((s) => !s)}
+              className="text-charcoal/70 hover:text-cocoa dark:text-cream/70 dark:hover:text-cream"
+              aria-label="Toggle Password visibility"
+            >
+              {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
+
+          {/* PIN */}
+          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
+            <div>
+              <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
+                pin
+              </div>
+              <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
+                {showPin ? "000111" : "••••••"}
+              </div>
+            </div>
+            <button
+              onClick={() => setShowPin((s) => !s)}
+              className="text-charcoal/70 hover:text-cocoa dark:text-cream/70 dark:hover:text-cream"
+              aria-label="Toggle PIN visibility"
+            >
+              {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
       </section>
 
@@ -264,9 +398,7 @@ function SettingsPage() {
           className="paper-card flex w-full items-center justify-between p-5 text-left transition hover:bg-dew dark:hover:bg-secondary"
         >
           <div>
-            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
-              shop
-            </div>
+            <div className="font-display text-lg lowercase text-cocoa dark:text-cream">shop</div>
             <div className="text-sm text-charcoal/70 dark:text-cream/70">
               browse the store and redeem your coins.
             </div>

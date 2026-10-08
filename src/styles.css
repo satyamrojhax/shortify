@@ -110,14 +110,14 @@
   * {
     border-color: var(--color-border);
   }
-  html {
-    background-color: var(--color-background);
-  }
-  body {
+  html,
+  body,
+  #root {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    overscroll-behavior-y: none;
   }
   h1,
   h2,
@@ -367,7 +367,14 @@
 }
 
 .ig-gradient-bg {
-  background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285aeb 90%);
+  background: radial-gradient(
+    circle at 30% 107%,
+    #fdf497 0%,
+    #fdf497 5%,
+    #fd5949 45%,
+    #d6249f 60%,
+    #285aeb 90%
+  );
 }
 
 /* ── Smooth scrolling & performance ─────────────────────────────── */
@@ -390,7 +397,9 @@ video {
 }
 
 /* Prevent tap-highlight flash on mobile */
-button, a, [role="button"] {
+button,
+a,
+[role="button"] {
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -423,4 +432,3 @@ input[type="range"]::-moz-range-thumb {
   border: none;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
-

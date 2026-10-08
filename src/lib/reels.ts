@@ -123,7 +123,6 @@ export function getLocalCatalog(): Promise<Reel[]> {
   return catalogPromise;
 }
 
-
 // ─── Network Fetch ────────────────────────────────────────────────────────────
 
 async function fetchWithRetry(url: string, attempts = 2): Promise<Response | null> {
@@ -140,7 +139,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
       const res = await fetch(url, { headers });
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
-    } catch { }
+    } catch {}
     if (i < attempts - 1) {
       await new Promise((r) => setTimeout(r, 300 + Math.random() * 200));
     }
@@ -174,7 +173,7 @@ async function fetchXvideos(base: (typeof XVIDEO_BASES)[number], page: number): 
     }));
 
     // Cache for 60 min — fire-and-forget
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
     return reels;
   } catch {
     return [];
@@ -192,7 +191,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
   if (!res) return [];
   try {
     const rawJson = await res.json();
-    const arr = Array.isArray(rawJson) ? rawJson : (rawJson.data || []);
+    const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
       id: `latest-${v.id}`,
       source: "satyamrojha",
@@ -206,7 +205,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
       dislikes: v.dislikes,
       username: v.username,
     }));
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
     return reels;
   } catch {
     return [];
@@ -214,11 +213,13 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
 }
 
 async function fetchCategoryReels(category: string): Promise<Reel[]> {
-  const res = await fetchWithRetry(`https://love.shortify.cc.cd/api/categories/${encodeURIComponent(category)}`);
+  const res = await fetchWithRetry(
+    `https://love.shortify.cc.cd/api/categories/${encodeURIComponent(category)}`,
+  );
   if (!res) return [];
   try {
     const rawJson = await res.json();
-    const arr = Array.isArray(rawJson) ? rawJson : (rawJson.data || []);
+    const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
       id: `category-${v.id}-${Math.random().toString(36).slice(2)}`,
       source: "satyamrojha",
@@ -338,7 +339,7 @@ export const CATEGORIES = [
   "Punjabi",
   "Bengali",
   "Desi-Village",
-  "Indian-Webcam"
+  "Indian-Webcam",
 ];
 
 let localDbOffset = 0;
@@ -459,7 +460,7 @@ export async function fetchReelsPage(
 
   // Cache the assembled page (except for random mode and categories)
   if (!isRandom && !filter.startsWith("category:")) {
-    videoCache.set(feedCacheKey, result).catch(() => { });
+    videoCache.set(feedCacheKey, result).catch(() => {});
   }
 
   return result;
@@ -470,7 +471,7 @@ export async function fetchReelsPage(
  * Call this to warm the next page before the user scrolls to it.
  */
 export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): void {
-  fetchReelsPage(page, filter).catch(() => { });
+  fetchReelsPage(page, filter).catch(() => {});
 }
 
 export function warmAllFilters(): void {
@@ -481,9 +482,11 @@ export function warmAllFilters(): void {
 export async function fetchCreatorReelsPage(
   username: string,
   type: "latest" | "popular",
-  page: number
+  page: number,
 ): Promise<{ items: Reel[]; nextPage: number | undefined }> {
-  const res = await fetchWithRetry(`https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`);
+  const res = await fetchWithRetry(
+    `https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`,
+  );
 
   if (!res) {
     return { items: [], nextPage: undefined };
@@ -491,7 +494,7 @@ export async function fetchCreatorReelsPage(
 
   try {
     const rawJson = await res.json();
-    const arr = Array.isArray(rawJson) ? rawJson : (rawJson.data || []);
+    const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
       id: `creator-${v.id}-${Math.random().toString(36).slice(2)}`,
       source: "satyamrojha",

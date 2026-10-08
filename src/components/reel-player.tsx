@@ -31,9 +31,11 @@ import {
   getVolume,
   setVolumeState,
   addToHistory,
+  isMemeSoundsEnabled,
 } from "@/lib/storage";
 import confetti from "canvas-confetti";
 import { useOfflineSrc } from "@/hooks/use-offline";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 type Props = {
   reel: Reel;
@@ -54,59 +56,84 @@ const renderTextWithLinks = (text: string) => {
   const parts = text.split(urlRegex);
   return parts.map((part, i) => {
     if (part.match(urlRegex)) {
-      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-cobalt-pop hover:underline" onClick={(e) => e.stopPropagation()}>{part}</a>;
+      return (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cobalt-pop hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {part}
+        </a>
+      );
     }
     return part;
   });
 };
 
-const Timeline = memo(({ videoRef, active }: { videoRef: React.RefObject<HTMLVideoElement | null>, active: boolean }) => {
-  const [progress, setProgress] = useState(0);
+const Timeline = memo(
+  ({
+    videoRef,
+    active,
+  }: {
+    videoRef: React.RefObject<HTMLVideoElement | null>;
+    active: boolean;
+  }) => {
+    const [progress, setProgress] = useState(0);
 
-  useEffect(() => {
-    const v = videoRef.current;
-    if (!v) return;
-    const onTime = () => setProgress((v.currentTime / (v.duration || 1)) * 100);
-    v.addEventListener("timeupdate", onTime);
-    return () => v.removeEventListener("timeupdate", onTime);
-  }, [active, videoRef]);
+    useEffect(() => {
+      const v = videoRef.current;
+      if (!v) return;
+      const onTime = () => setProgress((v.currentTime / (v.duration || 1)) * 100);
+      v.addEventListener("timeupdate", onTime);
+      return () => v.removeEventListener("timeupdate", onTime);
+    }, [active, videoRef]);
 
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-4 z-30 group/timeline flex items-end">
-      <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 group-hover/timeline:h-2.5 transition-all">
-        <div className="h-full bg-white transition-all duration-75" style={{ width: `${progress}%` }} />
-      </div>
-      <input
-        type="range" min="0" max="100" step="0.1" value={progress || 0}
-        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-        onChange={(e) => {
-          const v = videoRef.current;
-          if (v && v.duration) v.currentTime = (parseFloat(e.target.value) / 100) * v.duration;
-        }}
-      />
-    </div>
-  );
-});
-
-const ProfileAvatar = memo(({ name, size = "h-8 w-8", textClass = "text-xs" }: { name: string, size?: string, textClass?: string }) => {
-  const [error, setError] = useState(false);
-  return (
-    <div className={`relative shrink-0 ${size} rounded-full overflow-hidden`}>
-      {!error ? (
-        <img
-          src={`https://love.viraly.wtf/profileImages/${name}.jpg`}
-          alt={name}
-          className="h-full w-full object-cover bg-muted"
-          onError={() => setError(true)}
-        />
-      ) : (
-        <div className={`ig-gradient-bg flex h-full w-full items-center justify-center font-bold text-white ${textClass}`}>
-          {name[0]?.toUpperCase()}
+    return (
+      <div className="absolute bottom-0 left-0 right-0 h-4 z-30 group/timeline flex items-end">
+        <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-white/20 group-hover/timeline:h-2.5 transition-all">
+          <div
+            className="h-full bg-white transition-all duration-75"
+            style={{ width: `${progress}%` }}
+          />
         </div>
-      )}
-    </div>
-  );
-});
+        <input
+          type="range"
+          min="0"
+          max="100"
+          step="0.1"
+          value={progress || 0}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={(e) => {
+            const v = videoRef.current;
+            if (v && v.duration) v.currentTime = (parseFloat(e.target.value) / 100) * v.duration;
+          }}
+        />
+      </div>
+    );
+  },
+);
+
+const ProfileAvatar = memo(
+  ({
+    name,
+    size = "h-8 w-8",
+  }: {
+    name: string;
+    size?: string;
+    textClass?: string;
+  }) => {
+    return (
+      <UserAvatar
+        username={name}
+        src={`https://love.viraly.wtf/profileImages/${name}.jpg`}
+        className={size}
+      />
+    );
+  },
+);
 
 export const ReelPlayer = memo(function ReelPlayer({
   reel,
@@ -138,19 +165,20 @@ export const ReelPlayer = memo(function ReelPlayer({
   const [videoRatio, setVideoRatio] = useState<string>("9 / 16");
   /** true when viewport is ≥ 768 px */
   const [isDesktop, setIsDesktop] = useState(() =>
-    typeof window !== "undefined" ? window.innerWidth >= 768 : false
+    typeof window !== "undefined" ? window.innerWidth >= 768 : false,
   );
 
   const isPortrait = useMemo(() => {
-    const [w, h] = videoRatio.split("/").map(s => parseFloat(s.trim()));
+    const [w, h] = videoRatio.split("/").map((s) => parseFloat(s.trim()));
     if (isNaN(w) || isNaN(h)) return true;
     return w <= h;
   }, [videoRatio]);
 
   const [isFav, setIsFav] = useState(false);
   const showProfile = feedType !== "search";
-  const showCommentsBtn = feedType === "latest" || feedType?.startsWith("category_") || feedType?.startsWith("explore_");
-  
+  const showCommentsBtn =
+    feedType === "latest" || feedType?.startsWith("category_") || feedType?.startsWith("explore_");
+
   const bufferingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const coinsAwarded = useRef(false);
   const holdTimer = useRef<number | null>(null);
@@ -222,13 +250,18 @@ export const ReelPlayer = memo(function ReelPlayer({
     if (reel.duration) return reel.duration;
     const dur = videoDuration || videoRef.current?.duration;
     if (!dur || isNaN(dur) || dur === Infinity) return null;
-    return `${Math.floor(dur / 60)}:${(Math.floor(dur % 60)).toString().padStart(2, "0")}`;
+    return `${Math.floor(dur / 60)}:${Math.floor(dur % 60)
+      .toString()
+      .padStart(2, "0")}`;
   };
   const finalDuration = formatDurationFallback();
 
-  useEffect(() => () => {
-    if (bufferingTimer.current) clearTimeout(bufferingTimer.current);
-  }, []);
+  useEffect(
+    () => () => {
+      if (bufferingTimer.current) clearTimeout(bufferingTimer.current);
+    },
+    [],
+  );
 
   // ── Active / inactive management ─────────────────────────────────────────
   useEffect(() => {
@@ -238,7 +271,7 @@ export const ReelPlayer = memo(function ReelPlayer({
     if (active) {
       if (!hasPlayedRef.current) v.currentTime = 0;
       hasPlayedRef.current = true;
-      v.play().catch(() => { });
+      v.play().catch(() => {});
       setPaused(false);
       if (!watchedFired.current) {
         watchedFired.current = true;
@@ -256,7 +289,10 @@ export const ReelPlayer = memo(function ReelPlayer({
 
   useEffect(() => {
     const v = videoRef.current;
-    if (v) { v.muted = muted; v.volume = volume; }
+    if (v) {
+      v.muted = muted;
+      v.volume = volume;
+    }
   }, [muted, volume]);
 
   // ── Coins on completion ──────────────────────────────────────────────────
@@ -277,18 +313,25 @@ export const ReelPlayer = memo(function ReelPlayer({
   const doLike = () => {
     const now = toggleLike(reel);
     setLiked(now);
-    if (now) { setShowHeart(true); setTimeout(() => setShowHeart(false), 700); }
+    if (now) {
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 700);
+    }
   };
   const doSave = () => setSaved(toggleSave(reel));
 
   const onDoubleClick = () => {
     if (!liked) doLike();
-    else { setShowHeart(true); setTimeout(() => setShowHeart(false), 700); }
+    else {
+      setShowHeart(true);
+      setTimeout(() => setShowHeart(false), 700);
+    }
     if (hasUnlocked("effect_confetti"))
       confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 }, zIndex: 9999 });
-    if (localStorage.getItem("ig.meme_sounds") === "true") {
+    if (isMemeSoundsEnabled()) {
       const a = new Audio("https://www.myinstants.com/media/sounds/bruh.mp3");
-      a.volume = 0.5; a.play().catch(() => { });
+      a.volume = 0.5;
+      a.play().catch(() => {});
     }
     if (navigator.vibrate) navigator.vibrate(50);
   };
@@ -309,12 +352,17 @@ export const ReelPlayer = memo(function ReelPlayer({
   };
 
   const clearHold = () => {
-    if (holdTimer.current) { window.clearTimeout(holdTimer.current); holdTimer.current = null; }
+    if (holdTimer.current) {
+      window.clearTimeout(holdTimer.current);
+      holdTimer.current = null;
+    }
     const v = videoRef.current;
     if (v && v.playbackRate !== 1) v.playbackRate = 1;
     if (heldRef.current) {
       suppressClickRef.current = true;
-      setTimeout(() => { suppressClickRef.current = false; }, 50);
+      setTimeout(() => {
+        suppressClickRef.current = false;
+      }, 50);
     }
     heldRef.current = false;
     setIs2x(false);
@@ -324,8 +372,13 @@ export const ReelPlayer = memo(function ReelPlayer({
     if (suppressClickRef.current) return;
     const v = videoRef.current;
     if (!v) return;
-    if (v.paused) { v.play().catch(() => { }); setPaused(false); }
-    else { v.pause(); setPaused(true); }
+    if (v.paused) {
+      v.play().catch(() => {});
+      setPaused(false);
+    } else {
+      v.pause();
+      setPaused(true);
+    }
   };
 
   const share = async () => {
@@ -333,15 +386,20 @@ export const ReelPlayer = memo(function ReelPlayer({
     try {
       if (navigator.share) await navigator.share({ title: reel.title ?? "Watch this reel", url });
       else await navigator.clipboard.writeText(url);
-    } catch { }
+    } catch {}
   };
 
-  const copyLink = () => { navigator.clipboard.writeText(reel.videoUrl); setShowMenu(false); };
+  const copyLink = () => {
+    navigator.clipboard.writeText(reel.videoUrl);
+    setShowMenu(false);
+  };
 
   const reportReel = () => {
     setShowMenu(false);
     const s = encodeURIComponent(`Report Reel: ${reel.title ?? "Unknown"}`);
-    const b = encodeURIComponent(`Title: ${reel.title ?? "Unknown"}\nSource: ${reel.source}\nURL: ${reel.videoUrl}`);
+    const b = encodeURIComponent(
+      `Title: ${reel.title ?? "Unknown"}\nSource: ${reel.source}\nURL: ${reel.videoUrl}`,
+    );
     window.location.href = `mailto:lfrdcatechnologies@outlook.com?subject=${s}&body=${b}`;
   };
 
@@ -359,7 +417,10 @@ export const ReelPlayer = memo(function ReelPlayer({
   const showVolumeSlider = volumeHovered || volumeInteracting;
 
   const onVolumeAreaEnter = useCallback(() => {
-    if (volumeHideTimer.current) { clearTimeout(volumeHideTimer.current); volumeHideTimer.current = null; }
+    if (volumeHideTimer.current) {
+      clearTimeout(volumeHideTimer.current);
+      volumeHideTimer.current = null;
+    }
     setVolumeHovered(true);
   }, []);
 
@@ -371,7 +432,12 @@ export const ReelPlayer = memo(function ReelPlayer({
     }, 300);
   }, []);
 
-  useEffect(() => () => { if (volumeHideTimer.current) clearTimeout(volumeHideTimer.current); }, []);
+  useEffect(
+    () => () => {
+      if (volumeHideTimer.current) clearTimeout(volumeHideTimer.current);
+    },
+    [],
+  );
 
   // ── Image error handler ──────────────────────────────────────────────────
   const onImgError = useCallback(() => setImgError(true), []);
@@ -384,35 +450,51 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, []);
 
   // ── Shared video props ────────────────────────────────────────────────────
-  const videoProps = useMemo(() => ({
-    ref: videoRef,
-    src: videoSrc,
-    playsInline: true,
-    "webkit-playsinline": "true",
-    disableRemotePlayback: true,
-    loop: !autoScroll,
-    preload: preload,
-    onLoadedMetadata: handleLoadedMetadata,
-    onEnded: onEnded,
-    onClick: togglePlay,
-    onDoubleClick: onDoubleClick,
-    onPointerDown: onPointerDown,
-    onPointerUp: clearHold,
-    onPointerLeave: clearHold,
-    onPointerCancel: clearHold,
-    onTouchStart: startHold,
-    onTouchMove: clearHold,
-    onTouchEnd: clearHold,
-    onTouchCancel: clearHold,
-    onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
-    onWaiting: showBuffering,
-    onStalled: showBuffering,
-    onPlaying: hideBuffering,
-    onCanPlay: hideBuffering,
-    onCanPlayThrough: hideBuffering,
-    onSeeking: showBufferingImmediate,
-    onSeeked: hideBuffering,
-  }), [videoSrc, autoScroll, preload, onEnded, togglePlay, onDoubleClick, onPointerDown, clearHold, startHold, showBuffering, showBufferingImmediate, hideBuffering]);
+  const videoProps = useMemo(
+    () => ({
+      ref: videoRef,
+      src: videoSrc,
+      playsInline: true,
+      "webkit-playsinline": "true",
+      disableRemotePlayback: true,
+      loop: !autoScroll,
+      preload: preload,
+      onLoadedMetadata: handleLoadedMetadata,
+      onEnded: onEnded,
+      onClick: togglePlay,
+      onDoubleClick: onDoubleClick,
+      onPointerDown: onPointerDown,
+      onPointerUp: clearHold,
+      onPointerLeave: clearHold,
+      onPointerCancel: clearHold,
+      onTouchStart: startHold,
+      onTouchMove: clearHold,
+      onTouchEnd: clearHold,
+      onTouchCancel: clearHold,
+      onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
+      onWaiting: showBuffering,
+      onStalled: showBuffering,
+      onPlaying: hideBuffering,
+      onCanPlay: hideBuffering,
+      onCanPlayThrough: hideBuffering,
+      onSeeking: showBufferingImmediate,
+      onSeeked: hideBuffering,
+    }),
+    [
+      videoSrc,
+      autoScroll,
+      preload,
+      onEnded,
+      togglePlay,
+      onDoubleClick,
+      onPointerDown,
+      clearHold,
+      startHold,
+      showBuffering,
+      showBufferingImmediate,
+      hideBuffering,
+    ],
+  );
 
   // ── Shared overlays (pause, buffering, heart, 2x, volume) ────────────────
   const Overlays = () => (
@@ -431,7 +513,11 @@ export const ReelPlayer = memo(function ReelPlayer({
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="flex gap-2">
             {[0, 150, 300].map((d) => (
-              <div key={d} className="h-3 w-3 animate-bounce rounded-full bg-white shadow-lg" style={{ animationDelay: `${d}ms` }} />
+              <div
+                key={d}
+                className="h-3 w-3 animate-bounce rounded-full bg-white shadow-lg"
+                style={{ animationDelay: `${d}ms` }}
+              />
             ))}
           </div>
         </div>
@@ -451,62 +537,69 @@ export const ReelPlayer = memo(function ReelPlayer({
           <div
             className="overflow-hidden transition-all duration-300 ease-out relative flex items-center justify-center touch-none cursor-pointer"
             style={{ height: showVolumeSlider ? 88 : 0, width: 28 }}
-          onPointerDown={(e) => {
-            e.stopPropagation();
-            (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
-            setVolumeInteracting(true);
-            
-            const rect = e.currentTarget.getBoundingClientRect();
-            // Track height is 72, with 8px padding top/bottom in the 88px container
-            let y = e.clientY - rect.top - 8;
-            let val = 1 - (y / 72);
-            val = Math.max(0, Math.min(1, val));
-            setVolume(val);
-            setVolumeState(val);
-            if (val > 0 && muted) onToggleMute();
-            if (val === 0 && !muted) onToggleMute();
-          }}
-          onPointerMove={(e) => {
-            if (!volumeInteracting) return;
-            const rect = e.currentTarget.getBoundingClientRect();
-            let y = e.clientY - rect.top - 8;
-            let val = 1 - (y / 72);
-            val = Math.max(0, Math.min(1, val));
-            setVolume(val);
-            setVolumeState(val);
-            if (val > 0 && muted) onToggleMute();
-            if (val === 0 && !muted) onToggleMute();
-          }}
-          onPointerUp={(e) => {
-            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-            setVolumeInteracting(false);
-            onVolumeAreaLeave();
-          }}
-          onPointerCancel={(e) => {
-            (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
-            setVolumeInteracting(false);
-            onVolumeAreaLeave();
-          }}
-        >
-          {/* Track */}
-          <div className="relative w-1 h-[72px] bg-white/30 rounded-full overflow-hidden pointer-events-none">
-            <div 
-              className="absolute bottom-0 left-0 right-0 bg-white" 
-              style={{ height: `${(muted ? 0 : volume) * 100}%` }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
+              (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+              setVolumeInteracting(true);
+
+              const rect = e.currentTarget.getBoundingClientRect();
+              // Track height is 72, with 8px padding top/bottom in the 88px container
+              let y = e.clientY - rect.top - 8;
+              let val = 1 - y / 72;
+              val = Math.max(0, Math.min(1, val));
+              setVolume(val);
+              setVolumeState(val);
+              if (val > 0 && muted) onToggleMute();
+              if (val === 0 && !muted) onToggleMute();
+            }}
+            onPointerMove={(e) => {
+              if (!volumeInteracting) return;
+              const rect = e.currentTarget.getBoundingClientRect();
+              let y = e.clientY - rect.top - 8;
+              let val = 1 - y / 72;
+              val = Math.max(0, Math.min(1, val));
+              setVolume(val);
+              setVolumeState(val);
+              if (val > 0 && muted) onToggleMute();
+              if (val === 0 && !muted) onToggleMute();
+            }}
+            onPointerUp={(e) => {
+              (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+              setVolumeInteracting(false);
+              onVolumeAreaLeave();
+            }}
+            onPointerCancel={(e) => {
+              (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+              setVolumeInteracting(false);
+              onVolumeAreaLeave();
+            }}
+          >
+            {/* Track */}
+            <div className="relative w-1 h-[72px] bg-white/30 rounded-full overflow-hidden pointer-events-none">
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-white"
+                style={{ height: `${(muted ? 0 : volume) * 100}%` }}
+              />
+            </div>
+            {/* Thumb */}
+            <div
+              className="absolute w-3 h-3 bg-white rounded-full pointer-events-none shadow-md"
+              style={{ bottom: 8 + (muted ? 0 : volume) * 72 - 6 }}
             />
           </div>
-          {/* Thumb */}
-          <div 
-            className="absolute w-3 h-3 bg-white rounded-full pointer-events-none shadow-md"
-            style={{ bottom: 8 + (muted ? 0 : volume) * 72 - 6 }}
-          />
-        </div>
         )}
         <button
-          onClick={(e) => { e.stopPropagation(); onToggleMute(); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleMute();
+          }}
           className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full hover:bg-white/20 transition-colors"
         >
-          {muted || volume === 0 ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+          {muted || volume === 0 ? (
+            <VolumeX className="h-4 w-4" />
+          ) : (
+            <Volume2 className="h-4 w-4" />
+          )}
         </button>
       </div>
 
@@ -518,7 +611,6 @@ export const ReelPlayer = memo(function ReelPlayer({
   // ── Three-dots menu ───────────────────────────────────────────────────────
   // Mobile: bottom sheet sliding up; Desktop: right-side panel anchored to button
   const MenuModal = () => {
-
     return showMenu ? (
       <>
         {/* MOBILE Backdrop — tap anywhere to close */}
@@ -546,31 +638,50 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="overflow-y-auto">
               {/* Video details */}
               <div className="px-4 pt-2 pb-3 border-b border-border">
-                {showProfile && (
-                  showFollowButton ? (
+                {showProfile &&
+                  (showFollowButton ? (
                     <Link
-                      to="/creator/$username" 
+                      to="/creator/$username"
                       params={{ username: reel.username || reel.source }}
                       className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
                     >
-                      <ProfileAvatar name={reel.username || reel.source} size="h-8 w-8" textClass="text-xs" />
+                      <ProfileAvatar
+                        name={reel.username || reel.source}
+                        size="h-8 w-8"
+                        textClass="text-xs"
+                      />
                       <span className="text-sm font-semibold text-card-foreground truncate">
                         {reel.username || `${reel.source}_reels`}
                       </span>
                     </Link>
                   ) : (
                     <div className="flex items-center gap-3 mb-2 w-fit">
-                      <ProfileAvatar name={reel.username || reel.source} size="h-8 w-8" textClass="text-xs" />
+                      <ProfileAvatar
+                        name={reel.username || reel.source}
+                        size="h-8 w-8"
+                        textClass="text-xs"
+                      />
                       <span className="text-sm font-semibold text-card-foreground truncate">
                         {reel.username || `${reel.source}_reels`}
                       </span>
                     </div>
-                  )
+                  ))}
+                {reel.title && (
+                  <p className="text-sm text-card-foreground font-medium leading-snug">
+                    {reel.title}
+                  </p>
                 )}
-                {reel.title && <p className="text-sm text-card-foreground font-medium leading-snug">{reel.title}</p>}
-                {showProfile && reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">{reel.description}</p>}
+                {showProfile && reel.description && (
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed line-clamp-3">
+                    {reel.description}
+                  </p>
+                )}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                  {showProfile && finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
+                  {showProfile && finalDuration && (
+                    <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">
+                      {finalDuration}
+                    </span>
+                  )}
                   {reel.views && <span>{formatCount(reel.views)} views</span>}
                   {showProfile && reel.likes && <span>{formatCount(reel.likes)} likes</span>}
                   {showProfile && reel.timeAgo && <span>{reel.timeAgo}</span>}
@@ -578,7 +689,10 @@ export const ReelPlayer = memo(function ReelPlayer({
               </div>
               {/* Action buttons */}
               <div>
-                <button onClick={copyLink} className="flex w-full items-center gap-4 px-5 py-3.5 active:bg-muted transition">
+                <button
+                  onClick={copyLink}
+                  className="flex w-full items-center gap-4 px-5 py-3.5 active:bg-muted transition"
+                >
                   <Copy className="h-5 w-5 shrink-0 text-card-foreground" />
                   <span className="text-sm font-medium text-card-foreground">Copy link</span>
                 </button>
@@ -587,17 +701,24 @@ export const ReelPlayer = memo(function ReelPlayer({
                   className="flex w-full items-center justify-between px-5 py-3.5 active:bg-muted transition"
                 >
                   <div className="flex items-center gap-4">
-                    {autoScroll
-                      ? <ToggleRight className="h-5 w-5 shrink-0 text-cobalt-pop" />
-                      : <ToggleLeft className="h-5 w-5 shrink-0 text-muted-foreground" />}
+                    {autoScroll ? (
+                      <ToggleRight className="h-5 w-5 shrink-0 text-cobalt-pop" />
+                    ) : (
+                      <ToggleLeft className="h-5 w-5 shrink-0 text-muted-foreground" />
+                    )}
                     <span className="text-sm font-medium text-card-foreground">Auto-scroll</span>
                   </div>
-                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${autoScroll ? "bg-cobalt-pop/15 text-cobalt-pop" : "bg-muted text-muted-foreground"}`}>
+                  <span
+                    className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${autoScroll ? "bg-cobalt-pop/15 text-cobalt-pop" : "bg-muted text-muted-foreground"}`}
+                  >
                     {autoScroll ? "ON" : "OFF"}
                   </span>
                 </button>
                 <div className="mx-4 border-t border-border" />
-                <button onClick={reportReel} className="flex w-full items-center gap-4 px-5 py-3.5 active:bg-muted transition">
+                <button
+                  onClick={reportReel}
+                  className="flex w-full items-center gap-4 px-5 py-3.5 active:bg-muted transition"
+                >
                   <Flag className="h-5 w-5 shrink-0 text-destructive" />
                   <span className="text-sm font-semibold text-destructive">Report</span>
                 </button>
@@ -612,31 +733,48 @@ export const ReelPlayer = memo(function ReelPlayer({
           <div className="relative w-64 rounded-2xl bg-popover border border-border shadow-2xl overflow-hidden z-10 animate-in zoom-in-95 duration-200 pointer-events-auto">
             {/* Video details */}
             <div className="px-4 py-3 border-b border-border bg-muted/30">
-              {showProfile && (
-                showFollowButton ? (
+              {showProfile &&
+                (showFollowButton ? (
                   <Link
-                    to="/creator/$username" 
+                    to="/creator/$username"
                     params={{ username: reel.username || reel.source }}
                     className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
                   >
-                    <ProfileAvatar name={reel.username || reel.source} size="h-9 w-9" textClass="text-sm" />
+                    <ProfileAvatar
+                      name={reel.username || reel.source}
+                      size="h-9 w-9"
+                      textClass="text-sm"
+                    />
                     <span className="text-sm font-semibold text-foreground truncate">
                       {reel.username || `${reel.source}_reels`}
                     </span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-3 mb-2 w-fit">
-                    <ProfileAvatar name={reel.username || reel.source} size="h-9 w-9" textClass="text-sm" />
+                    <ProfileAvatar
+                      name={reel.username || reel.source}
+                      size="h-9 w-9"
+                      textClass="text-sm"
+                    />
                     <span className="text-sm font-semibold text-foreground truncate">
                       {reel.username || `${reel.source}_reels`}
                     </span>
                   </div>
-                )
+                ))}
+              {reel.title && (
+                <p className="text-sm text-foreground font-medium leading-snug">{reel.title}</p>
               )}
-              {reel.title && <p className="text-sm text-foreground font-medium leading-snug">{reel.title}</p>}
-              {showProfile && reel.description && <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{reel.description}</p>}
+              {showProfile && reel.description && (
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  {reel.description}
+                </p>
+              )}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                {showProfile && finalDuration && <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">{finalDuration}</span>}
+                {showProfile && finalDuration && (
+                  <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">
+                    {finalDuration}
+                  </span>
+                )}
                 {reel.views && <span>· {formatCount(reel.views)} views</span>}
                 {showProfile && reel.likes && <span>· {formatCount(reel.likes)} likes</span>}
                 {showProfile && reel.timeAgo && <span>· {reel.timeAgo}</span>}
@@ -645,7 +783,10 @@ export const ReelPlayer = memo(function ReelPlayer({
 
             {/* Actions */}
             <div className="py-2">
-              <button onClick={copyLink} className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted transition">
+              <button
+                onClick={copyLink}
+                className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted transition"
+              >
                 <Copy className="h-4 w-4 shrink-0 text-foreground" />
                 <span className="text-sm font-medium text-foreground">Copy link</span>
               </button>
@@ -654,17 +795,24 @@ export const ReelPlayer = memo(function ReelPlayer({
                 className="flex w-full items-center justify-between px-4 py-3 hover:bg-muted transition"
               >
                 <div className="flex items-center gap-3">
-                  {autoScroll
-                    ? <ToggleRight className="h-4 w-4 shrink-0 text-cobalt-pop" />
-                    : <ToggleLeft className="h-4 w-4 shrink-0 text-muted-foreground" />}
+                  {autoScroll ? (
+                    <ToggleRight className="h-4 w-4 shrink-0 text-cobalt-pop" />
+                  ) : (
+                    <ToggleLeft className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  )}
                   <span className="text-sm font-medium text-foreground">Auto-scroll</span>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${autoScroll ? "bg-cobalt-pop/10 text-cobalt-pop" : "bg-muted text-muted-foreground"}`}>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${autoScroll ? "bg-cobalt-pop/10 text-cobalt-pop" : "bg-muted text-muted-foreground"}`}
+                >
                   {autoScroll ? "ON" : "OFF"}
                 </span>
               </button>
               <div className="mx-4 my-1 border-t border-border" />
-              <button onClick={reportReel} className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted transition">
+              <button
+                onClick={reportReel}
+                className="flex w-full items-center gap-3 px-4 py-3 hover:bg-muted transition"
+              >
                 <Flag className="h-4 w-4 shrink-0 text-destructive" />
                 <span className="text-sm font-semibold text-destructive">Report</span>
               </button>
@@ -684,19 +832,31 @@ export const ReelPlayer = memo(function ReelPlayer({
         <div className="flex items-center gap-3 w-full max-w-full">
           {showFollowButton ? (
             <Link
-              to="/creator/$username" 
+              to="/creator/$username"
               params={{ username: reel.username || reel.source }}
               className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
             >
-              <ProfileAvatar name={reel.username || reel.source} size="h-10 w-10" textClass="text-sm" />
-              <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+              <ProfileAvatar
+                name={reel.username || reel.source}
+                size="h-10 w-10"
+                textClass="text-sm"
+              />
+              <span
+                className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+              >
                 {reel.username || `${reel.source}_reels`}
               </span>
             </Link>
           ) : (
             <div className="flex items-center gap-2 min-w-0 shrink">
-              <ProfileAvatar name={reel.username || reel.source} size="h-10 w-10" textClass="text-sm" />
-              <span className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}>
+              <ProfileAvatar
+                name={reel.username || reel.source}
+                size="h-10 w-10"
+                textClass="text-sm"
+              />
+              <span
+                className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+              >
                 {reel.username || `${reel.source}_reels`}
               </span>
             </div>
@@ -716,12 +876,18 @@ export const ReelPlayer = memo(function ReelPlayer({
         </div>
       )}
       {reel.title && (
-        <p className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}>
+        <p
+          className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}
+        >
           {reel.title}
         </p>
       )}
-      <div className={`mt-2 flex flex-wrap items-center gap-2 text-xs font-medium ${overlay ? "text-white/70 drop-shadow" : "text-slate-mist dark:text-muted-foreground"}`}>
-        {finalDuration && <span className="rounded bg-black/40 px-1.5 py-0.5 text-white">{finalDuration}</span>}
+      <div
+        className={`mt-2 flex flex-wrap items-center gap-2 text-xs font-medium ${overlay ? "text-white/70 drop-shadow" : "text-slate-mist dark:text-muted-foreground"}`}
+      >
+        {finalDuration && (
+          <span className="rounded bg-black/40 px-1.5 py-0.5 text-white">{finalDuration}</span>
+        )}
         {reel.views && <span>{formatCount(reel.views)} views</span>}
         {reel.timeAgo && <span>{reel.timeAgo}</span>}
       </div>
@@ -735,10 +901,9 @@ export const ReelPlayer = memo(function ReelPlayer({
   // ─────────────────────────────────────────────────────────────────────────
   if (isDesktop) {
     const isOffline = feedType === "offline";
-    
+
     return (
       <div className="relative h-full w-full flex items-center justify-center gap-4 px-4 overflow-hidden bg-background">
-
         {/* Left — Profile info (Only for portrait) */}
         {isPortrait && !isOffline && (
           <div className="flex w-56 shrink-0 flex-col justify-end h-full pb-12 z-10">
@@ -758,13 +923,18 @@ export const ReelPlayer = memo(function ReelPlayer({
         >
           {reel.thumbnail && !imgError && (
             <img
-              src={reel.thumbnail} alt=""
+              src={reel.thumbnail}
+              alt=""
               className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isBuffering || !active ? "opacity-60" : "opacity-0 pointer-events-none"}`}
-              loading="eager" decoding="async"
+              loading="eager"
+              decoding="async"
               onError={onImgError}
             />
           )}
-          <video {...videoProps} className="absolute inset-0 h-full w-full object-cover cursor-pointer" />
+          <video
+            {...videoProps}
+            className="absolute inset-0 h-full w-full object-cover cursor-pointer"
+          />
           <Overlays />
 
           {/* Overlaid Profile info (bottom left inside the video - Only for landscape) */}
@@ -786,9 +956,17 @@ export const ReelPlayer = memo(function ReelPlayer({
             style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
           >
             {/* Like */}
-            <button onClick={() => { doLike(); }} className="flex flex-col items-center gap-1 group">
+            <button
+              onClick={() => {
+                doLike();
+              }}
+              className="flex flex-col items-center gap-1 group"
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                <Heart className={`h-6 w-6 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`} strokeWidth={2} />
+                <Heart
+                  className={`h-6 w-6 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`}
+                  strokeWidth={2}
+                />
               </div>
               <span className="text-xs font-semibold text-foreground">
                 {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : "Like"}
@@ -807,9 +985,15 @@ export const ReelPlayer = memo(function ReelPlayer({
 
             {/* Comments */}
             {showCommentsBtn && (
-              <button onClick={() => setShowComments(!showComments)} className="flex flex-col items-center gap-1 group">
+              <button
+                onClick={() => setShowComments(!showComments)}
+                className="flex flex-col items-center gap-1 group"
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                  <MessageCircle className={`h-6 w-6 transition ${showComments ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={2} />
+                  <MessageCircle
+                    className={`h-6 w-6 transition ${showComments ? "fill-foreground text-foreground" : "text-foreground"}`}
+                    strokeWidth={2}
+                  />
                 </div>
                 <span className="text-xs font-semibold text-foreground">
                   {reel.comments?.length ? formatCount(reel.comments.length) : "Comment"}
@@ -828,15 +1012,25 @@ export const ReelPlayer = memo(function ReelPlayer({
             {/* Save */}
             <button onClick={doSave} className="flex flex-col items-center gap-1 group">
               <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                {saved
-                  ? <BookmarkCheck className="h-6 w-6 fill-foreground text-foreground" strokeWidth={2} />
-                  : <Bookmark className="h-6 w-6 text-foreground" strokeWidth={2} />}
+                {saved ? (
+                  <BookmarkCheck
+                    className="h-6 w-6 fill-foreground text-foreground"
+                    strokeWidth={2}
+                  />
+                ) : (
+                  <Bookmark className="h-6 w-6 text-foreground" strokeWidth={2} />
+                )}
               </div>
-              <span className="text-xs font-semibold text-foreground">{saved ? "Saved" : "Save"}</span>
+              <span className="text-xs font-semibold text-foreground">
+                {saved ? "Saved" : "Save"}
+              </span>
             </button>
 
             {/* Three dots */}
-            <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1 group">
+            <button
+              onClick={() => setShowMenu(!showMenu)}
+              className="flex flex-col items-center gap-1 group"
+            >
               <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
                 <MoreHorizontal className="h-6 w-6 text-foreground" strokeWidth={2} />
               </div>
@@ -846,15 +1040,17 @@ export const ReelPlayer = memo(function ReelPlayer({
 
         {/* Right — Comments Sidebar (Desktop) */}
         {!isOffline && showComments && isDesktop && (
-          <div 
+          <div
             className="flex flex-col shrink-0 w-[350px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
             style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
           >
             <div className="px-4 py-3 border-b border-border bg-muted/30 flex justify-between items-center">
               <h3 className="font-bold text-foreground">Comments</h3>
-              <button onClick={() => setShowComments(false)} className="p-1.5 rounded-full hover:bg-muted text-foreground transition">
-                <span className="sr-only">Close</span>
-                ✕
+              <button
+                onClick={() => setShowComments(false)}
+                className="p-1.5 rounded-full hover:bg-muted text-foreground transition"
+              >
+                <span className="sr-only">Close</span>✕
               </button>
             </div>
             <div className="overflow-y-auto p-4 flex-1">
@@ -862,7 +1058,9 @@ export const ReelPlayer = memo(function ReelPlayer({
                 <MobileCommentItem key={i} c={c} />
               ))}
               {!reel.comments?.length && (
-                <div className="text-center text-muted-foreground py-8 text-sm">No comments yet.</div>
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  No comments yet.
+                </div>
               )}
             </div>
           </div>
@@ -873,14 +1071,22 @@ export const ReelPlayer = memo(function ReelPlayer({
 
   // ─────────────────────────────────────────────────────────────────────────
 
-  const MobileCommentItem = ({ c, isReply }: { c: any, isReply?: boolean }) => {
+  const MobileCommentItem = ({ c, isReply }: { c: any; isReply?: boolean }) => {
     const [showReplies, setShowReplies] = useState(false);
-  
+
     return (
       <div className="flex gap-3 mb-5 group">
-        <ProfileAvatar name={c.user || c.repliedUser || "unknown"} size="h-8 w-8 shrink-0" textClass="text-xs" />
+        <ProfileAvatar
+          name={c.user || c.repliedUser || "unknown"}
+          size="h-8 w-8 shrink-0"
+          textClass="text-xs"
+        />
         <div className="flex-1 text-sm min-w-0">
-          <Link to="/creator/$username" params={{ username: c.user || c.repliedUser || "unknown" }} className="font-semibold text-card-foreground hover:underline mr-2">
+          <Link
+            to="/creator/$username"
+            params={{ username: c.user || c.repliedUser || "unknown" }}
+            className="font-semibold text-card-foreground hover:underline mr-2"
+          >
             {c.user || c.repliedUser}
           </Link>
           <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
@@ -891,14 +1097,14 @@ export const ReelPlayer = memo(function ReelPlayer({
           </div>
           {c.replies?.length > 0 && (
             <div className="mt-3 pl-2 border-l border-muted-foreground/20">
-              <button 
+              <button
                 onClick={() => setShowReplies(!showReplies)}
                 className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
               >
                 <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
                 {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
               </button>
-              
+
               {showReplies && (
                 <div className="mt-4 flex flex-col gap-4">
                   {c.replies.map((r: any, idx: number) => (
@@ -917,7 +1123,7 @@ export const ReelPlayer = memo(function ReelPlayer({
       </div>
     );
   };
-  
+
   const CommentsModal = () => {
     if (!showComments) return null;
 
@@ -937,13 +1143,18 @@ export const ReelPlayer = memo(function ReelPlayer({
         >
           <div className="w-full h-[60vh] flex flex-col rounded-t-2xl bg-card border-t border-border shadow-2xl">
             {/* Drag handle */}
-            <div className="flex shrink-0 justify-center pt-2.5 pb-1" onClick={() => setShowComments(false)}>
+            <div
+              className="flex shrink-0 justify-center pt-2.5 pb-1"
+              onClick={() => setShowComments(false)}
+            >
               <div className="h-[3px] w-9 rounded-full bg-muted-foreground/25" />
             </div>
-            
+
             <div className="px-4 py-2 border-b border-border flex justify-between items-center">
               <h3 className="font-bold text-card-foreground">Comments</h3>
-              <span className="text-xs text-muted-foreground">{reel.comments?.length || 0} comments</span>
+              <span className="text-xs text-muted-foreground">
+                {reel.comments?.length || 0} comments
+              </span>
             </div>
 
             {/* Scrollable content */}
@@ -952,7 +1163,9 @@ export const ReelPlayer = memo(function ReelPlayer({
                 <MobileCommentItem key={i} c={c} />
               ))}
               {!reel.comments?.length && (
-                <div className="text-center text-muted-foreground py-8 text-sm">No comments yet.</div>
+                <div className="text-center text-muted-foreground py-8 text-sm">
+                  No comments yet.
+                </div>
               )}
             </div>
           </div>
@@ -967,13 +1180,18 @@ export const ReelPlayer = memo(function ReelPlayer({
     <div className="relative h-full w-full bg-black">
       {reel.thumbnail && !imgError && (
         <img
-          src={reel.thumbnail} alt=""
+          src={reel.thumbnail}
+          alt=""
           className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${isBuffering || !active ? "opacity-60" : "opacity-0 pointer-events-none"}`}
-          loading="eager" decoding="async"
+          loading="eager"
+          decoding="async"
           onError={onImgError}
         />
       )}
-      <video {...videoProps} className="absolute inset-0 h-full w-full object-cover cursor-pointer" />
+      <video
+        {...videoProps}
+        className="absolute inset-0 h-full w-full object-cover cursor-pointer"
+      />
       <Overlays />
 
       {/* Right action rail */}
@@ -981,7 +1199,10 @@ export const ReelPlayer = memo(function ReelPlayer({
         <div className="absolute bottom-24 right-3 z-20 flex flex-col items-center gap-5">
           {/* Like */}
           <button onClick={doLike} className="flex flex-col items-center gap-1">
-            <Heart className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`} strokeWidth={2} />
+            <Heart
+              className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`}
+              strokeWidth={2}
+            />
             <span className="text-xs font-medium text-white drop-shadow">
               {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : ""}
             </span>
@@ -997,7 +1218,10 @@ export const ReelPlayer = memo(function ReelPlayer({
 
           {/* Comments */}
           {showCommentsBtn && (
-            <button onClick={() => setShowComments(true)} className="flex flex-col items-center gap-1">
+            <button
+              onClick={() => setShowComments(true)}
+              className="flex flex-col items-center gap-1"
+            >
               <MessageCircle className="h-8 w-8 text-white" strokeWidth={2} />
               <span className="text-xs font-medium text-white drop-shadow">
                 {reel.comments?.length ? formatCount(reel.comments.length) : ""}
@@ -1013,14 +1237,21 @@ export const ReelPlayer = memo(function ReelPlayer({
 
           {/* Save */}
           <button onClick={doSave} className="flex flex-col items-center gap-1">
-            {saved
-              ? <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
-              : <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />}
-            <span className="text-xs font-medium text-white drop-shadow">{saved ? "Saved" : "Save"}</span>
+            {saved ? (
+              <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
+            ) : (
+              <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />
+            )}
+            <span className="text-xs font-medium text-white drop-shadow">
+              {saved ? "Saved" : "Save"}
+            </span>
           </button>
 
           {/* Three dots */}
-          <button onClick={() => setShowMenu(!showMenu)} className="flex flex-col items-center gap-1">
+          <button
+            onClick={() => setShowMenu(!showMenu)}
+            className="flex flex-col items-center gap-1"
+          >
             <MoreHorizontal className="h-8 w-8 text-white" strokeWidth={2} />
           </button>
         </div>
@@ -1028,7 +1259,7 @@ export const ReelPlayer = memo(function ReelPlayer({
 
       {/* MenuModal rendered at root level */}
       {!isOffline && <MenuModal />}
-      
+
       {/* CommentsModal rendered at root level */}
       {!isOffline && <CommentsModal />}
 

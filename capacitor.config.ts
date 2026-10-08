@@ -1,9 +1,9 @@
-import type { CapacitorConfig } from '@capacitor/cli';
+import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
-  appId: 'cc.cd.lfrdcatechnologies.shortify',
-  appName: 'Shortify',
-  webDir: 'dist',
+  appId: "cc.cd.lfrdcatechnologies.shortify",
+  appName: "Shortify",
+  webDir: "dist",
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
@@ -12,8 +12,8 @@ const config: CapacitorConfig = {
     },
   },
   android: {
-    path: 'android_v6'
-  }
+    path: "android_v6",
+  },
 };
 
 export default config;

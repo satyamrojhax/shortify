@@ -1,6 +1,18 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
-import { Play, Compass, Heart, Settings, Sparkles, Mic, WandSparkles, PlaySquare, Flame, Wrench, AudioLines } from "lucide-react";
+import {
+  Play,
+  Compass,
+  Heart,
+  Settings,
+  Sparkles,
+  Mic,
+  WandSparkles,
+  PlaySquare,
+  Flame,
+  Wrench,
+  AudioLines,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/home")({
   component: HomePage,
@@ -15,8 +27,7 @@ function HomePage() {
       <section className="relative">
         <p className="font-display text-marker text-xl lowercase italic">welcome back,</p>
         <h1 className="mt-2 font-display text-[48px] leading-[1.02] lowercase text-cocoa md:text-[80px] dark:text-cream break-words">
-          hey{" "}
-          <span className="break-all">@{username}</span>,<br />
+          hey <span className="break-all">@{username}</span>,<br />
           start <span className="marker-underline">exploring.</span>
         </h1>
         <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-charcoal/80 dark:text-cream/70">
@@ -70,7 +81,17 @@ function HomePage() {
         <p className="font-display text-3xl lowercase md:text-4xl">
           that's all for now — go tap something.
         </p>
-        <p className="mt-2 text-sm opacity-80">Shortify · A Product By <a href="https://lfrdcatechnologies.cc.cd" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80 transition">LFRDCA Technologies</a></p>
+        <p className="mt-2 text-sm opacity-80">
+          Shortify · A Product By{" "}
+          <a
+            href="https://lfrdcatechnologies.cc.cd"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline hover:opacity-80 transition"
+          >
+            LFRDCA Technologies
+          </a>
+        </p>
       </footer>
     </div>
   );

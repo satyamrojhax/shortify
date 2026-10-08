@@ -5,7 +5,18 @@ import { fetchCreatorReelsPage, type Reel } from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
 import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite } from "@/lib/storage";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
-import { AlertTriangle, RefreshCw, ChevronLeft, ChevronUp, ChevronDown, Play, Heart, ImageOff, MessageCircle } from "lucide-react";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import {
+  AlertTriangle,
+  RefreshCw,
+  ChevronLeft,
+  ChevronUp,
+  ChevronDown,
+  Play,
+  Heart,
+  ImageOff,
+  MessageCircle,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_app/creator/$username")({
   component: CreatorPage,
@@ -17,21 +28,14 @@ function CreatorPage() {
   const [activeTab, setActiveTab] = useState<"latest" | "popular">("latest");
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
 
-  const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    refetch,
-  } = useInfiniteQuery({
-    queryKey: ["creator-reels", username, activeTab],
-    queryFn: ({ pageParam }) => fetchCreatorReelsPage(username, activeTab, pageParam),
-    initialPageParam: 0,
-    getNextPageParam: (last) => last.nextPage,
-    staleTime: 5 * 60_000,
-  });
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
+    useInfiniteQuery({
+      queryKey: ["creator-reels", username, activeTab],
+      queryFn: ({ pageParam }) => fetchCreatorReelsPage(username, activeTab, pageParam),
+      initialPageParam: 0,
+      getNextPageParam: (last) => last.nextPage,
+      staleTime: 5 * 60_000,
+    });
 
   const { data: stats } = useQuery({
     queryKey: ["creator-stats", username],
@@ -59,8 +63,6 @@ function CreatorPage() {
     toggleFavorite(username);
     setFavSince(getFavoriteSince(username));
   };
-
-
 
   const toggleMute = useCallback(() => {
     setMuted((m) => {
@@ -135,7 +137,7 @@ function CreatorPage() {
           }
         }
       },
-      { root: null, rootMargin: "200px" }
+      { root: null, rootMargin: "200px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
@@ -214,13 +216,22 @@ function CreatorPage() {
               </section>
             );
           })}
-          
+
           {isFetchingNextPage && (
             <div className="flex h-24 items-center justify-center bg-black">
               <div className="flex items-center gap-1.5">
-                <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60" style={{ animationDelay: "0ms" }} />
-                <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60" style={{ animationDelay: "150ms" }} />
-                <div className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60" style={{ animationDelay: "300ms" }} />
+                <div
+                  className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <div
+                  className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <div
+                  className="h-2.5 w-2.5 animate-bounce rounded-full bg-white/60"
+                  style={{ animationDelay: "300ms" }}
+                />
               </div>
             </div>
           )}
@@ -236,10 +247,15 @@ function CreatorPage() {
       <div className="w-full bg-background/80 backdrop-blur-3xl pt-4 pb-6 px-4 md:px-8 border-b border-border shadow-sm flex flex-col items-center">
         {/* Top nav */}
         <div className="w-full flex items-center justify-between mb-2">
-          <button onClick={() => window.history.back()} className="p-2 -ml-2 rounded-full hover:bg-muted text-foreground transition-colors">
+          <button
+            onClick={() => window.history.back()}
+            className="p-2 -ml-2 rounded-full hover:bg-muted text-foreground transition-colors"
+          >
             <ChevronLeft className="h-6 w-6" />
           </button>
-          <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">@{username}</h1>
+          <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">
+            @{username}
+          </h1>
           <div className="w-10"></div> {/* Placeholder to center the title */}
         </div>
 
@@ -248,38 +264,42 @@ function CreatorPage() {
           {/* Avatar with gradient border */}
           <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-tr from-cobalt-pop via-periwinkle-sky to-magenta-haze p-1 shadow-xl">
             <div className="h-full w-full rounded-full bg-background flex items-center justify-center border-[4px] border-background overflow-hidden">
-               <CreatorProfileImage username={username!} />
+              <CreatorProfileImage username={username!} />
             </div>
           </div>
-          
+
           <h2 className="mt-4 text-2xl font-black text-foreground">@{username}</h2>
           <p className="text-muted-foreground text-sm font-medium mt-1">Creator</p>
-          
+
           {/* Stats */}
           <div className="flex items-center gap-8 md:gap-12 mt-6 w-full justify-center">
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
                 {stats?.postsCount !== undefined ? formatViews(stats.postsCount) : "..."}
               </span>
-              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Videos</span>
+              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
+                Videos
+              </span>
             </div>
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
                 {stats?.followersCount !== undefined ? formatViews(stats.followersCount) : "..."}
               </span>
-              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">Followers</span>
+              <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
+                Followers
+              </span>
             </div>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex items-center gap-3 w-full mt-6 px-4 md:px-0">
-            <button 
-               onClick={handleFollow}
-               className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all border shadow-sm ${
-                 favSince 
-                 ? "bg-muted border-border text-foreground hover:bg-muted/80" 
-                 : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90 shadow-cobalt-pop/20 shadow-md"
-               }`}
+            <button
+              onClick={handleFollow}
+              className={`flex-1 py-2.5 rounded-xl font-bold text-sm transition-all border shadow-sm ${
+                favSince
+                  ? "bg-muted border-border text-foreground hover:bg-muted/80"
+                  : "bg-cobalt-pop border-cobalt-pop text-white hover:bg-cobalt-pop/90 shadow-cobalt-pop/20 shadow-md"
+              }`}
             >
               {favSince ? "Following" : "Follow"}
             </button>
@@ -292,7 +312,9 @@ function CreatorPage() {
         <button
           onClick={() => setActiveTab("latest")}
           className={`flex-1 py-3.5 text-sm font-bold transition-colors relative ${
-            activeTab === "latest" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            activeTab === "latest"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Latest
@@ -303,7 +325,9 @@ function CreatorPage() {
         <button
           onClick={() => setActiveTab("popular")}
           className={`flex-1 py-3.5 text-sm font-bold transition-colors relative ${
-            activeTab === "popular" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+            activeTab === "popular"
+              ? "text-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           Popular
@@ -323,7 +347,10 @@ function CreatorPage() {
           <div className="flex flex-col items-center justify-center p-10 text-center">
             <AlertTriangle className="mb-2 h-8 w-8 text-muted-foreground" />
             <p className="text-sm text-muted-foreground mb-4">Couldn't load reels.</p>
-            <button onClick={() => refetch()} className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium">
+            <button
+              onClick={() => refetch()}
+              className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium"
+            >
               <RefreshCw className="h-4 w-4" /> Retry
             </button>
           </div>
@@ -351,14 +378,14 @@ function CreatorPage() {
               >
                 <CreatorThumb src={reel.thumbnail} alt={reel.title || "Reel thumbnail"} />
                 <div className="absolute inset-0 bg-black/10 transition-opacity md:group-hover:bg-black/40" />
-                
+
                 {/* Duration Badge */}
                 {reel.duration && (
                   <div className="absolute top-2 right-2 flex items-center rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white drop-shadow-md backdrop-blur-sm z-10 pointer-events-none">
                     {reel.duration}
                   </div>
                 )}
-                
+
                 {/* Views Counter (Hidden on PC hover) */}
                 <div className="absolute bottom-2 left-2 flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md transition-opacity md:group-hover:opacity-0 pointer-events-none">
                   <Play className="h-3 w-3 fill-white" />
@@ -374,7 +401,9 @@ function CreatorPage() {
                     </div>
                     <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
                       <MessageCircle className="h-4 w-4 md:h-5 md:w-5 fill-white" />
-                      <span>{reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}</span>
+                      <span>
+                        {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
+                      </span>
                     </div>
                   </div>
                   {reel.title && (
@@ -387,13 +416,13 @@ function CreatorPage() {
             ))}
           </div>
         )}
-        
+
         {isFetchingNextPage && (
           <div className="flex h-20 items-center justify-center">
             <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-foreground" />
           </div>
         )}
-        
+
         {/* Invisible element to trigger intersection observer for infinite scroll */}
         <div ref={bottomObserverRef} className="h-4 w-full" />
       </div>
@@ -422,9 +451,7 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
 
   return (
     <>
-      {!loaded && (
-        <div className="absolute inset-0 bg-muted animate-pulse" />
-      )}
+      {!loaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
       <img
         src={src}
         alt={alt}
@@ -444,22 +471,14 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
 }
 
 function CreatorProfileImage({ username }: { username: string }) {
-  const [error, setError] = useState(false);
-  const [loaded, setLoaded] = useState(false);
-  if (error) {
-    return <span className="text-4xl font-black uppercase text-foreground">{username?.[0]}</span>;
-  }
   return (
-    <>
-      {!loaded && <div className="absolute inset-0 bg-muted animate-pulse" />}
-      <img
-        src={`https://love.viraly.wtf/profileImages/${username}.jpg`}
-        alt={username}
-        className={`h-full w-full object-cover transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
-        onError={() => setError(true)}
-        onLoad={() => setLoaded(true)}
-      />
-    </>
+    <UserAvatar
+      username={username}
+      src={`https://love.viraly.wtf/profileImages/${username}.jpg`}
+      size="2xl"
+      showBorder={false}
+      className="h-full w-full"
+    />
   );
 }
 
@@ -468,21 +487,21 @@ async function fetchCreatorStats(username: string) {
     fetch(`https://love.viraly.wtf/getPostsCount/${username}`).catch(() => null),
     fetch(`https://love.viraly.wtf/getuser/${username}`).catch(() => null),
   ]);
-  
+
   let postsCount = 0;
   let followersCount = 0;
-  
+
   if (postsRes && postsRes.ok) {
     const pData = await postsRes.json();
     postsCount = pData.count || 0;
   }
-  
+
   if (userRes && userRes.ok) {
     const uData = await userRes.json();
     if (uData.followers && Array.isArray(uData.followers)) {
       followersCount = uData.followers.length;
     }
   }
-  
+
   return { postsCount, followersCount };
 }

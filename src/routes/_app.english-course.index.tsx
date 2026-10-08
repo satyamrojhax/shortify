@@ -43,7 +43,7 @@ export const Route = createFileRoute("/_app/english-course/")({
       const [coursesRes, pdfRes, quizRes] = await Promise.all([
         fetch("https://speaking.shortify.cc.cd/course_list.json"),
         fetch("https://speaking.shortify.cc.cd/pdf/english-ebook-aleena-rais%20150%20page.json"),
-        fetch("https://speaking.shortify.cc.cd/quizes/quiz_data.json")
+        fetch("https://speaking.shortify.cc.cd/quizes/quiz_data.json"),
       ]);
       const coursesData: CourseListResponse = await coursesRes.json();
       const pdfData: PdfResource = await pdfRes.json();
@@ -54,10 +54,10 @@ export const Route = createFileRoute("/_app/english-course/")({
       return {
         coursesData: { yourCourses: [], upcomingCourses: [] },
         pdfData: null,
-        quizData: []
+        quizData: [],
       };
     }
-  }
+  },
 });
 
 function EnglishCoursePage() {
@@ -71,30 +71,33 @@ function EnglishCoursePage() {
         <div className="mb-8 grid grid-cols-2 gap-3 border-b border-twilight-navy/10 pb-4 pt-4 sm:flex sm:flex-wrap sm:gap-4 dark:border-periwinkle-sky/10">
           <button
             onClick={() => setActiveTab("courses")}
-            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "courses"
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
+              activeTab === "courses"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-              }`}
+            }`}
           >
             <MonitorPlay className="h-4 w-4 shrink-0" />
             <span className="truncate">Courses</span>
           </button>
           <button
             onClick={() => setActiveTab("quizzes")}
-            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "quizzes"
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
+              activeTab === "quizzes"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-              }`}
+            }`}
           >
             <ListTodo className="h-4 w-4 shrink-0" />
             <span className="truncate">Quizzes</span>
           </button>
           <button
             onClick={() => setActiveTab("resources")}
-            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "resources"
+            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
+              activeTab === "resources"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-              }`}
+            }`}
           >
             <FileText className="h-4 w-4 shrink-0" />
             <span className="truncate">Resources</span>
@@ -112,7 +115,9 @@ function EnglishCoursePage() {
                 {coursesData.yourCourses.map((course, i) => (
                   <Link
                     key={i}
-                    to={`/english-course/${course.title.includes("Bonus") ? "bonus" : "main"}` as any}
+                    to={
+                      `/english-course/${course.title.includes("Bonus") ? "bonus" : "main"}` as any
+                    }
                     className="group relative flex flex-col overflow-hidden rounded-[20px] bg-cloud-white transition-all hover:-translate-y-1 hover:shadow-xl dark:bg-dusk-indigo border border-twilight-navy/5 dark:border-periwinkle-sky/10"
                   >
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-[#2D333B]">

@@ -25,6 +25,7 @@ import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppLikedRouteImport } from './routes/_app.liked'
 import { Route as AppMyCoursesRouteImport } from './routes/_app.my-courses'
 import { Route as AppRedeemRouteImport } from './routes/_app.redeem'
+import { Route as AppRedeemHistoryRouteImport } from './routes/_app.redeem-history'
 import { Route as AppReelsRouteImport } from './routes/_app.reels'
 import { Route as AppSavedRouteImport } from './routes/_app.saved'
 import { Route as AppSearchRouteImport } from './routes/_app.search'
@@ -115,6 +116,11 @@ const AppRedeemRoute = AppRedeemRouteImport.update({
   path: '/redeem',
   getParentRoute: () => AppRoute,
 } as any)
+const AppRedeemHistoryRoute = AppRedeemHistoryRouteImport.update({
+  id: '/redeem-history',
+  path: '/redeem-history',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppReelsRoute = AppReelsRouteImport.update({
   id: '/reels',
   path: '/reels',
@@ -183,6 +189,7 @@ export interface FileRoutesByFullPath {
   '/liked': typeof AppLikedRoute
   '/my-courses': typeof AppMyCoursesRoute
   '/redeem': typeof AppRedeemRoute
+  '/redeem-history': typeof AppRedeemHistoryRoute
   '/reels': typeof AppReelsRoute
   '/saved': typeof AppSavedRoute
   '/search': typeof AppSearchRoute
@@ -210,6 +217,7 @@ export interface FileRoutesByTo {
   '/liked': typeof AppLikedRoute
   '/my-courses': typeof AppMyCoursesRoute
   '/redeem': typeof AppRedeemRoute
+  '/redeem-history': typeof AppRedeemHistoryRoute
   '/reels': typeof AppReelsRoute
   '/saved': typeof AppSavedRoute
   '/search': typeof AppSearchRoute
@@ -239,6 +247,7 @@ export interface FileRoutesById {
   '/_app/liked': typeof AppLikedRoute
   '/_app/my-courses': typeof AppMyCoursesRoute
   '/_app/redeem': typeof AppRedeemRoute
+  '/_app/redeem-history': typeof AppRedeemHistoryRoute
   '/_app/reels': typeof AppReelsRoute
   '/_app/saved': typeof AppSavedRoute
   '/_app/search': typeof AppSearchRoute
@@ -268,6 +277,7 @@ export interface FileRouteTypes {
     | '/liked'
     | '/my-courses'
     | '/redeem'
+    | '/redeem-history'
     | '/reels'
     | '/saved'
     | '/search'
@@ -295,6 +305,7 @@ export interface FileRouteTypes {
     | '/liked'
     | '/my-courses'
     | '/redeem'
+    | '/redeem-history'
     | '/reels'
     | '/saved'
     | '/search'
@@ -323,6 +334,7 @@ export interface FileRouteTypes {
     | '/_app/liked'
     | '/_app/my-courses'
     | '/_app/redeem'
+    | '/_app/redeem-history'
     | '/_app/reels'
     | '/_app/saved'
     | '/_app/search'
@@ -458,6 +470,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRedeemRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/redeem-history': {
+      id: '/_app/redeem-history'
+      path: '/redeem-history'
+      fullPath: '/redeem-history'
+      preLoaderRoute: typeof AppRedeemHistoryRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/reels': {
       id: '/_app/reels'
       path: '/reels'
@@ -542,6 +561,7 @@ interface AppRouteChildren {
   AppLikedRoute: typeof AppLikedRoute
   AppMyCoursesRoute: typeof AppMyCoursesRoute
   AppRedeemRoute: typeof AppRedeemRoute
+  AppRedeemHistoryRoute: typeof AppRedeemHistoryRoute
   AppReelsRoute: typeof AppReelsRoute
   AppSavedRoute: typeof AppSavedRoute
   AppSearchRoute: typeof AppSearchRoute
@@ -565,6 +585,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppLikedRoute: AppLikedRoute,
   AppMyCoursesRoute: AppMyCoursesRoute,
   AppRedeemRoute: AppRedeemRoute,
+  AppRedeemHistoryRoute: AppRedeemHistoryRoute,
   AppReelsRoute: AppReelsRoute,
   AppSavedRoute: AppSavedRoute,
   AppSearchRoute: AppSearchRoute,

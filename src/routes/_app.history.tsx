@@ -49,10 +49,7 @@ function HistoryPage() {
               <Trash2 className="h-4 w-4" />
             </button>
           )}
-          <button
-            onClick={() => navigate({ to: "/settings" })}
-            className="btn-pill"
-          >
+          <button onClick={() => navigate({ to: "/settings" })} className="btn-pill">
             back
           </button>
         </div>
@@ -94,7 +91,7 @@ function HistoryPage() {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              
+
               <button
                 onClick={(e) => {
                   e.preventDefault();
@@ -108,7 +105,7 @@ function HistoryPage() {
               >
                 <X className="h-4 w-4" />
               </button>
-              
+
               <Link
                 to="/reels"
                 search={{ start: r.id }}
@@ -119,14 +116,14 @@ function HistoryPage() {
                   <Play className="h-6 w-6 fill-cream text-cream ml-1" />
                 </div>
               </Link>
-              
+
               {r.views && (
                 <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-cream bg-charcoal/70 px-2 py-0.5 text-[10px] text-cream backdrop-blur">
                   <Play className="h-3 w-3 fill-cream" />
                   {formatCount(r.views)}
                 </div>
               )}
-              
+
               {r.title && (
                 <p className="absolute inset-x-2 bottom-2 line-clamp-2 text-xs font-medium text-cream">
                   {r.title}

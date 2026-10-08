@@ -140,7 +140,7 @@ async function cacheFirst(request, cacheName, maxAgeSeconds) {
   try {
     const fresh = await fetch(request);
     if (fresh.ok) {
-      cache.put(request, fresh.clone()).catch(() => { });
+      cache.put(request, fresh.clone()).catch(() => {});
     }
     return fresh;
   } catch {
@@ -167,9 +167,9 @@ async function staleWhileRevalidate(request, cacheName, maxAgeSeconds) {
       // Return stale immediately, revalidate in background
       fetch(request)
         .then((fresh) => {
-          if (fresh.ok) cache.put(request, fresh).catch(() => { });
+          if (fresh.ok) cache.put(request, fresh).catch(() => {});
         })
-        .catch(() => { });
+        .catch(() => {});
       return cached;
     }
   }
@@ -178,7 +178,7 @@ async function staleWhileRevalidate(request, cacheName, maxAgeSeconds) {
   try {
     const fresh = await fetch(request);
     if (fresh.ok) {
-      cache.put(request, fresh.clone()).catch(() => { });
+      cache.put(request, fresh.clone()).catch(() => {});
     }
     return fresh;
   } catch {
@@ -201,7 +201,7 @@ async function networkFirst(request, cacheName, timeoutMs) {
 
     const fresh = await Promise.race([networkPromise, timeoutPromise]);
     if (fresh.ok && request.mode === "navigate") {
-      cache.put(request, fresh.clone()).catch(() => { });
+      cache.put(request, fresh.clone()).catch(() => {});
     }
     return fresh;
   } catch {

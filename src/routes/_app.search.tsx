@@ -17,8 +17,8 @@ function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [selectedReel, setSelectedReel] = useState<Reel | null>(null);
-  const [isMobile, setIsMobile] = useState(() => 
-    typeof window !== "undefined" ? window.innerWidth < 768 : false
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== "undefined" ? window.innerWidth < 768 : false,
   );
 
   useEffect(() => {
@@ -29,18 +29,21 @@ function SearchPage() {
 
   const observer = useRef<IntersectionObserver | null>(null);
 
-  const lastElementRef = useCallback((node: HTMLDivElement | null) => {
-    if (loading) return;
-    if (observer.current) observer.current.disconnect();
-    
-    observer.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore && query.trim() !== "") {
-        setPage(prev => prev + 1);
-      }
-    });
-    
-    if (node) observer.current.observe(node);
-  }, [loading, hasMore, query]);
+  const lastElementRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      if (loading) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore && query.trim() !== "") {
+          setPage((prev) => prev + 1);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, hasMore, query],
+  );
 
   const fetchResults = async (searchQuery: string, pageNum: number, isNewSearch = false) => {
     if (!searchQuery.trim()) {
@@ -51,10 +54,12 @@ function SearchPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`https://love.shortify.cc.cd/api/search?query=${encodeURIComponent(searchQuery)}&page=${pageNum}`);
+      const res = await fetch(
+        `https://love.shortify.cc.cd/api/search?query=${encodeURIComponent(searchQuery)}&page=${pageNum}`,
+      );
       const json = await res.json();
-      const newItems = Array.isArray(json) ? json : (json.data || []);
-      
+      const newItems = Array.isArray(json) ? json : json.data || [];
+
       if (newItems.length === 0) {
         setHasMore(false);
       } else {
@@ -62,7 +67,7 @@ function SearchPage() {
         if (isNewSearch) {
           setResults(newItems);
         } else {
-          setResults(prev => [...prev, ...newItems]);
+          setResults((prev) => [...prev, ...newItems]);
         }
       }
     } catch (e) {
@@ -92,10 +97,9 @@ function SearchPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-6 md:px-6 md:py-10">
-      
       {/* Header */}
       <div className="flex items-center gap-2 md:gap-4 mb-8">
-        <button 
+        <button
           onClick={() => navigate({ to: "/explore" })}
           className="p-1 md:p-2 shrink-0 rounded-full hover:bg-charcoal/5 dark:hover:bg-cream/5 transition"
         >
@@ -132,18 +136,18 @@ function SearchPage() {
       ) : (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
           {results.map((reel, index) => (
-            <div 
+            <div
               ref={index === results.length - 1 ? lastElementRef : null}
-              key={reel.id} 
+              key={reel.id}
               className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
               onClick={() => setSelectedReel(reel)}
             >
-              <img 
-                src={reel.thumbnail} 
-                alt={reel.title || "Reel"} 
+              <img
+                src={reel.thumbnail}
+                alt={reel.title || "Reel"}
                 className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
               />
-              
+
               <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
                 <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
                 <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
@@ -171,30 +175,33 @@ function SearchPage() {
               </div>
             </div>
           ))}
-          
+
           {/* Loading placeholders for pagination */}
-          {loading && [...Array(3)].map((_, i) => (
-            <div key={`loading-${i}`} className="aspect-[9/16] bg-dew dark:bg-secondary animate-pulse rounded-md" />
-          ))}
+          {loading &&
+            [...Array(3)].map((_, i) => (
+              <div
+                key={`loading-${i}`}
+                className="aspect-[9/16] bg-dew dark:bg-secondary animate-pulse rounded-md"
+              />
+            ))}
         </div>
       )}
 
-      {selectedReel && (
-        isMobile ? (
-          <ExtraReelsPlayer 
-            reels={results} 
-            initialIndex={results.findIndex(r => r.id === selectedReel.id)} 
-            onClose={() => setSelectedReel(null)} 
+      {selectedReel &&
+        (isMobile ? (
+          <ExtraReelsPlayer
+            reels={results}
+            initialIndex={results.findIndex((r) => r.id === selectedReel.id)}
+            onClose={() => setSelectedReel(null)}
             feedType="search"
           />
         ) : (
-          <ReelModal 
-            reels={results} 
-            initialIndex={results.findIndex(r => r.id === selectedReel.id)} 
-            onClose={() => setSelectedReel(null)} 
+          <ReelModal
+            reels={results}
+            initialIndex={results.findIndex((r) => r.id === selectedReel.id)}
+            onClose={() => setSelectedReel(null)}
           />
-        )
-      )}
+        ))}
     </div>
   );
 }

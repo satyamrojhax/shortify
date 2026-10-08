@@ -54,7 +54,7 @@ function AgePage() {
           </a>
         </div>
         <p className="mt-6 text-sm text-foreground/60">
-          no signup, no tracking. everything lives on this device.
+          login required. we securely save your preferences in our database.
         </p>
       </div>
     </div>
