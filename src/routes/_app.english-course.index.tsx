@@ -41,9 +41,9 @@ export const Route = createFileRoute("/_app/english-course/")({
   loader: async () => {
     try {
       const [coursesRes, pdfRes, quizRes] = await Promise.all([
-        fetch("https://epowerx-labs-private-limited.github.io/english-speaking/course_list.json"),
-        fetch("https://epowerx-labs-private-limited.github.io/english-speaking/pdf/english-ebook-aleena-rais%20150%20page.json"),
-        fetch("https://epowerx-labs-private-limited.github.io/english-speaking/quizes/quiz_data.json")
+        fetch("https://speaking.shortify.cc.cd/course_list.json"),
+        fetch("https://speaking.shortify.cc.cd/pdf/english-ebook-aleena-rais%20150%20page.json"),
+        fetch("https://speaking.shortify.cc.cd/quizes/quiz_data.json")
       ]);
       const coursesData: CourseListResponse = await coursesRes.json();
       const pdfData: PdfResource = await pdfRes.json();
@@ -51,8 +51,8 @@ export const Route = createFileRoute("/_app/english-course/")({
       return { coursesData, pdfData, quizData };
     } catch (e) {
       console.error("Failed to fetch english course data", e);
-      return { 
-        coursesData: { yourCourses: [], upcomingCourses: [] }, 
+      return {
+        coursesData: { yourCourses: [], upcomingCourses: [] },
         pdfData: null,
         quizData: []
       };
@@ -71,33 +71,30 @@ function EnglishCoursePage() {
         <div className="mb-8 grid grid-cols-2 gap-3 border-b border-twilight-navy/10 pb-4 pt-4 sm:flex sm:flex-wrap sm:gap-4 dark:border-periwinkle-sky/10">
           <button
             onClick={() => setActiveTab("courses")}
-            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
-              activeTab === "courses"
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "courses"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-            }`}
+              }`}
           >
             <MonitorPlay className="h-4 w-4 shrink-0" />
             <span className="truncate">Courses</span>
           </button>
           <button
             onClick={() => setActiveTab("quizzes")}
-            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
-              activeTab === "quizzes"
+            className={`flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "quizzes"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-            }`}
+              }`}
           >
             <ListTodo className="h-4 w-4 shrink-0" />
             <span className="truncate">Quizzes</span>
           </button>
           <button
             onClick={() => setActiveTab("resources")}
-            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${
-              activeTab === "resources"
+            className={`col-span-2 sm:col-span-1 flex items-center justify-center gap-1.5 sm:gap-2 rounded-full px-2 py-2.5 sm:px-5 text-sm font-semibold transition-colors ${activeTab === "resources"
                 ? "bg-magenta-haze text-white dark:bg-periwinkle-sky dark:text-twilight-navy"
                 : "bg-cloud-white text-twilight-navy hover:bg-slate-mist/20 dark:bg-dusk-indigo dark:text-cream-linen dark:hover:bg-secondary"
-            }`}
+              }`}
           >
             <FileText className="h-4 w-4 shrink-0" />
             <span className="truncate">Resources</span>
@@ -239,7 +236,7 @@ function EnglishCoursePage() {
                     {quiz.name}
                   </h3>
                   <p className="mb-4 text-sm text-slate-mist">Google Form Assessment</p>
-                  
+
                   <div className="mt-auto flex items-center text-sm font-semibold text-magenta-haze dark:text-periwinkle-sky">
                     Start Quiz
                   </div>

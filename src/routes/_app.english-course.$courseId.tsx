@@ -45,7 +45,7 @@ export const Route = createFileRoute("/_app/english-course/$courseId")({
 function EnglishCourseDetailsPage() {
   const { courseId } = Route.useParams();
   const { isEnrolled, enroll, unenroll } = useEnrolledCourses();
-  
+
   const [course, setCourse] = useState<CourseDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -78,14 +78,14 @@ function EnglishCourseDetailsPage() {
     async function fetchCourse() {
       try {
         const isBonus = courseId === "bonus";
-        const url = isBonus 
-          ? "https://epowerx-labs-private-limited.github.io/english-speaking/bonus/bonus_videos.json"
-          : "https://epowerx-labs-private-limited.github.io/english-speaking/courses/courses_data.json";
-          
+        const url = isBonus
+          ? "https://speaking.shortify.cc.cd/bonus/bonus_videos.json"
+          : "https://speaking.shortify.cc.cd/courses/courses_data.json";
+
         const res = await fetch(url);
         if (!res.ok) throw new Error("Course not found");
         const rawData = await res.json();
-        
+
         // Transform data
         const transformedContent: Section[] = rawData.map((module: any) => ({
           type: "section",
@@ -110,7 +110,7 @@ function EnglishCourseDetailsPage() {
         };
 
         setCourse(transformedCourse);
-        
+
         // Load progress
         const savedProgress = get<Record<string, boolean>>(`progress_english_${courseId}`, {});
         if (Object.keys(savedProgress).length > 0) {
@@ -129,7 +129,7 @@ function EnglishCourseDetailsPage() {
     if (!course) return;
     let targetLesson: Lecture | null = null;
     const sections = course.content;
-    
+
     // Find first uncompleted lesson
     for (const sec of sections) {
       for (const lec of sec.lectures) {
@@ -140,12 +140,12 @@ function EnglishCourseDetailsPage() {
       }
       if (targetLesson) break;
     }
-    
+
     // Fallback to first lesson if all completed
     if (!targetLesson && sections[0]?.lectures[0]) {
       targetLesson = sections[0].lectures[0];
     }
-    
+
     if (targetLesson) {
       setActiveVideo(targetLesson);
     }
@@ -225,56 +225,56 @@ function EnglishCourseDetailsPage() {
   return (
     <div className="min-h-screen pb-20 md:pb-8">
       <div className="h-4 md:h-8" />
-      
+
       <div className="mx-auto max-w-4xl px-4 md:px-8">
         {/* Top Header / Hero Section (Hidden when playing a video) */}
         {!activeVideo && (
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-twilight-navy via-dusk-indigo to-magenta-haze p-6 text-white shadow-xl md:p-8 border border-white/10 mb-8">
-          <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-1000 hover:scale-110" />
-          
-          <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center text-center md:text-left">
-            <div className="mx-auto md:mx-0 aspect-[16/9] w-full max-w-[240px] shrink-0 overflow-hidden rounded-2xl bg-white/10 shadow-lg border border-white/20 backdrop-blur-sm">
-              <img src={course.courseImage} alt={course.courseName} className="h-full w-full object-cover" />
-            </div>
-            <div className="flex-1 flex flex-col items-center md:items-start justify-center">
-              <h1 className="mb-4 text-3xl font-black text-white md:text-4xl drop-shadow-md">
-                {course.courseName}
-              </h1>
-            {!enrolled ? (
-              <button
-                onClick={handleEnroll}
-                className="w-full max-w-sm rounded-full bg-magenta-haze px-8 py-4 text-lg font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 shadow-md shadow-magenta-haze/20 border border-white/10 backdrop-blur-sm"
-              >
-                Enroll Now for FREE
-              </button>
-            ) : (
-              <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
-                <button
-                  onClick={handleResume}
-                  className="w-full sm:w-auto rounded-full bg-magenta-haze px-8 py-3 text-lg font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 shadow-md shadow-magenta-haze/20"
-                >
-                  Resume Learning
-                </button>
-                <button 
-                  onClick={() => unenroll(course.slug)}
-                  className="flex w-full sm:w-fit items-center justify-center gap-2 rounded-full border border-red-400/30 bg-red-500/20 px-5 py-3 text-sm font-bold text-red-100 transition-colors hover:bg-red-500 hover:text-white backdrop-blur-sm"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Unenroll
-                </button>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-twilight-navy via-dusk-indigo to-magenta-haze p-6 text-white shadow-xl md:p-8 border border-white/10 mb-8">
+            <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl transition-transform duration-1000 hover:scale-110" />
+
+            <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center text-center md:text-left">
+              <div className="mx-auto md:mx-0 aspect-[16/9] w-full max-w-[240px] shrink-0 overflow-hidden rounded-2xl bg-white/10 shadow-lg border border-white/20 backdrop-blur-sm">
+                <img src={course.courseImage} alt={course.courseName} className="h-full w-full object-cover" />
               </div>
-            )}
+              <div className="flex-1 flex flex-col items-center md:items-start justify-center">
+                <h1 className="mb-4 text-3xl font-black text-white md:text-4xl drop-shadow-md">
+                  {course.courseName}
+                </h1>
+                {!enrolled ? (
+                  <button
+                    onClick={handleEnroll}
+                    className="w-full max-w-sm rounded-full bg-magenta-haze px-8 py-4 text-lg font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 shadow-md shadow-magenta-haze/20 border border-white/10 backdrop-blur-sm"
+                  >
+                    Enroll Now for FREE
+                  </button>
+                ) : (
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-4 mt-2">
+                    <button
+                      onClick={handleResume}
+                      className="w-full sm:w-auto rounded-full bg-magenta-haze px-8 py-3 text-lg font-bold text-white transition-transform hover:scale-[1.02] active:scale-95 shadow-md shadow-magenta-haze/20"
+                    >
+                      Resume Learning
+                    </button>
+                    <button
+                      onClick={() => unenroll(course.slug)}
+                      className="flex w-full sm:w-fit items-center justify-center gap-2 rounded-full border border-red-400/30 bg-red-500/20 px-5 py-3 text-sm font-bold text-red-100 transition-colors hover:bg-red-500 hover:text-white backdrop-blur-sm"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Unenroll
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-        </div>
         )}
 
         {/* Video Player Section (Only if enrolled and a video is active) */}
         {enrolled && activeVideo && (
           <div className="mb-10 w-full animate-in fade-in slide-in-from-bottom-4">
             <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-              <button 
-                onClick={() => setActiveVideo(null)} 
+              <button
+                onClick={() => setActiveVideo(null)}
                 className="flex items-center gap-1 w-fit shrink-0 text-sm font-medium text-magenta-haze hover:underline dark:text-periwinkle-sky"
               >
                 &larr; Back to Curriculum
@@ -283,10 +283,10 @@ function EnglishCourseDetailsPage() {
                 {activeVideo.name}
               </h2>
             </div>
-            
+
             <div className="relative">
-              <CoursePlayer 
-                videoUrl={activeVideo.videoUrl} 
+              <CoursePlayer
+                videoUrl={activeVideo.videoUrl}
                 title={activeVideo.name}
                 onEnded={() => {
                   if (nextLesson) {
@@ -296,12 +296,12 @@ function EnglishCourseDetailsPage() {
                   }
                 }}
               />
-              
+
               {showAutoplayCountdown && nextLesson && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm rounded-xl animate-in fade-in p-2 sm:p-4">
                   <h3 className="mb-1 text-sm font-bold text-white sm:text-base md:mb-2 md:text-xl">Up Next</h3>
                   <p className="mb-2 px-2 text-center text-sm text-cream-linen line-clamp-2 sm:text-base md:mb-6 md:text-2xl">{nextLesson.name}</p>
-                  
+
                   <div className="relative mb-2 flex h-10 w-10 items-center justify-center sm:h-12 sm:w-12 md:mb-6 md:h-16 md:w-16">
                     <svg className="absolute h-full w-full -rotate-90 transform" viewBox="0 0 36 36">
                       <path
@@ -322,15 +322,15 @@ function EnglishCourseDetailsPage() {
                     </svg>
                     <span className="text-sm font-bold text-white sm:text-lg md:text-xl">{autoplayCountdown}</span>
                   </div>
-                  
+
                   <div className="flex gap-2 sm:gap-4">
-                    <button 
+                    <button
                       onClick={() => setShowAutoplayCountdown(false)}
                       className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white transition-colors hover:bg-white/20 sm:px-4 sm:py-1.5 sm:text-sm md:px-6 md:py-2 md:text-base"
                     >
                       Cancel
                     </button>
-                    <button 
+                    <button
                       onClick={() => {
                         setActiveVideo(nextLesson!);
                         setShowAutoplayCountdown(false);
@@ -343,7 +343,7 @@ function EnglishCourseDetailsPage() {
                 </div>
               )}
             </div>
-            
+
             <div className="mt-6 rounded-2xl border border-twilight-navy/10 bg-cloud-white p-6 shadow-sm dark:border-periwinkle-sky/10 dark:bg-dusk-indigo">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                 <div className="flex-1">
@@ -354,16 +354,15 @@ function EnglishCourseDetailsPage() {
                     {activeVideo.info}
                   </p>
                 </div>
-                
+
                 <div className="flex shrink-0 items-center">
                   <button
                     onClick={() => markCompleted(activeVideo.lectureId)}
                     disabled={completedLectures[activeVideo.lectureId]}
-                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${
-                      completedLectures[activeVideo.lectureId] 
-                        ? "bg-green-500/10 text-green-600 dark:text-green-400" 
+                    className={`flex items-center gap-2 rounded-full px-6 py-3 text-sm font-bold transition-all ${completedLectures[activeVideo.lectureId]
+                        ? "bg-green-500/10 text-green-600 dark:text-green-400"
                         : "bg-magenta-haze/10 text-magenta-haze hover:bg-magenta-haze hover:text-white"
-                    }`}
+                      }`}
                   >
                     <CheckCircle className="h-5 w-5" />
                     {completedLectures[activeVideo.lectureId] ? "Completed" : "Mark as completed"}
@@ -397,7 +396,7 @@ function EnglishCourseDetailsPage() {
               {/* Current Section Playlist */}
               {currentSection && (
                 <div className="border-t border-twilight-navy/10 pt-6 dark:border-periwinkle-sky/10">
-                  <button 
+                  <button
                     onClick={() => setIsCurrentSectionOpen((prev: boolean) => !prev)}
                     className="flex w-full items-center justify-between mb-4"
                   >
@@ -416,11 +415,10 @@ function EnglishCourseDetailsPage() {
                           <button
                             key={lecture.lectureId}
                             onClick={() => setActiveVideo(lecture)}
-                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
-                              isActive 
-                                ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm" 
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                                ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
                                 : "hover:bg-slate-mist/10 dark:hover:bg-secondary border border-transparent"
-                            }`}
+                              }`}
                           >
                             <div className="flex items-center gap-3">
                               <PlayCircle className={`h-5 w-5 shrink-0 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
@@ -439,21 +437,21 @@ function EnglishCourseDetailsPage() {
 
                   {/* Suggest Next Section */}
                   {nextSection && nextLesson && (
-                    (currentSection.lectures.every(l => completedLectures[l.lectureId]) || 
-                     activeVideo.lectureId === currentSection.lectures[currentSection.lectures.length - 1].lectureId)
+                    (currentSection.lectures.every(l => completedLectures[l.lectureId]) ||
+                      activeVideo.lectureId === currentSection.lectures[currentSection.lectures.length - 1].lectureId)
                   ) && (
-                    <div className="mt-6 border-t border-twilight-navy/10 pt-6 dark:border-periwinkle-sky/10 animate-in fade-in slide-in-from-bottom-2">
-                      <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-twilight-navy/60 dark:text-cream-linen/60">
-                        Up Next Section
-                      </h3>
-                      <button
-                        onClick={() => setActiveVideo(nextLesson!)}
-                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-twilight-navy p-4 text-lg font-bold text-white transition-transform hover:scale-[1.01] hover:bg-twilight-navy/90 shadow-md dark:bg-periwinkle-sky dark:text-dusk-indigo dark:hover:bg-periwinkle-sky/90"
-                      >
-                        Start {nextSection.name} <PlayCircle className="h-6 w-6 shrink-0" />
-                      </button>
-                    </div>
-                  )}
+                      <div className="mt-6 border-t border-twilight-navy/10 pt-6 dark:border-periwinkle-sky/10 animate-in fade-in slide-in-from-bottom-2">
+                        <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-twilight-navy/60 dark:text-cream-linen/60">
+                          Up Next Section
+                        </h3>
+                        <button
+                          onClick={() => setActiveVideo(nextLesson!)}
+                          className="flex w-full items-center justify-center gap-2 rounded-2xl bg-twilight-navy p-4 text-lg font-bold text-white transition-transform hover:scale-[1.01] hover:bg-twilight-navy/90 shadow-md dark:bg-periwinkle-sky dark:text-dusk-indigo dark:hover:bg-periwinkle-sky/90"
+                        >
+                          Start {nextSection.name} <PlayCircle className="h-6 w-6 shrink-0" />
+                        </button>
+                      </div>
+                    )}
                 </div>
               )}
             </div>
@@ -462,59 +460,58 @@ function EnglishCourseDetailsPage() {
 
         {/* Curriculum Section (Visible to everyone, hidden when video is playing) */}
         {(!enrolled || !activeVideo) && (
-        <div className="mb-10">
-          <h2 className="mb-6 text-2xl font-bold text-twilight-navy dark:text-cream-linen">
-            Course Curriculum
-          </h2>
-          <div className="flex flex-col gap-4">
-            {sections.map((section, index) => (
-              <div key={index} className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo">
-                <button
-                  onClick={() => toggleSection(index)}
-                  className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-mist/5"
-                >
-                  <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
-                    {section.name}
-                  </h3>
-                  <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`} />
-                </button>
-                
-                {openSections[index] && (
-                  <div className="border-t border-twilight-navy/10 bg-slate-mist/5 p-2 dark:border-periwinkle-sky/10 dark:bg-dusk-indigo/50">
-                    {section.lectures.map((lecture) => {
-                      const isCompleted = completedLectures[lecture.lectureId];
-                      const isActive = activeVideo?.lectureId === lecture.lectureId;
-                      return (
-                        <button
-                          key={lecture.lectureId}
-                          onClick={() => {
-                            if (enrolled) setActiveVideo(lecture);
-                            // Do nothing if unenrolled. User must use Enroll Now button.
-                          }}
-                          className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${
-                            isActive 
-                              ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm" 
-                              : "hover:bg-cloud-white dark:hover:bg-dusk-indigo border border-transparent"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <PlayCircle className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
-                            <span className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
-                              {lecture.name}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            {isCompleted && <CheckCircle className="h-4 w-4 text-green-500" />}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="mb-10">
+            <h2 className="mb-6 text-2xl font-bold text-twilight-navy dark:text-cream-linen">
+              Course Curriculum
+            </h2>
+            <div className="flex flex-col gap-4">
+              {sections.map((section, index) => (
+                <div key={index} className="overflow-hidden rounded-2xl border border-twilight-navy/10 bg-cloud-white dark:border-periwinkle-sky/10 dark:bg-dusk-indigo">
+                  <button
+                    onClick={() => toggleSection(index)}
+                    className="flex w-full items-center justify-between p-5 text-left transition-colors hover:bg-slate-mist/5"
+                  >
+                    <h3 className="text-lg font-bold text-twilight-navy dark:text-cream-linen">
+                      {section.name}
+                    </h3>
+                    <ChevronDown className={`h-5 w-5 text-twilight-navy transition-transform dark:text-cream-linen ${openSections[index] ? "rotate-180" : ""}`} />
+                  </button>
+
+                  {openSections[index] && (
+                    <div className="border-t border-twilight-navy/10 bg-slate-mist/5 p-2 dark:border-periwinkle-sky/10 dark:bg-dusk-indigo/50">
+                      {section.lectures.map((lecture) => {
+                        const isCompleted = completedLectures[lecture.lectureId];
+                        const isActive = activeVideo?.lectureId === lecture.lectureId;
+                        return (
+                          <button
+                            key={lecture.lectureId}
+                            onClick={() => {
+                              if (enrolled) setActiveVideo(lecture);
+                              // Do nothing if unenrolled. User must use Enroll Now button.
+                            }}
+                            className={`flex w-full items-center justify-between rounded-xl p-3 text-left transition-all ${isActive
+                                ? "bg-magenta-haze/10 border-magenta-haze/30 border shadow-sm"
+                                : "hover:bg-cloud-white dark:hover:bg-dusk-indigo border border-transparent"
+                              }`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <PlayCircle className={`h-5 w-5 ${isActive ? "text-magenta-haze" : "text-twilight-navy/50 dark:text-cream-linen/50"}`} />
+                              <span className={`font-medium ${isActive ? "text-magenta-haze dark:text-periwinkle-sky" : "text-twilight-navy dark:text-cream-linen"}`}>
+                                {lecture.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              {isCompleted && <CheckCircle className="h-4 w-4 text-green-500" />}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
         )}
 
       </div>
