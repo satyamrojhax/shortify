@@ -7,8 +7,6 @@ import {
   unlockItem,
   hasUnlocked,
   set,
-  isCrtEnabled,
-  setCrtEnabled,
   isMemeSoundsEnabled,
   setMemeSoundsEnabled,
 } from "@/lib/storage";
@@ -82,18 +80,7 @@ const ITEMS: ShopItem[] = [
     icon: PartyPopper,
     cost: 300,
   },
-  {
-    id: "filter_crt",
-    name: "CRT Retro Filter",
-    description: "Adds scanlines and screen curvature to the video player.",
-    icon: Tv,
-    cost: 500,
-    onApply: () => {
-      const current = isCrtEnabled();
-      setCrtEnabled(!current);
-      window.dispatchEvent(new Event("effects-change"));
-    },
-  },
+
   {
     id: "sound_meme",
     name: "Meme Soundboard",
@@ -112,7 +99,6 @@ function ShopPage() {
   const [coins, setCoins] = useState(0);
   const [unlocks, setUnlocks] = useState<string[]>([]);
   const [activeTheme, setActiveTheme] = useState("");
-  const [activeCrt, setActiveCrt] = useState(false);
   const [activeMeme, setActiveMeme] = useState(false);
 
   const formatCoins = (num: number) => new Intl.NumberFormat("en-IN").format(num);
@@ -122,7 +108,6 @@ function ShopPage() {
     setUnlocks(getUnlocks());
     const raw = localStorage.getItem("ig.theme");
     setActiveTheme(raw ? JSON.parse(raw) : "system");
-    setActiveCrt(isCrtEnabled());
     setActiveMeme(isMemeSoundsEnabled());
 
     const handleCoinsChange = () => setCoins(getCoins());
@@ -131,7 +116,6 @@ function ShopPage() {
       setActiveTheme(current ? JSON.parse(current) : "system");
     };
     const handleEffectsChange = () => {
-      setActiveCrt(isCrtEnabled());
       setActiveMeme(isMemeSoundsEnabled());
     };
 
@@ -230,12 +214,6 @@ function ShopPage() {
                       "applied"
                     ) : (
                       "apply"
-                    )
-                  ) : item.id === "filter_crt" ? (
-                    activeCrt ? (
-                      "disable"
-                    ) : (
-                      "enable"
                     )
                   ) : item.id === "sound_meme" ? (
                     activeMeme ? (

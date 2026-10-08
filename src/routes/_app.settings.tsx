@@ -199,10 +199,10 @@ function SettingsPage() {
           <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
             <div>
               <div className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-                email
+                login username
               </div>
               <div className="mt-0.5 font-mono text-base text-cocoa dark:text-cream">
-                {email || "loading..."}
+                {email ? email.split('@')[0] : "loading..."}
               </div>
             </div>
           </div>
@@ -320,13 +320,14 @@ function SettingsPage() {
         </div>
       </section>
 
-      {/* Playback */}
+      {/* Playback & Display */}
       <section className="mt-4">
-        <div className="paper-card p-6">
+        <div className="paper-card p-6 flex flex-col gap-6">
           <h2 className="text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
-            playback
+            playback & display
           </h2>
-          <div className="mt-4 flex items-center justify-between">
+          
+          <div className="flex items-center justify-between">
             <div>
               <div className="font-display text-lg lowercase text-cocoa dark:text-cream">
                 show random reels
@@ -350,6 +351,7 @@ function SettingsPage() {
               />
             </button>
           </div>
+
         </div>
       </section>
 

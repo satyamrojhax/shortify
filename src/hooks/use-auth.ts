@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { KEYS, get, set, remove, initStorageData } from "@/lib/storage";
+import { useNavigate } from "@tanstack/react-router";
+import { KEYS, get, set, remove, initStorageData, isBrowser } from "@/lib/storage";
 import { loginUserDb, signupUserDb, fetchUserData, updateUserDob, updateDeviceInfo } from "@/lib/db";
 
 const SESSION_PIN_KEY = "ig.session_pin_ok";
@@ -59,25 +60,43 @@ export function useAuth() {
   const [hash, setHash] = useState<string | null>(null);
   const [deviceId, setDeviceId] = useState<string | null>(null);
   const [fingerprint, setFingerprint] = useState<string | null>(null);
+  const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null);
 
   useEffect(() => {
     async function load() {
-      const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
-      if (uid) {
+      // 1. Fetch Maintenance Mode globally
+      import("@/lib/supabase").then(async ({ supabase }) => {
         try {
-          const rows = await fetchUserData(uid);
-          const data: Record<string, any> = {};
-          for (const row of rows || []) {
-            data[row.key] = row.value;
-          }
-          initStorageData(uid, data);
-        } catch (err) {
-          console.error("Failed to fetch user data", err);
+          const { data: setting } = await supabase.from("platform_settings").select("value").eq("key", "maintenance").single();
+          if (setting) setIsMaintenance(setting.value === 'true' || setting.value === true);
+          else setIsMaintenance(false);
+        } catch (e) {
+          setIsMaintenance(false);
         }
-      }
 
-      setAgeOk(get<boolean>(KEYS.age, false));
-      setUsername(get<string | null>(KEYS.username, null));
+        // Listen for maintenance mode changes globally
+        const maintenanceChannel = `maintenance-sync-${Math.random().toString(36).substring(7)}`;
+        supabase.channel(maintenanceChannel)
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings', filter: `key=eq.maintenance` }, (payload) => {
+            const newData = payload.new as any;
+            if (newData && newData.value !== undefined) {
+              setIsMaintenance(newData.value === 'true' || newData.value === true);
+            }
+          })
+          .subscribe();
+      });
+
+      // 2. Fetch User Data if logged in
+      const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
+      const cachedUsername = get<string | null>(KEYS.username, null);
+      
+      let isAgeOk = false;
+      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true") isAgeOk = true;
+      if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true") isAgeOk = true;
+      if (uid) isAgeOk = true;
+      
+      setAgeOk(isAgeOk);
+      setUsername(cachedUsername);
       const isSessionPinOk = typeof sessionStorage !== "undefined" ? sessionStorage.getItem(SESSION_PIN_KEY) === "true" : false;
       setPinOk(isSessionPinOk);
       setPinCodeState(get<string | null>(KEYS.pinCode, null));
@@ -87,11 +106,70 @@ export function useAuth() {
       setDeviceId(get<string | null>(KEYS.deviceId, null));
       setFingerprint(get<string | null>(KEYS.fingerprint, null));
 
-      setReady(true);
+      // If we have cached data, we are ready instantly! No UI hang.
+      if (cachedUsername || !uid) {
+        setReady(true);
+      }
+
+      if (uid) {
+        try {
+          // Fetch silently in background to update cache
+          const rows = await fetchUserData(uid);
+          const data: Record<string, any> = {};
+          for (const row of rows || []) {
+            data[row.key] = row.value;
+          }
+          initStorageData(uid, data);
+          
+          // CRITICAL: Update states after fetching so we don't stay null
+          setUsername(data[KEYS.username] || null);
+          setRealName(data[KEYS.realName] || null);
+          setDob(data[KEYS.dob] || null);
+          setHash(data[KEYS.hash] || null);
+          setDeviceId(data[KEYS.deviceId] || null);
+          setFingerprint(data[KEYS.fingerprint] || null);
+          
+          import("@/lib/supabase").then(({ supabase }) => {
+            const userDataChannel = `user-data-sync-${uid}-${Math.random().toString(36).substring(7)}`;
+            supabase.channel(userDataChannel)
+              .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data', filter: `user_id=eq.${uid}` }, (payload) => {
+                const newData = payload.new as any;
+                if (newData && newData.key !== undefined && newData.value !== undefined) {
+                  import("@/lib/storage").then(({ setLocal }) => {
+                    setLocal(newData.key, newData.value);
+                  });
+                }
+              })
+              .subscribe();
+          });
+        } catch (err) {
+          console.error("Failed to fetch user data", err);
+        } finally {
+          setReady(true);
+        }
+      }
     }
 
     load();
   }, []);
+
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (ready && isBrowser() && isMaintenance !== null) {
+      const isMaintenancePage = window.location.pathname === "/maintenance";
+      if (isMaintenance && username !== "Admin" && !isMaintenancePage) {
+        navigate({ to: "/maintenance" });
+      } else if (!isMaintenance && isMaintenancePage) {
+        if (username && pinOk && ageOk) {
+          navigate({ to: "/home" });
+        } else if (username && !pinOk) {
+          navigate({ to: "/pin" });
+        } else {
+          navigate({ to: "/login" });
+        }
+      }
+    }
+  }, [ready, isMaintenance, username, pinOk, ageOk, navigate]);
 
   return {
     ready,
@@ -104,8 +182,10 @@ export function useAuth() {
     hash,
     deviceId,
     fingerprint,
+    isMaintenance,
     confirmAge: () => {
-      set(KEYS.age, true);
+      if (typeof sessionStorage !== "undefined") sessionStorage.setItem("ig.age_ok", "true");
+      if (typeof localStorage !== "undefined") localStorage.setItem("ig.age_ok", "true");
       setAgeOk(true);
     },
     loginUser: async (email: string, pass: string) => {

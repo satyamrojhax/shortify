@@ -132,11 +132,10 @@ function RedeemPage() {
           <button
             onClick={() => setIsModalOpen(true)}
             disabled={currentCoins < 1000}
-            className={`w-full rounded-xl py-3.5 px-6 font-display text-base font-bold transition-all shadow-md ${
-              currentCoins >= 1000
+            className={`w-full rounded-xl py-3.5 px-6 font-display text-base font-bold transition-all shadow-md ${currentCoins >= 1000
                 ? "bg-cobalt-pop text-white hover:bg-cobalt-pop/90 active:scale-95"
                 : "bg-charcoal/10 text-charcoal/40 dark:bg-cream/10 dark:text-cream/40 cursor-not-allowed"
-            }`}
+              }`}
           >
             {currentCoins >= 1000 ? "Request Payout Now" : "Need 1,000 Coins Minimum"}
           </button>
@@ -215,60 +214,60 @@ function RedeemPage() {
 
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
-                  Account Holder Name
-                </label>
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="e.g. Satyam Rojha"
-                  required
-                  className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40"
-                />
-              </div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
+                      Account Holder Name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g. LFRDCA"
+                      required
+                      className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40"
+                    />
+                  </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
-                  Coins to Redeem
-                </label>
-                <input
-                  type="number"
-                  min="1000"
-                  max={currentCoins}
-                  step="100"
-                  value={coinsToRedeem}
-                  onChange={(e) => setCoinsToRedeem(e.target.value)}
-                  placeholder="e.g. 1000"
-                  required
-                  className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40"
-                />
-                {rupeesValue > 0 && (
-                  <p className="mt-1.5 text-xs font-bold text-green-600 dark:text-green-400">
-                    You will receive: ₹{rupeesValue} INR
-                  </p>
-                )}
-              </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
+                      Coins to Redeem
+                    </label>
+                    <input
+                      type="number"
+                      min="1000"
+                      max={currentCoins}
+                      step="100"
+                      value={coinsToRedeem}
+                      onChange={(e) => setCoinsToRedeem(e.target.value)}
+                      placeholder="e.g. 1000"
+                      required
+                      className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40"
+                    />
+                    {rupeesValue > 0 && (
+                      <p className="mt-1.5 text-xs font-bold text-green-600 dark:text-green-400">
+                        You will receive: ₹{rupeesValue} INR
+                      </p>
+                    )}
+                  </div>
 
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
-                  UPI ID or Phone Number
-                </label>
-                <input
-                  type="text"
-                  value={upi}
-                  onChange={(e) => setUpi(e.target.value)}
-                  placeholder="e.g. username@okhdfcbank or 9876543210"
-                  required
-                  className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40 font-mono"
-                />
-              </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
+                      UPI ID or Phone Number
+                    </label>
+                    <input
+                      type="text"
+                      value={upi}
+                      onChange={(e) => setUpi(e.target.value)}
+                      placeholder="e.g. username@okhdfcbank or 9876543210"
+                      required
+                      className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40 font-mono"
+                    />
+                  </div>
 
-              {error && (
-                <div className="rounded-lg border border-marker/30 bg-marker/10 p-2.5 text-xs font-medium text-marker">
-                  {error}
-                </div>
-              )}
+                  {error && (
+                    <div className="rounded-lg border border-marker/30 bg-marker/10 p-2.5 text-xs font-medium text-marker">
+                      {error}
+                    </div>
+                  )}
 
                   <div className="pt-2 flex gap-3">
                     <button

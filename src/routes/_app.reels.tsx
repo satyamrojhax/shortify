@@ -329,16 +329,24 @@ function ReelsPage() {
 
   return (
     <div className="relative h-[100dvh] w-full bg-background overflow-hidden">
-      {/* Category Pills */}
-      <div className="absolute left-0 right-0 top-14 z-30 flex w-full justify-center px-4 md:top-6 md:justify-end md:pr-8 pointer-events-none">
-        <div className="no-scrollbar flex items-center justify-center gap-2 overflow-x-auto sm:gap-3 pointer-events-auto">
+      {/* Unified Top Header for Coins & Categories */}
+      <div className="absolute left-0 right-0 top-4 z-30 flex w-full items-center justify-between px-4 md:top-6 md:px-6 pointer-events-none">
+        
+        {/* Coins display */}
+        <div className="flex items-center gap-2 rounded-full bg-background/80 border border-border/50 px-3 py-1.5 backdrop-blur pointer-events-auto shadow-sm">
+          <Coins className="h-4 w-4 md:h-5 md:w-5 text-yellow-500" />
+          <span className="text-xs md:text-sm font-semibold text-foreground">{coins}</span>
+        </div>
+
+        {/* Category Pills */}
+        <div className="no-scrollbar flex items-center justify-end gap-1.5 overflow-x-auto pointer-events-auto pl-2">
           {(["all", "latest", "local", "trending"] as string[]).map((f) => (
             <button
               key={f}
               onClick={() =>
                 navigate({ search: (prev) => ({ ...prev, tabs: f as FeedFilter }), replace: true })
               }
-              className={`shrink-0 rounded-full px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider transition sm:px-4 sm:text-xs ${
+              className={`shrink-0 rounded-full px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-wider transition sm:px-4 sm:text-xs shadow-sm ${
                 filter === f
                   ? "bg-foreground text-background"
                   : "bg-background/80 text-foreground border border-border/60 backdrop-blur hover:bg-muted"
@@ -348,12 +356,6 @@ function ReelsPage() {
             </button>
           ))}
         </div>
-      </div>
-
-      {/* Coins display */}
-      <div className="absolute top-4 left-4 z-30 flex items-center gap-2 rounded-full bg-background/80 border border-border/50 px-3 py-1.5 backdrop-blur md:top-6 md:left-6">
-        <Coins className="h-5 w-5 text-yellow-500" />
-        <span className="text-sm font-semibold text-foreground">{coins}</span>
       </div>
 
       {/* Desktop Navigation Arrows */}

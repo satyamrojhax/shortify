@@ -127,11 +127,7 @@ function AboutPage() {
               title="Coin Earnings & Shop"
               desc="Earn coins by watching and unlock exclusive badges, themes, and sound effects."
             />
-            <FeatureCard
-              icon={<Tv className="h-4 w-4" />}
-              title="Retro CRT Filter"
-              desc="Transform your player into a vintage retro TV with authentic scanlines."
-            />
+
             <FeatureCard
               icon={<Music className="h-4 w-4" />}
               title="Meme Soundboard"

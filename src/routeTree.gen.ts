@@ -11,8 +11,10 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/_app'
+import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgeRouteImport } from './routes/age'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as PinRouteImport } from './routes/pin'
 import { Route as PinSetupRouteImport } from './routes/pin-setup'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
@@ -32,10 +34,14 @@ import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShopRouteImport } from './routes/_app.shop'
 import { Route as AppSkillsRouteImport } from './routes/_app.skills'
+import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AppCourseSlugRouteImport } from './routes/_app.course.$slug'
 import { Route as AppCreatorUsernameRouteImport } from './routes/_app.creator.$username'
 import { Route as AppEnglishCourseIndexRouteImport } from './routes/_app.english-course.index'
 import { Route as AppEnglishCourseCourseIdRouteImport } from './routes/_app.english-course.$courseId'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin.users.index'
+import { Route as AdminUsersIdRouteImport } from './routes/admin.users.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +52,11 @@ const AppRoute = AppRouteImport.update({
   id: '/_app',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminRoute = AdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AgeRoute = AgeRouteImport.update({
   id: '/age',
   path: '/age',
@@ -54,6 +65,11 @@ const AgeRoute = AgeRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MaintenanceRoute = MaintenanceRouteImport.update({
+  id: '/maintenance',
+  path: '/maintenance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PinRoute = PinRouteImport.update({
@@ -151,6 +167,16 @@ const AppSkillsRoute = AppSkillsRouteImport.update({
   path: '/skills',
   getParentRoute: () => AppRoute,
 } as any)
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminSettingsRoute = AdminSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AppCourseSlugRoute = AppCourseSlugRouteImport.update({
   id: '/course/$slug',
   path: '/course/$slug',
@@ -172,11 +198,23 @@ const AppEnglishCourseCourseIdRoute =
     path: '/english-course/$courseId',
     getParentRoute: () => AppRoute,
   } as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminUsersIdRoute = AdminUsersIdRouteImport.update({
+  id: '/users/$id',
+  path: '/users/$id',
+  getParentRoute: () => AdminRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin': typeof AdminRouteWithChildren
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
@@ -196,15 +234,20 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/': typeof AdminIndexRoute
   '/course/$slug': typeof AppCourseSlugRoute
   '/creator/$username': typeof AppCreatorUsernameRoute
   '/english-course/$courseId': typeof AppEnglishCourseCourseIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/english-course/': typeof AppEnglishCourseIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
@@ -224,17 +267,23 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin': typeof AdminIndexRoute
   '/course/$slug': typeof AppCourseSlugRoute
   '/creator/$username': typeof AppCreatorUsernameRoute
   '/english-course/$courseId': typeof AppEnglishCourseCourseIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/english-course': typeof AppEnglishCourseIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_app': typeof AppRouteWithChildren
+  '/admin': typeof AdminRouteWithChildren
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/_app/about': typeof AppAboutRoute
@@ -254,17 +303,23 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/shop': typeof AppShopRoute
   '/_app/skills': typeof AppSkillsRoute
+  '/admin/settings': typeof AdminSettingsRoute
+  '/admin/': typeof AdminIndexRoute
   '/_app/course/$slug': typeof AppCourseSlugRoute
   '/_app/creator/$username': typeof AppCreatorUsernameRoute
   '/_app/english-course/$courseId': typeof AppEnglishCourseCourseIdRoute
+  '/admin/users/$id': typeof AdminUsersIdRoute
   '/_app/english-course/': typeof AppEnglishCourseIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin'
     | '/age'
     | '/login'
+    | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/about'
@@ -284,15 +339,20 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/skills'
+    | '/admin/settings'
+    | '/admin/'
     | '/course/$slug'
     | '/creator/$username'
     | '/english-course/$courseId'
+    | '/admin/users/$id'
     | '/english-course/'
+    | '/admin/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/age'
     | '/login'
+    | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/about'
@@ -312,16 +372,22 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/skills'
+    | '/admin/settings'
+    | '/admin'
     | '/course/$slug'
     | '/creator/$username'
     | '/english-course/$courseId'
+    | '/admin/users/$id'
     | '/english-course'
+    | '/admin/users'
   id:
     | '__root__'
     | '/'
     | '/_app'
+    | '/admin'
     | '/age'
     | '/login'
+    | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/_app/about'
@@ -341,17 +407,23 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/shop'
     | '/_app/skills'
+    | '/admin/settings'
+    | '/admin/'
     | '/_app/course/$slug'
     | '/_app/creator/$username'
     | '/_app/english-course/$courseId'
+    | '/admin/users/$id'
     | '/_app/english-course/'
+    | '/admin/users/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AppRoute: typeof AppRouteWithChildren
+  AdminRoute: typeof AdminRouteWithChildren
   AgeRoute: typeof AgeRoute
   LoginRoute: typeof LoginRoute
+  MaintenanceRoute: typeof MaintenanceRoute
   PinRoute: typeof PinRoute
   PinSetupRoute: typeof PinSetupRoute
 }
@@ -372,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/age': {
       id: '/age'
       path: '/age'
@@ -384,6 +463,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/maintenance': {
+      id: '/maintenance'
+      path: '/maintenance'
+      fullPath: '/maintenance'
+      preLoaderRoute: typeof MaintenanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pin': {
@@ -519,6 +605,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSkillsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/settings': {
+      id: '/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AdminSettingsRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/_app/course/$slug': {
       id: '/_app/course/$slug'
       path: '/course/$slug'
@@ -546,6 +646,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/english-course/$courseId'
       preLoaderRoute: typeof AppEnglishCourseCourseIdRouteImport
       parentRoute: typeof AppRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/users/$id': {
+      id: '/admin/users/$id'
+      path: '/users/$id'
+      fullPath: '/admin/users/$id'
+      preLoaderRoute: typeof AdminUsersIdRouteImport
+      parentRoute: typeof AdminRoute
     }
   }
 }
@@ -600,11 +714,29 @@ const AppRouteChildren: AppRouteChildren = {
 
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
+interface AdminRouteChildren {
+  AdminSettingsRoute: typeof AdminSettingsRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminUsersIdRoute: typeof AdminUsersIdRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+}
+
+const AdminRouteChildren: AdminRouteChildren = {
+  AdminSettingsRoute: AdminSettingsRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminUsersIdRoute: AdminUsersIdRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+}
+
+const AdminRouteWithChildren = AdminRoute._addFileChildren(AdminRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AppRoute: AppRouteWithChildren,
+  AdminRoute: AdminRouteWithChildren,
   AgeRoute: AgeRoute,
   LoginRoute: LoginRoute,
+  MaintenanceRoute: MaintenanceRoute,
   PinRoute: PinRoute,
   PinSetupRoute: PinSetupRoute,
 }

@@ -4,7 +4,6 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Sidebar, BottomNav, Footer, MobileHeader } from "@/components/nav";
 import { InstallPwa } from "@/components/install-pwa";
-import { isCrtEnabled } from "@/lib/storage";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -13,20 +12,10 @@ export const Route = createFileRoute("/_app")({
 function AppLayout() {
   useTheme();
   const navigate = useNavigate();
-  const { ready, ageOk, username, pinOk } = useAuth();
+  const { ready, ageOk, username, pinOk, isMaintenance } = useAuth();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isReels =
     pathname === "/reels" || pathname === "/category" || pathname.startsWith("/creator");
-
-  const [activeCrt, setActiveCrt] = useState(false);
-  useEffect(() => {
-    setActiveCrt(isCrtEnabled());
-    const handleEffectsChange = () => {
-      setActiveCrt(isCrtEnabled());
-    };
-    window.addEventListener("effects-change", handleEffectsChange);
-    return () => window.removeEventListener("effects-change", handleEffectsChange);
-  }, []);
 
   useEffect(() => {
     if (!ready) return;
@@ -44,7 +33,7 @@ function AppLayout() {
   }
 
   return (
-    <div className={`flex min-h-screen w-full bg-background ${activeCrt ? "crt-filter" : ""}`}>
+    <div className={`flex min-h-screen w-full bg-background`}>
       <Sidebar username={username} />
       <div className="flex-1 min-w-0 flex flex-col relative h-screen overflow-y-auto bg-background">
         {!isReels && <MobileHeader username={username} />}

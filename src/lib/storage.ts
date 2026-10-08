@@ -2,7 +2,6 @@ import type { Reel } from "./reels";
 import { setRemoteData } from "@/lib/db";
 
 export const KEYS = {
-  age: "ig.age_ok",
   username: "ig.username",
   pin: "ig.pin_ok",
   pinCode: "ig.pin_code",
@@ -27,7 +26,6 @@ export const KEYS = {
   history: "ig.history",
   avatarStyle: "ig.avatar_style",
   avatarSeed: "ig.avatar_seed",
-  crt: "ig.crt",
   memeSounds: "ig.meme_sounds",
 } as const;
 
@@ -63,6 +61,14 @@ export function get<T>(key: string, fallback: T): T {
     return memoryCache.get(key) as T;
   }
   return fallback;
+}
+
+export function setLocal<T>(key: string, value: T) {
+  memoryCache.set(key, value);
+  if (isBrowser()) {
+    if (key === KEYS.coins) window.dispatchEvent(new Event("coins-change"));
+    // Add other event dispatches if necessary
+  }
 }
 
 export function set<T>(key: string, value: T) {
@@ -256,16 +262,7 @@ export function setAvatarSeed(seed: string): void {
   set(KEYS.avatarSeed, seed);
 }
 
-export function isCrtEnabled(): boolean {
-  return get<boolean>(KEYS.crt, false) || (typeof localStorage !== "undefined" && localStorage.getItem("ig.crt") === "true");
-}
 
-export function setCrtEnabled(value: boolean): void {
-  set(KEYS.crt, value);
-  if (typeof localStorage !== "undefined") {
-    localStorage.setItem("ig.crt", String(value));
-  }
-}
 
 export function isMemeSoundsEnabled(): boolean {
   return get<boolean>(KEYS.memeSounds, false) || (typeof localStorage !== "undefined" && localStorage.getItem("ig.meme_sounds") === "true");
@@ -280,7 +277,7 @@ export function setMemeSoundsEnabled(value: boolean): void {
 
 export async function clearAllStats() {
   const keepKeys = [
-    KEYS.age, KEYS.username, KEYS.pin, KEYS.pinCode,
+    "ig.age_ok", KEYS.username, KEYS.pin, KEYS.pinCode,
     KEYS.realName, KEYS.dob, KEYS.hash, KEYS.deviceId, KEYS.fingerprint
   ];
 

@@ -326,34 +326,7 @@
   font-weight: bold;
 }
 
-.crt-filter {
-  animation: flicker 0.15s infinite;
-  pointer-events: none;
-}
-.crt-filter::before {
-  content: " ";
-  display: block;
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-  background-size: 100% 4px;
-  z-index: 50;
-  pointer-events: none;
-}
-@keyframes flicker {
-  0% {
-    opacity: 0.95;
-  }
-  50% {
-    opacity: 0.85;
-  }
-  100% {
-    opacity: 0.95;
-  }
-}
+
 
 @keyframes slideUp {
   from {

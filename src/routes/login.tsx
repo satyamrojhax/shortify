@@ -4,28 +4,35 @@ import { useAuth } from "@/hooks/use-auth";
 import { BrandMark } from "@/components/nav";
 
 export const Route = createFileRoute("/login")({
+  validateSearch: (search: Record<string, unknown>): { admin?: boolean } => {
+    return {
+      admin: search.admin === "true" || search.admin === true,
+    };
+  },
   component: LoginPage,
 });
 
 function LoginPage() {
   const navigate = useNavigate();
+  const { admin } = Route.useSearch();
   const { ready, ageOk, loginUser, signupUser, pinCode } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">("signup");
+  const [mode, setMode] = useState<"login" | "signup">(admin ? "login" : "signup");
   const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const [userHandle, setUserHandle] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    if (ready && !ageOk) navigate({ to: "/age" });
-  }, [ready, ageOk, navigate]);
+    if (!admin && ready && !ageOk) navigate({ to: "/age" });
+  }, [admin, ready, ageOk, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    const trimmedEmail = email.trim();
-    if (!trimmedEmail || !password) return;
+    const handle = userHandle.trim().toLowerCase();
+    const trimmedEmail = `${handle}@shortify.cc.cd`;
+    if (!handle || !password) return;
     if (mode === "signup" && !trimmedName) return;
 
     setLoading(true);
@@ -36,7 +43,15 @@ function LoginPage() {
       } else {
         await loginUser(trimmedEmail, password);
       }
-      navigate({ to: pinCode ? "/pin" : "/pin-setup" });
+
+      if (admin) {
+        navigate({ to: "/admin" });
+      } else {
+        import("@/lib/storage").then(({ get, KEYS }) => {
+          const pin = get(KEYS.pinCode, null);
+          navigate({ to: pin ? "/pin" : "/pin-setup" });
+        });
+      }
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Failed to authenticate");
@@ -71,8 +86,8 @@ function LoginPage() {
         </h1>
         <p className="mt-4 text-[17px] text-foreground/80">
           {isSignup
-            ? "enter your name, email and password to continue."
-            : "enter your email and password to continue."}
+            ? "enter your name, username and password to continue."
+            : "enter your username and password to continue."}
         </p>
 
         {errorMsg && (
@@ -85,7 +100,7 @@ function LoginPage() {
           {isSignup && (
             <label className="block">
               <span className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-                your name
+                display name
               </span>
               <input
                 autoFocus
@@ -99,13 +114,13 @@ function LoginPage() {
           )}
           <label className="block">
             <span className="mb-2 block text-xs font-medium uppercase tracking-[0.2em] text-foreground/60">
-              email address
+              username
             </span>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
+              type="text"
+              value={userHandle}
+              onChange={(e) => setUserHandle(e.target.value.toLowerCase())}
+              placeholder="e.g. LFRDCA"
               className="w-full rounded-lg border-[1.5px] border-foreground/30 bg-background px-4 py-3 text-lg text-foreground placeholder:text-foreground/40 outline-none transition focus:bg-muted disabled:opacity-50"
               disabled={loading}
               autoFocus={!isSignup}
@@ -126,7 +141,7 @@ function LoginPage() {
           </label>
           <button
             type="submit"
-            disabled={loading || !email.trim() || !password.trim() || (isSignup && !name.trim())}
+            disabled={loading || !userHandle.trim() || !password.trim() || (isSignup && !name.trim())}
             className="btn-pill"
           >
             {loading ? "loading..." : "continue →"}

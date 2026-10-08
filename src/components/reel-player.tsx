@@ -917,7 +917,7 @@ export const ReelPlayer = memo(function ReelPlayer({
           style={{
             height: "calc(100vh - 100px)",
             maxHeight: 850,
-            maxWidth: showComments && isDesktop ? "calc(100vw - 600px)" : "calc(100vw - 200px)",
+            maxWidth: showComments && isDesktop ? "calc(100vw - 500px)" : "calc(100vw - 200px)",
             aspectRatio: videoRatio,
           }}
         >
@@ -1041,8 +1041,8 @@ export const ReelPlayer = memo(function ReelPlayer({
         {/* Right — Comments Sidebar (Desktop) */}
         {!isOffline && showComments && isDesktop && (
           <div
-            className="flex flex-col shrink-0 w-[350px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
-            style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
+            className="flex flex-col shrink-0 w-[260px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
+            style={{ height: "calc(100vh - 200px)", maxHeight: 700 }}
           >
             <div className="px-4 py-3 border-b border-border bg-muted/30 flex justify-between items-center">
               <h3 className="font-bold text-foreground">Comments</h3>

@@ -151,7 +151,6 @@ export async function setRemoteData(userId: string, key: string, value: any) {
       key === "ig.avatar_style" ||
       key === "ig.avatar_seed" ||
       key === "ig.theme" ||
-      key === "ig.crt" ||
       key === "ig.meme_sounds"
     ) {
       const field = key.replace("ig.", "");
@@ -186,7 +185,7 @@ export async function fetchUserProfile(userId: string) {
 
 export async function resetAllStatsDb(userId: string) {
   const keepKeys = [
-    "ig.age_ok", "ig.username", "ig.pin_ok", "ig.pin_code", 
+    "ig.username", "ig.pin_ok", "ig.pin_code", 
     "ig.real_name", "ig.dob", "ig.hash", "ig.device_id", "ig.fingerprint"
   ];
   
