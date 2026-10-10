@@ -63,7 +63,7 @@ function AppLayout() {
               </div>
               <h1 className="mb-2 font-display text-4xl text-foreground">You're Offline bruh</h1>
               <p className="mb-8 max-w-md text-foreground/70">
-                Please connect to internet to use it in more casual and funny way. But hey, you can still watch your downloaded reels!
+                damn, your wifi really said 'nope' today. did you forget to pay the bill or are you still stealing from your neighbor? anyway, while you rethink your life choices, go watch the stuff you hoarded in your downloads.
               </p>
               <Link to="/downloaded" search={{ tab: "library" }} className="btn-pill inline-flex items-center gap-2">
                 <Download className="h-5 w-5" />
