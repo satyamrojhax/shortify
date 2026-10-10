@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Use Vite/Vercel proxy to hide the real URL from the frontend
-const supabaseUrl = typeof window !== "undefined" ? `${window.location.origin}/shortify` : "http://localhost/shortify";
+// Use direct URL for WebSockets since proxies (like Vercel rewrites) often drop the connection
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://mcrhjyszrxbtiizhgacn.supabase.co";
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
