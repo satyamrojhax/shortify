@@ -1,18 +1,16 @@
-name: Publish to npm
+name: Publish to GitHub Packages
 
 on:
   release:
     types: [created]
-  # Allows you to trigger the workflow manually from the Actions tab
   workflow_dispatch:
 
 jobs:
   publish:
     runs-on: ubuntu-latest
-    environment: shortify-npm-package
     permissions:
       contents: read
-      id-token: write # Required for npm provenance / Trusted Publishers
+      packages: write # Required to publish to GitHub Packages
 
     steps:
       - name: Checkout code
@@ -22,9 +20,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '24'
-
-      - name: Update npm to latest
-        run: npm install -g npm@latest
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@satyamrojhax'
 
       - name: Install dependencies
         run: npm ci
@@ -32,5 +29,7 @@ jobs:
       - name: Build project
         run: npm run build
 
-      - name: Publish package
-        run: npm publish --provenance --access public
+      - name: Publish to GitHub Packages
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
