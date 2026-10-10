@@ -1,6 +1,28 @@
 {
-  "name": "tanstack_start_ts",
-  "private": true,
+  "name": "@satyamrojha/shortify",
+  "version": "1.2.70",
+  "description": "A modern, responsive web application for watching short videos & learning skills.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/satyamrojhax/shortify.git"
+  },
+  "homepage": "https://github.com/satyamrojhax/shortify#readme",
+  "bugs": {
+    "url": "https://github.com/satyamrojhax/shortify/issues"
+  },
+  "author": "Satyam Rojha",
+  "keywords": [
+    "shortify",
+    "reels",
+    "video",
+    "player",
+    "technologies",
+    "satyamrojhax",
+    "satyamrojha",
+    "lfrdca",
+    "18+"
+  ],
+  "private": false,
   "sideEffects": false,
   "type": "module",
   "scripts": {
