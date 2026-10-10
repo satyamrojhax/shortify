@@ -2,21 +2,39 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || "";
 
-// We must use the direct Supabase URL for all requests.
-// Why?
-// 1. Vercel rewrites DO NOT support WebSockets, breaking Realtime completely.
-// 2. Proxied Vercel rewrites add latency that causes Service Worker 5s timeouts (ERR_FAILED).
-// 3. Using two separate clients causes "Multiple GoTrueClient instances" warnings and session race conditions.
-// Note: Supabase URLs and Anon Keys are explicitly designed to be public. Your DB is secured by RLS, not by hiding the URL.
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "https://mcrhjyszrxbtiizhgacn.supabase.co";
+// Vercel Edge proxy rewrites DO NOT support WebSockets, which breaks Realtime if proxied.
+// To hide the base URL for standard REST queries as requested, we intercept fetch calls
+// and route them through the proxy. Realtime will bypass this and use the direct WSS URL.
+const supabaseUrl = "https://mcrhjyszrxbtiizhgacn.supabase.co";
+const proxyUrl = import.meta.env.VITE_SUPABASE_URL || "/shortify";
 
 // To prevent logging out existing users from when the proxy was used, we keep the old storage key.
 const legacyHostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
 const storageKey = `sb-${legacyHostname.split('.')[0]}-auth-token`;
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storageKey,
-  }
-});
+const getSupabaseClient = () => {
+  return createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      storageKey,
+    },
+    global: {
+      fetch: (input, init) => {
+        if (typeof input === "string" && input.startsWith(supabaseUrl)) {
+          return fetch(input.replace(supabaseUrl, proxyUrl), init);
+        } else if (input instanceof URL && input.href.startsWith(supabaseUrl)) {
+          return fetch(input.href.replace(supabaseUrl, proxyUrl), init);
+        }
+        return fetch(input, init);
+      }
+    }
+  });
+};
 
+// Cache the instance on the window object to prevent multiple GoTrueClient warnings during HMR
+const globalWindow = typeof window !== "undefined" ? (window as any) : null;
+
+export const supabase = globalWindow?.__supabaseClient || getSupabaseClient();
+
+if (globalWindow && !globalWindow.__supabaseClient) {
+  globalWindow.__supabaseClient = supabase;
+}

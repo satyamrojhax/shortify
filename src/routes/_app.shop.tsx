@@ -108,13 +108,21 @@ function ShopPage() {
     setCoins(getCoins());
     setUnlocks(getUnlocks());
     const raw = localStorage.getItem("ig.theme");
-    setActiveTheme(raw ? JSON.parse(raw) : "system");
+    try {
+      setActiveTheme(raw ? JSON.parse(raw) : "system");
+    } catch {
+      setActiveTheme(raw || "system");
+    }
     setActiveMeme(isMemeSoundsEnabled());
 
     const handleCoinsChange = () => setCoins(getCoins());
     const handleThemeChange = () => {
       const current = localStorage.getItem("ig.theme");
-      setActiveTheme(current ? JSON.parse(current) : "system");
+      try {
+        setActiveTheme(current ? JSON.parse(current) : "system");
+      } catch {
+        setActiveTheme(current || "system");
+      }
     };
     const handleEffectsChange = () => {
       setActiveMeme(isMemeSoundsEnabled());

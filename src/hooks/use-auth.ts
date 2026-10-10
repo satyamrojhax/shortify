@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { KEYS, get, set, remove, initStorageData, isBrowser } from "@/lib/storage";
+import { KEYS, get, set, remove, initStorageData, isBrowser, setLocal } from "@/lib/storage";
 import { loginUserDb, signupUserDb, fetchUserData, updateUserDob, updateDeviceInfo } from "@/lib/db";
+import { supabase } from "@/lib/supabase";
 
 const SESSION_PIN_KEY = "ig.session_pin_ok";
 
@@ -65,7 +66,7 @@ export function useAuth() {
   useEffect(() => {
     async function load() {
       // 1. Fetch Maintenance Mode globally
-      import("@/lib/supabase").then(async ({ supabase }) => {
+      (async () => {
         try {
           const { data: setting } = await supabase.from("platform_settings").select("value").eq("key", "maintenance").single();
           if (setting) setIsMaintenance(setting.value === 'true' || setting.value === true);
@@ -84,7 +85,7 @@ export function useAuth() {
             }
           })
           .subscribe();
-      });
+      })();
 
       // 2. Fetch User Data if logged in
       const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
@@ -130,19 +131,15 @@ export function useAuth() {
           setDeviceId(data[KEYS.deviceId] || null);
           setFingerprint(data[KEYS.fingerprint] || null);
           
-          import("@/lib/supabase").then(({ supabase }) => {
-            const userDataChannel = `user-data-sync-${uid}-${crypto.randomUUID()}`;
-            supabase.channel(userDataChannel)
-              .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data', filter: `user_id=eq.${uid}` }, (payload) => {
-                const newData = payload.new as any;
-                if (newData && newData.key !== undefined && newData.value !== undefined) {
-                  import("@/lib/storage").then(({ setLocal }) => {
-                    setLocal(newData.key, newData.value);
-                  });
-                }
-              })
-              .subscribe();
-          });
+          const userDataChannel = `user-data-sync-${uid}-${crypto.randomUUID()}`;
+          supabase.channel(userDataChannel)
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data', filter: `user_id=eq.${uid}` }, (payload) => {
+              const newData = payload.new as any;
+              if (newData && newData.key !== undefined && newData.value !== undefined) {
+                setLocal(newData.key, newData.value);
+              }
+            })
+            .subscribe();
         } catch (err) {
           console.error("Failed to fetch user data", err);
         } finally {
