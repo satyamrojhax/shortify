@@ -400,10 +400,17 @@ function SettingsPage() {
                 sign out of this device.
               </div>
             </div>
-            <LogOut className="h-5 w-5 text-marker" />
+            <img src="data:image/svg+xml;base64,CiAgICA8c3ZnCiAgICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgICAgZmlsbD0ibm9uZSIKICAgICAgdmlld0JveD0iMCAwIDI0IDI0IgogICAgICBzdHJva2Utd2lkdGg9IjEuNSIKICAgICAgc3Ryb2tlPSJjdXJyZW50Q29sb3IiCiAgICAgIAogICAgPgogICAgICA8cGF0aAogICAgICAgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICAgICAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgICAgIGQ9Ik01LjYzNiA1LjYzNmE5IDkgMCAxIDAgMTIuNzI4IDBNMTIgM3Y5IgogICAgICAvPgogICAgPC9zdmc+CiA=" alt="logout" className="h-5 w-5 text-marker" />
           </button>
         </div>
       </section>
+
+      <div className="mt-12 mb-8 flex flex-col items-center justify-center">
+        <img src="https://static.pw.live/5eb393ee95fab7468a79d189/ADMIN/884f4b16-1d2b-42ce-856b-eef1b49c0850.svg" alt="Love Learning" className="h-20 sm:h-24 object-contain mb-3 drop-shadow-sm" />
+        <p className="text-xs font-medium text-charcoal/70 dark:text-cream/70">
+          Made with ❤️ in India
+        </p>
+      </div>
 
       {/* Reset Confirmation Dialog */}
       {showResetConfirm && (

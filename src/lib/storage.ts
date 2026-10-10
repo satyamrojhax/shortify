@@ -61,19 +61,38 @@ export function get<T>(key: string, fallback: T): T {
   if (memoryCache.has(key)) {
     return memoryCache.get(key) as T;
   }
+  if (isBrowser()) {
+    const local = localStorage.getItem(key);
+    if (local !== null) {
+      try {
+        const parsed = JSON.parse(local);
+        memoryCache.set(key, parsed);
+        return parsed;
+      } catch (e) {
+        memoryCache.set(key, local);
+        return local as unknown as T;
+      }
+    }
+  }
   return fallback;
 }
 
 export function setLocal<T>(key: string, value: T) {
   memoryCache.set(key, value);
   if (isBrowser()) {
+    localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
     if (key === KEYS.coins) window.dispatchEvent(new Event("coins-change"));
+    if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
     // Add other event dispatches if necessary
   }
 }
 
 export function set<T>(key: string, value: T) {
   memoryCache.set(key, value);
+  if (isBrowser()) {
+    localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
+    if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
+  }
 
   const uid =
     currentUserId ||
@@ -89,6 +108,9 @@ export function set<T>(key: string, value: T) {
 
 export function remove(key: string) {
   memoryCache.delete(key);
+  if (isBrowser()) {
+    localStorage.removeItem(key);
+  }
   const uid =
     currentUserId ||
     (typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null);
@@ -318,6 +340,7 @@ export function updateStreak(): { updated: boolean, streak: StreakData } {
   };
   
   set(KEYS.streak, newStreak);
+  if (isBrowser()) window.dispatchEvent(new Event("streak-change"));
   return { updated: true, streak: newStreak };
 }
 

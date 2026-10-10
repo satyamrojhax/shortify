@@ -41,6 +41,7 @@ function LoginPage() {
     setErrorMsg("");
     try {
       if (mode === "signup") {
+        if (admin) throw new Error("Cannot sign up as admin.");
         await signupUser(trimmedName, trimmedEmail, password);
       } else {
         await loginUser(trimmedEmail, password);
@@ -92,15 +93,17 @@ function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-between gap-2 text-foreground">
           <BrandMark size={32} />
-          <button
-            onClick={() => {
-              setMode(isSignup ? "login" : "signup");
-              setErrorMsg("");
-            }}
-            className="text-sm font-medium uppercase tracking-widest text-foreground/60 hover:text-foreground"
-          >
-            {isSignup ? "Log In Instead" : "Sign Up Instead"}
-          </button>
+          {!admin && (
+            <button
+              onClick={() => {
+                setMode(isSignup ? "login" : "signup");
+                setErrorMsg("");
+              }}
+              className="text-sm font-medium uppercase tracking-widest text-foreground/60 hover:text-foreground"
+            >
+              {isSignup ? "Log In Instead" : "Sign Up Instead"}
+            </button>
+          )}
         </div>
         <p className="font-display text-destructive text-xl lowercase italic">
           {isSignup ? "hello there," : "welcome back,"}

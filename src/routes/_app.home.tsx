@@ -31,8 +31,7 @@ function HomePage() {
           start <span className="marker-underline">exploring.</span>
         </h1>
         <p className="mt-6 max-w-xl text-[18px] leading-relaxed text-charcoal/80 dark:text-cream/70">
-          a stack of fresh reels waiting to be peeled. tap play, hold to double the speed,
-          double-tap to love it — everything stays on this device.
+          scroll till your thumb goes numb, or actually level up your life with our skills & speaking courses. tap play, hold to 2x speed, double-tap to like. it's that easy.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link to="/reels" className="btn-pill">
@@ -58,20 +57,20 @@ function HomePage() {
       <section className="mt-16 grid gap-4 md:grid-cols-3">
         <FeatureCard
           icon={<Sparkles className="h-5 w-5" />}
-          title="endless scroll"
-          body="fresh reels are stitched from a handful of public feeds and shuffled just for you."
+          title="doomscroll responsibly"
+          body="fresh reels curated just to distract you from your responsibilities."
           rotate={-0.6}
         />
         <FeatureCard
-          icon={<Heart className="h-5 w-5" />}
-          title="love & keep"
-          body="double-tap to like. your collection lives quietly on this device — nowhere else."
+          icon={<Wrench className="h-5 w-5" />}
+          title="big brain time"
+          body="learn english or pick up a new skill. because scrolling for 5 hours straight is a bad look."
           rotate={0.4}
         />
         <FeatureCard
-          icon={<Settings className="h-5 w-5" />}
-          title="yours to shape"
-          body="theme, pin, and profile — swap them anytime from settings."
+          icon={<Heart className="h-5 w-5" />}
+          title="stash the good stuff"
+          body="double-tap to like, save it for later. all safe and sound on your device."
           rotate={-0.3}
         />
       </section>
@@ -87,7 +86,7 @@ function HomePage() {
             href="https://lfrdcatechnologies.cc.cd"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline hover:opacity-80 transition"
+            className="hover:opacity-80 transition"
           >
             LFRDCA Technologies
           </a>

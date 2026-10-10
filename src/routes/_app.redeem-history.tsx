@@ -13,6 +13,7 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
+import { BubbleLoader } from "@/components/ui/bubble-loader";
 
 export const Route = createFileRoute("/_app/redeem-history")({
   component: RedeemHistoryPage,
@@ -150,7 +151,7 @@ function RedeemHistoryPage() {
       <section className="mt-6">
         {loading ? (
           <div className="paper-card flex flex-col items-center justify-center p-12 text-center">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-charcoal/20 border-t-cobalt-pop dark:border-cream/20 dark:border-t-cobalt-pop" />
+            <BubbleLoader size="lg" />
             <p className="mt-3 text-sm text-charcoal/60 dark:text-cream/60">
               loading your payout records...
             </p>

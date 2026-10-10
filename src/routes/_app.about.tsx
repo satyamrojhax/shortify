@@ -45,8 +45,7 @@ function AboutPage() {
             Shortify
           </h1>
           <p className="mt-1 text-base text-charcoal/70 dark:text-cream/70 max-w-xl">
-            An ultra-fast, immersive short video platform built with modern web technologies,
-            cloud persistence, and zero interruptions.
+            welcome to shortify. come for the reels, stay because you accidentally learned english and picked up 3 new skills.
           </p>
         </div>
       </div>
@@ -56,25 +55,25 @@ function AboutPage() {
         <div className="paper-card p-4 text-center">
           <div className="font-display text-2xl text-cocoa dark:text-cream">100%</div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
-            Ad-Free
+            Ad-Free (Duh)
           </div>
         </div>
         <div className="paper-card p-4 text-center">
           <div className="font-display text-2xl text-cocoa dark:text-cream">Cloud</div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
-            Supabase DB
+            Magic Sync
           </div>
         </div>
         <div className="paper-card p-4 text-center">
-          <div className="font-display text-2xl text-cocoa dark:text-cream">DiceBear</div>
+          <div className="font-display text-2xl text-cocoa dark:text-cream">Avatars</div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
-            Vector Avatars
+            Vibe Checked
           </div>
         </div>
         <div className="paper-card p-4 text-center">
-          <div className="font-display text-2xl text-cocoa dark:text-cream">PWA</div>
+          <div className="font-display text-2xl text-cocoa dark:text-cream">Offline</div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
-            Offline Ready
+            No Wifi? Ok.
           </div>
         </div>
       </div>
@@ -85,15 +84,11 @@ function AboutPage() {
           <div className="flex items-center gap-2 mb-3">
             <Flame className="h-5 w-5 text-marker" />
             <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
-              what is Shortify?
+              what is this place?
             </h2>
           </div>
           <p className="text-sm sm:text-base text-charcoal/70 dark:text-cream/70 leading-relaxed">
-            Shortify is crafted to redefine how you experience short-form videos. Built from the
-            ground up without bloated trackers or invasive ads, it provides instant playback,
-            continuous auto-scrolling, high-definition streaming, and rich creator discovery. Every
-            interaction is optimized for lightning speed, whether you are browsing on mobile,
-            tablet, or desktop.
+            look, we know you're just here to procrastinate. but we figured, why not make it productive? Shortify is a blazing fast video app with zero annoying ads. we've got endless reels for when your brain needs a break, plus speaking courses and skills training for when you realize you should probably do something with your life. the ultimate win-win.
           </p>
         </div>
 
@@ -101,57 +96,50 @@ function AboutPage() {
         <div className="paper-card p-6 sm:p-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-display text-2xl lowercase text-cocoa dark:text-cream">
-              featured highlights
+              the good stuff
             </h2>
-            <span className="text-xs text-marker font-mono uppercase tracking-wider">v2.4</span>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
             <FeatureCard
               icon={<Play className="h-4 w-4" />}
-              title="Endless Reel Feeds"
-              desc="Browse categories, trending feeds, creator pages, and random discovery."
+              title="Doomscroll Mode"
+              desc="swipe endlessly through reels until you forget what year it is."
             />
             <FeatureCard
-              icon={<Sparkles className="h-4 w-4" />}
-              title="DiceBear Avatars"
-              desc="Deterministic vector avatars with 9 selectable artistic collections."
-            />
-            <FeatureCard
-              icon={<Cloud className="h-4 w-4" />}
-              title="Cloud Database Sync"
-              desc="Likes, bookmarks, coins, and settings securely synced across your devices."
+              icon={<Award className="h-4 w-4" />}
+              title="Actually Learn Stuff"
+              desc="courses to fix your english and teach you legit skills."
             />
             <FeatureCard
               icon={<Coins className="h-4 w-4" />}
-              title="Coin Earnings & Shop"
-              desc="Earn coins by watching and unlock exclusive badges, themes, and sound effects."
-            />
-
-            <FeatureCard
-              icon={<Music className="h-4 w-4" />}
-              title="Meme Soundboard"
-              desc="Add fun auditory feedback and confetti bursts to your likes."
+              title="Get Paid to Watch"
+              desc="watch videos, earn coins, redeem them. literally free money."
             />
             <FeatureCard
-              icon={<Zap className="h-4 w-4" />}
-              title="2× Speed & Gestures"
-              desc="Press and hold for 2× playback speed, double-tap to like, and instant mute toggle."
-            />
-            <FeatureCard
-              icon={<Gift className="h-4 w-4" />}
-              title="Redemption Tracking"
-              desc="Submit real rewards redemptions with live database status history."
-            />
-            <FeatureCard
-              icon={<Shield className="h-4 w-4" />}
-              title="Secure PIN Protection"
-              desc="Biometric / DOB-derived security verification keeping your account private."
+              icon={<Cloud className="h-4 w-4" />}
+              title="Cloud Magic"
+              desc="your likes, saves, and coins sync everywhere magically."
             />
             <FeatureCard
               icon={<Smartphone className="h-4 w-4" />}
-              title="Progressive Web App"
-              desc="Install directly onto iOS, Android, and Desktop with offline video cache."
+              title="No Internet? No Problem"
+              desc="download your stuff and watch it even when your wifi betrays you."
+            />
+            <FeatureCard
+              icon={<Shield className="h-4 w-4" />}
+              title="Fort Knox Security"
+              desc="lock it down with a PIN. your secrets are safe with us."
+            />
+            <FeatureCard
+              icon={<Music className="h-4 w-4" />}
+              title="Meme Noises"
+              desc="because everything is better with goofy sound effects."
+            />
+            <FeatureCard
+              icon={<Sparkles className="h-4 w-4" />}
+              title="Vibe Check Avatars"
+              desc="pick a cool vector face so you don't look like an egg."
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { Search, Heart, Play, ChevronLeft } from "lucide-react";
 import { Reel } from "@/lib/reels";
 import { ReelModal } from "@/components/reel-modal";
 import { ExtraReelsPlayer } from "@/components/extra-reels-player";
+import { BubbleLoader } from "@/components/ui/bubble-loader";
 
 export const Route = createFileRoute("/_app/search")({
   component: SearchPage,
@@ -126,7 +127,7 @@ function SearchPage() {
         </div>
       ) : loading && results.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-charcoal/50 dark:text-cream/50">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-charcoal/30 border-t-charcoal dark:border-cream/30 dark:border-t-cream mb-4"></div>
+          <BubbleLoader className="mb-4" size="lg" />
           <p className="font-display text-xl lowercase">Searching...</p>
         </div>
       ) : results.length === 0 && !loading ? (

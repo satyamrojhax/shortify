@@ -2,6 +2,8 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 
+import { BubbleLoader } from "@/components/ui/bubble-loader";
+
 export const Route = createFileRoute("/")({
   component: IndexRedirect,
 });
@@ -20,7 +22,7 @@ function IndexRedirect() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+      <BubbleLoader />
     </div>
   );
 }

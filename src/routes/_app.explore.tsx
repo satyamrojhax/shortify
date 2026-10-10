@@ -29,6 +29,10 @@ function ExplorePage() {
   }, []);
 
   const fetchForYou = async () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("https://love.shortify.cc.cd/api/for-you");
@@ -44,6 +48,10 @@ function ExplorePage() {
   };
 
   const fetchTrending = async () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch("https://love.shortify.cc.cd/api/trending/videos");

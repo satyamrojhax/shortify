@@ -6,6 +6,7 @@ import { ReelPlayer } from "@/components/reel-player";
 import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite } from "@/lib/storage";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { BubbleLoader } from "@/components/ui/bubble-loader";
 import {
   AlertTriangle,
   RefreshCw,
@@ -341,7 +342,7 @@ function CreatorPage() {
       <div className="flex-1 p-0.5 md:p-4 w-full max-w-5xl mx-auto">
         {isLoading ? (
           <div className="flex h-40 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+            <BubbleLoader size="lg" />
           </div>
         ) : isError ? (
           <div className="flex flex-col items-center justify-center p-10 text-center">
@@ -419,7 +420,7 @@ function CreatorPage() {
 
         {isFetchingNextPage && (
           <div className="flex h-20 items-center justify-center">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted border-t-foreground" />
+            <BubbleLoader />
           </div>
         )}
 

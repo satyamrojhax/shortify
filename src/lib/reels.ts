@@ -59,6 +59,10 @@ let dbLoadPromise: Promise<void> | null = null;
 
 function startDatabaseLoad(): Promise<void> {
   if (dbLoadPromise) return dbLoadPromise;
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    dbLoadPromise = Promise.resolve();
+    return dbLoadPromise;
+  }
   dbLoadPromise = (async () => {
     try {
       const localRes = await fetch("/assets/v1-reels-db.json");
@@ -99,6 +103,9 @@ let catalogPromise: Promise<Reel[]> | null = null;
  * ones used by the "local" feed, so downloads map 1:1 to feed reels.
  */
 export function getLocalCatalog(): Promise<Reel[]> {
+  if (typeof navigator !== "undefined" && !navigator.onLine) {
+    return Promise.reject(new Error("You're offline. Connect to the internet once to load the database."));
+  }
   if (!catalogPromise) {
     catalogPromise = fetch("/assets/v1-reels-db.json")
       .then((res) => {

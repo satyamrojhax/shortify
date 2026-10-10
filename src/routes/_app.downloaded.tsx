@@ -140,6 +140,10 @@ function DownloadedPage() {
   const [shellReady, setShellReady] = useState(false);
 
   const loadCatalog = () => {
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      setCatalogError("You're offline. Connect to the internet once to load the database.");
+      return;
+    }
     setCatalogError(null);
     getLocalCatalog()
       .then(setCatalog)

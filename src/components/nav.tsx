@@ -206,6 +206,9 @@ export function MobileHeader({ username }: { username?: string | null }) {
 
   useEffect(() => {
     setStreak(getStreak().current);
+    const handler = () => setStreak(getStreak().current);
+    window.addEventListener("streak-change", handler);
+    return () => window.removeEventListener("streak-change", handler);
   }, []);
 
   return (
@@ -216,8 +219,8 @@ export function MobileHeader({ username }: { username?: string | null }) {
         </Link>
         <div className="flex items-center gap-2.5">
           {streak > 0 && (
-            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 text-xs font-bold mr-1">
-              <Flame className="h-3.5 w-3.5" />
+            <div className="flex items-center justify-center gap-1.5 h-8 px-3 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 text-sm font-bold mr-1">
+              <Flame className="h-4 w-4" />
               {streak}
             </div>
           )}

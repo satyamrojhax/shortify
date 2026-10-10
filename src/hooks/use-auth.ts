@@ -88,7 +88,8 @@ export function useAuth() {
 
       // 2. Fetch User Data if logged in
       const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
-      const cachedUsername = get<string | null>(KEYS.username, null);
+      const fallbackUserName = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_name") : null;
+      const cachedUsername = get<string | null>(KEYS.username, null) || fallbackUserName;
       
       let isAgeOk = false;
       if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true") isAgeOk = true;
@@ -111,7 +112,7 @@ export function useAuth() {
         setReady(true);
       }
 
-      if (uid) {
+      if (uid && (typeof navigator === "undefined" || navigator.onLine)) {
         try {
           // Fetch silently in background to update cache
           const rows = await fetchUserData(uid);
