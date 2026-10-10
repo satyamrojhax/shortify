@@ -1,4 +1,5 @@
 import { sanitizeUrl } from "@/lib/utils";
+import DOMPurify from "dompurify";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";

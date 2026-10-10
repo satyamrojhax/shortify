@@ -1,4 +1,5 @@
 import { sanitizeUrl } from "@/lib/utils";
+import DOMPurify from "dompurify";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useEnrolledCourses } from "@/hooks/use-enrolled-courses";
