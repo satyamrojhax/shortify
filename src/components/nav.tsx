@@ -199,17 +199,9 @@ export function Footer() {
 
 export function MobileHeader({ username }: { username?: string | null }) {
   const [open, setOpen] = useState(false);
-  const [streak, setStreak] = useState(0);
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const avatarStyle = getAvatarStyle();
   const avatarSeed = getAvatarSeed(username || "");
-
-  useEffect(() => {
-    setStreak(getStreak().current);
-    const handler = () => setStreak(getStreak().current);
-    window.addEventListener("streak-change", handler);
-    return () => window.removeEventListener("streak-change", handler);
-  }, []);
 
   return (
     <>
@@ -218,12 +210,6 @@ export function MobileHeader({ username }: { username?: string | null }) {
           <BrandMark size={24} />
         </Link>
         <div className="flex items-center gap-2.5">
-          {streak > 0 && (
-            <div className="flex items-center justify-center gap-1.5 h-8 px-3 rounded-full bg-orange-500/10 text-orange-500 border border-orange-500/20 text-sm font-bold mr-1">
-              <Flame className="h-4 w-4" />
-              {streak}
-            </div>
-          )}
           {username && (
             <Link to="/profile" aria-label="Profile">
               <UserAvatar
