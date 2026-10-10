@@ -54,13 +54,18 @@ function ProfilePage() {
 
   useEffect(() => {
     if (!hydrated) return;
-    setLikedCount(getLiked().length);
-    setSavedCount(getSaved().length);
-    setWatched(get<number>(KEYS.watched, 0));
-    setCoins(getCoins());
-    setStreak(getStreak().current);
-    setAvatarStyleState(getAvatarStyle());
-    setAvatarSeedState(getAvatarSeed(username || ""));
+
+    const loadStats = () => {
+      setLikedCount(getLiked().length);
+      setSavedCount(getSaved().length);
+      setWatched(get<number>(KEYS.watched, 0));
+      setCoins(getCoins());
+      setStreak(getStreak().current);
+      setAvatarStyleState(getAvatarStyle());
+      setAvatarSeedState(getAvatarSeed(username || ""));
+    };
+
+    loadStats();
 
     const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
     if (uid) {
@@ -71,6 +76,14 @@ function ProfilePage() {
         })
         .catch(console.error);
     }
+
+    window.addEventListener("storage-sync", loadStats);
+    window.addEventListener("storage-update", loadStats);
+
+    return () => {
+      window.removeEventListener("storage-sync", loadStats);
+      window.removeEventListener("storage-update", loadStats);
+    };
   }, [hydrated, username]);
 
   const handleStyleChange = (newStyle: string) => {

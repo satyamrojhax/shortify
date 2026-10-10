@@ -55,6 +55,7 @@ export function initStorageData(userId: string, data: Record<string, any>) {
       setRemoteData(userId, k, v).catch(() => {});
     }
   }
+  if (isBrowser()) window.dispatchEvent(new Event("storage-sync"));
 }
 
 export function get<T>(key: string, fallback: T): T {
@@ -83,7 +84,7 @@ export function setLocal<T>(key: string, value: T) {
     localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
     if (key === KEYS.coins) window.dispatchEvent(new Event("coins-change"));
     if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
-    // Add other event dispatches if necessary
+    window.dispatchEvent(new CustomEvent("storage-update", { detail: { key, value } }));
   }
 }
 
@@ -92,6 +93,7 @@ export function set<T>(key: string, value: T) {
   if (isBrowser()) {
     localStorage.setItem(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
     if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
+    window.dispatchEvent(new CustomEvent("storage-update", { detail: { key, value } }));
   }
 
   const uid =
