@@ -130,7 +130,7 @@ function MyCoursesPage() {
                     >
                       {imageUrl ? (
                         <img
-                          src={sanitizeUrl(imageUrl)}
+                          src={imageUrl?.startsWith("http") || imageUrl?.startsWith("/") ? imageUrl : "about:blank"}
                           alt={course.title}
                           className="h-full w-full object-cover"
                           loading="lazy"

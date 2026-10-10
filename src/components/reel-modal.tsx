@@ -25,7 +25,7 @@ const renderTextWithLinks = (text: string) => {
       return (
         <a
           key={i}
-          href={part}
+          href={part?.startsWith("http") || part?.startsWith("/") ? part : "about:blank"}
           target="_blank"
           rel="noopener noreferrer"
           className="text-blue-500 hover:underline"
@@ -287,7 +287,7 @@ export function ReelModal({
           >
             <video
               ref={videoRef}
-              src={reel.videoUrl}
+              src={reel.videoUrl?.startsWith("http") || reel.videoUrl?.startsWith("/") ? reel.videoUrl : "about:blank"}
               poster={reel.thumbnail}
               className="w-full h-full object-contain md:object-cover"
               autoPlay

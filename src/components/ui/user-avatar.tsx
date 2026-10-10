@@ -55,7 +55,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
         <div className="absolute inset-0 animate-pulse bg-muted/60" />
       )}
       <img
-        src={sanitizeUrl(imageUrl)}
+        src={imageUrl?.startsWith("http") || imageUrl?.startsWith("/") ? imageUrl : "about:blank"}
         alt={alt || username || name || "User avatar"}
         className={`h-full w-full object-cover transition-opacity duration-200 ${
           loaded ? "opacity-100" : "opacity-0"
