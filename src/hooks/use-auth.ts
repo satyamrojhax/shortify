@@ -65,7 +65,7 @@ export function useAuth() {
   useEffect(() => {
     async function load() {
       // 1. Fetch Maintenance Mode globally
-      import("@/lib/supabase").then(async ({ supabase, realtimeSupabase }) => {
+      import("@/lib/supabase").then(async ({ supabase }) => {
         try {
           const { data: setting } = await supabase.from("platform_settings").select("value").eq("key", "maintenance").single();
           if (setting) setIsMaintenance(setting.value === 'true' || setting.value === true);
@@ -76,7 +76,7 @@ export function useAuth() {
 
         // Listen for maintenance mode changes globally
         const maintenanceChannel = `maintenance-sync-${crypto.randomUUID()}`;
-        realtimeSupabase.channel(maintenanceChannel)
+        supabase.channel(maintenanceChannel)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings', filter: `key=eq.maintenance` }, (payload) => {
             const newData = payload.new as any;
             if (newData && newData.value !== undefined) {
@@ -130,9 +130,9 @@ export function useAuth() {
           setDeviceId(data[KEYS.deviceId] || null);
           setFingerprint(data[KEYS.fingerprint] || null);
           
-          import("@/lib/supabase").then(({ realtimeSupabase }) => {
+          import("@/lib/supabase").then(({ supabase }) => {
             const userDataChannel = `user-data-sync-${uid}-${crypto.randomUUID()}`;
-            realtimeSupabase.channel(userDataChannel)
+            supabase.channel(userDataChannel)
               .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data', filter: `user_id=eq.${uid}` }, (payload) => {
                 const newData = payload.new as any;
                 if (newData && newData.key !== undefined && newData.value !== undefined) {

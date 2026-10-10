@@ -73,7 +73,9 @@ self.addEventListener("fetch", (event) => {
   if (
     url.hostname.endsWith("reelsbackend.satyamrojha") ||
     url.hostname === "fonts.googleapis.com" ||
-    url.hostname === "fonts.gstatic.com"
+    url.hostname === "fonts.gstatic.com" ||
+    url.hostname.includes("supabase.co") ||
+    url.pathname.startsWith("/shortify/")
   ) {
     return;
   }
