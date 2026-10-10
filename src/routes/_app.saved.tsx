@@ -65,7 +65,7 @@ function SavedPage() {
                 />
               ) : (
                 <video
-                  src={r.videoUrl?.startsWith("http") || r.videoUrl?.startsWith("/") ? r.videoUrl : "about:blank"}
+                  src={DOMPurify.sanitize(r.videoUrl?.startsWith("http") || r.videoUrl?.startsWith("/") ? r.videoUrl : "about:blank")}
                   className="h-full w-full object-cover"
                   muted
                   playsInline

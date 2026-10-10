@@ -1,4 +1,5 @@
 import { sanitizeUrl } from "@/lib/utils";
+import DOMPurify from "dompurify";
 import { useEffect, useRef, useState, memo, useCallback, useMemo } from "react";
 import type { Reel } from "@/lib/reels";
 import { Link } from "@tanstack/react-router";
@@ -60,7 +61,7 @@ const renderTextWithLinks = (text: string) => {
       return (
         <a
           key={i}
-          href={part?.startsWith("http") || part?.startsWith("/") ? part : "about:blank"}
+          href={DOMPurify.sanitize(part?.startsWith("http") || part?.startsWith("/") ? part : "about:blank")}
           target="_blank"
           rel="noopener noreferrer"
           className="text-cobalt-pop hover:underline"
