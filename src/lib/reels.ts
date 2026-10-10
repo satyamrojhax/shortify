@@ -157,7 +157,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
 
 /** Fetch xvideos page, using videoCache as the backing store. */
 async function fetchXvideos(base: (typeof XVIDEO_BASES)[number], page: number): Promise<Reel[]> {
-  const safePage = ((page - 1) % base.maxPage) + 1;
+  const safePage = Math.max(1, Math.min(page, base.maxPage));
   const cacheKey = `xv::${base.key}::p${safePage}`;
 
   // L1/L2 cache hit — instant return
