@@ -1,4 +1,5 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import {
   Heart,
   Shield,
@@ -31,6 +32,7 @@ function AboutPage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-10 pb-28">
+      <BackButton />
       {/* Hero Header */}
       <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 border-b border-charcoal/10 dark:border-cream/10 pb-8">
         <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-3xl ig-gradient-bg shadow-xl ring-4 ring-twilight-navy/10 dark:ring-cream-linen/10">

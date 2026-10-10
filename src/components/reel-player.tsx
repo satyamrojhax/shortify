@@ -411,7 +411,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   };
 
   const preload: "auto" | "metadata" | "none" =
-    distance <= 1 ? "auto" : distance <= 3 ? "metadata" : "none";
+    distance === 0 ? "auto" : distance <= 2 ? "metadata" : "none";
 
   // ── Volume hover helpers ──────────────────────────────────────────────────
   const showVolumeSlider = volumeHovered || volumeInteracting;

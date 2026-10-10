@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useState, useEffect } from "react";
 import { Coins, ArrowRight, History, Sparkles, X, CheckCircle2 } from "lucide-react";
 import { getCoins, set, KEYS } from "@/lib/storage";
@@ -94,6 +95,7 @@ function RedeemPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10 pb-36">
+      <BackButton />
       <div className="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
         <div>
           <p className="font-display text-marker text-xl lowercase italic">cash out —</p>

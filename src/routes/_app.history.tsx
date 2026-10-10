@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
 import { getHistory, set, KEYS } from "@/lib/storage";
 import type { Reel } from "@/lib/reels";
@@ -25,6 +26,7 @@ function HistoryPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
+      <BackButton />
       <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="font-display text-marker text-lg md:text-xl lowercase italic">

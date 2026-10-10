@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
 import { getFavorites, toggleFavorite, type FavoriteCreator } from "@/lib/storage";
 import { Users, UserMinus, Play } from "lucide-react";
@@ -26,6 +27,7 @@ function FavoritesPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
+      <BackButton />
       <div className="mb-8">
         <p className="font-display text-marker text-xl lowercase italic">your favorites —</p>
         <h1 className="mt-2 font-display text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">

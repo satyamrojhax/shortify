@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
 import { getLiked, setLiked as saveLiked } from "@/lib/storage";
 import type { Reel } from "@/lib/reels";
@@ -27,6 +28,7 @@ function LikedPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
+      <BackButton />
       <div className="mb-8">
         <p className="font-display text-marker text-xl lowercase italic">
           your little collection —

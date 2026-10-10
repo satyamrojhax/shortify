@@ -39,10 +39,7 @@ function CategoryPage() {
     return () => window.removeEventListener("coins-change", handleCoinsChange);
   }, []);
 
-  // Force fetch fresh data every time the category/filter changes or the page is visited
-  useEffect(() => {
-    queryClient.removeQueries({ queryKey: ["reels-feed"] }); // wipe all to prevent returning cached data for other filters
-  }, [filter, queryClient]);
+
 
   const {
     data,
@@ -234,7 +231,6 @@ function CategoryPage() {
             onChange={(e) => {
               const val = e.target.value;
               if (val) {
-                queryClient.removeQueries({ queryKey: ["reels-feed"] });
                 navigate({ search: (prev) => ({ ...prev, c: val }), replace: true });
               }
             }}

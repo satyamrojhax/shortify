@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import {
@@ -180,6 +181,7 @@ function DownloadedPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 py-8 md:px-6 md:py-10">
+      {online && <BackButton />}
       <div className="mb-6 md:mb-8">
         <p className="font-display text-marker text-lg md:text-xl lowercase italic opacity-80">
           your offline collection —

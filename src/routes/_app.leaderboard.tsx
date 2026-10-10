@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { Trophy, Eye, TrendingUp, Medal } from "lucide-react";
@@ -44,6 +45,7 @@ function LeaderboardPage() {
 
   return (
     <div className="mx-auto max-w-[1200px] px-4 md:px-6 py-6 md:py-10">
+      <BackButton />
       <div className="mb-6 md:mb-8">
         <p className="font-display text-marker text-lg md:text-xl lowercase italic">
           top creators —
