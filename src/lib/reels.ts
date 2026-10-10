@@ -1,3 +1,4 @@
+import { secureMathRandom } from '@/lib/utils';
 import { getRandomMode } from "./storage";
 import { videoCache } from "./video-cache";
 
@@ -39,7 +40,7 @@ const XVIDEO_BASES = [
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(secureMathRandom() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
@@ -148,7 +149,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
     } catch {}
     if (i < attempts - 1) {
-      await new Promise((r) => setTimeout(r, 300 + Math.random() * 200));
+      await new Promise((r) => setTimeout(r, 300 + secureMathRandom() * 200));
     }
   }
   return null;
@@ -228,7 +229,7 @@ async function fetchCategoryReels(category: string): Promise<Reel[]> {
     const rawJson = await res.json();
     const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
-      id: `category-${v.id}-${Math.random().toString(36).slice(2)}`,
+      id: `category-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
       source: "satyamrojha",
       videoUrl: v.videoUrl,
       thumbnail: v.thumbnail,
@@ -388,9 +389,9 @@ export async function fetchReelsPage(
 
     case "trending": {
       if (isRandom) {
-        const randomBaseIndex = Math.floor(Math.random() * XVIDEO_BASES.length);
+        const randomBaseIndex = Math.floor(secureMathRandom() * XVIDEO_BASES.length);
         const base = XVIDEO_BASES[randomBaseIndex];
-        const randomPage = Math.floor(Math.random() * base.maxPage) + 1;
+        const randomPage = Math.floor(secureMathRandom() * base.maxPage) + 1;
         const res = await fetchXvideos(base, randomPage);
         selectedReels.push(...res);
       } else {
@@ -423,8 +424,8 @@ export async function fetchReelsPage(
       if (filter === "all") {
         if (isRandom) {
           selectedReels.push(...shuffle(localDb).slice(0, 50));
-          const base = XVIDEO_BASES[Math.floor(Math.random() * XVIDEO_BASES.length)];
-          const randomPage = Math.floor(Math.random() * base.maxPage) + 1;
+          const base = XVIDEO_BASES[Math.floor(secureMathRandom() * XVIDEO_BASES.length)];
+          const randomPage = Math.floor(secureMathRandom() * base.maxPage) + 1;
           const res = await fetchXvideos(base, randomPage);
           selectedReels.push(...res);
         } else {
@@ -503,7 +504,7 @@ export async function fetchCreatorReelsPage(
     const rawJson = await res.json();
     const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
-      id: `creator-${v.id}-${Math.random().toString(36).slice(2)}`,
+      id: `creator-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
       source: "satyamrojha",
       videoUrl: v.videoUrl,
       thumbnail: v.thumbnail,
@@ -524,3 +525,4 @@ export async function fetchCreatorReelsPage(
     throw new Error("Error parsing creator reels");
   }
 }
+

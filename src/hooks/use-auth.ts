@@ -75,7 +75,7 @@ export function useAuth() {
         }
 
         // Listen for maintenance mode changes globally
-        const maintenanceChannel = `maintenance-sync-${Math.random().toString(36).substring(7)}`;
+        const maintenanceChannel = `maintenance-sync-${crypto.randomUUID()}`;
         supabase.channel(maintenanceChannel)
           .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings', filter: `key=eq.maintenance` }, (payload) => {
             const newData = payload.new as any;
@@ -131,7 +131,7 @@ export function useAuth() {
           setFingerprint(data[KEYS.fingerprint] || null);
           
           import("@/lib/supabase").then(({ supabase }) => {
-            const userDataChannel = `user-data-sync-${uid}-${Math.random().toString(36).substring(7)}`;
+            const userDataChannel = `user-data-sync-${uid}-${crypto.randomUUID()}`;
             supabase.channel(userDataChannel)
               .on('postgres_changes', { event: '*', schema: 'public', table: 'user_data', filter: `user_id=eq.${uid}` }, (payload) => {
                 const newData = payload.new as any;

@@ -1,3 +1,4 @@
+import { sanitizeUrl } from "@/lib/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useEnrolledCourses } from "@/hooks/use-enrolled-courses";
@@ -129,7 +130,7 @@ function MyCoursesPage() {
                     >
                       {imageUrl ? (
                         <img
-                          src={imageUrl}
+                          src={sanitizeUrl(imageUrl)}
                           alt={course.title}
                           className="h-full w-full object-cover"
                           loading="lazy"

@@ -1,3 +1,4 @@
+import { sanitizeUrl } from "@/lib/utils";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
@@ -66,7 +67,7 @@ function LikedPage() {
                 />
               ) : (
                 <video
-                  src={r.videoUrl}
+                  src={sanitizeUrl(r.videoUrl)}
                   className="h-full w-full object-cover"
                   muted
                   playsInline

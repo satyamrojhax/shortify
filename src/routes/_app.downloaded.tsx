@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { secureMathRandom } from "@/lib/utils";
 import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -117,7 +118,7 @@ function sortItems(items: OfflineMeta[], key: SortKey): OfflineMeta[] {
 function shuffled<T>(arr: T[]): T[] {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(secureMathRandom() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;

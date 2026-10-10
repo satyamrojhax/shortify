@@ -71,9 +71,9 @@ self.addEventListener("fetch", (event) => {
   // ── Skip external APIs and fonts to prevent SW from masking network errors ──
   // (React Query handles caching for the API, and fonts are handled natively)
   if (
-    url.hostname.includes("reelsbackend.satyamrojha") ||
-    url.hostname.includes("fonts.googleapis.com") ||
-    url.hostname.includes("fonts.gstatic.com")
+    url.hostname.endsWith("reelsbackend.satyamrojha") ||
+    url.hostname === "fonts.googleapis.com" ||
+    url.hostname === "fonts.gstatic.com"
   ) {
     return;
   }

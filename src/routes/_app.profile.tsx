@@ -79,7 +79,7 @@ function ProfilePage() {
   };
 
   const handleRandomizeAvatar = () => {
-    const randomSeed = `${username || "user"}_${Math.random().toString(36).substring(2, 7)}`;
+    const randomSeed = `${username || "user"}_${crypto.randomUUID().substring(0, 5)}`;
     setAvatarSeedState(randomSeed);
     setAvatarSeed(randomSeed);
   };

@@ -1,3 +1,4 @@
+import { sanitizeUrl } from "@/lib/utils";
 import React, { useState } from "react";
 import { getUserAvatarUrl, getDiceBearAvatar, type DiceBearStyle } from "@/lib/avatar";
 

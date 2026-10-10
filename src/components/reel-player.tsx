@@ -59,7 +59,7 @@ const renderTextWithLinks = (text: string) => {
       return (
         <a
           key={i}
-          href={part}
+          href={sanitizeUrl(part)}
           target="_blank"
           rel="noopener noreferrer"
           className="text-cobalt-pop hover:underline"
