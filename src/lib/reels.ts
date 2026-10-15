@@ -66,7 +66,7 @@ function startDatabaseLoad(): Promise<void> {
   }
   dbLoadPromise = (async () => {
     try {
-      const localRes = await fetch("/assets/v1-reels-db.json");
+      const localRes = await fetch("https://speaking.shortify.cc.cd/v1-reels-db.json");
 
       if (localRes.ok) {
         const localDbRaw = await localRes.json();
@@ -110,7 +110,7 @@ export function getLocalCatalog(): Promise<Reel[]> {
     );
   }
   if (!catalogPromise) {
-    catalogPromise = fetch("/assets/v1-reels-db.json")
+    catalogPromise = fetch("https://speaking.shortify.cc.cd/v1-reels-db.json")
       .then((res) => {
         if (!res.ok) throw new Error(`Failed to load reels database (${res.status})`);
         return res.json() as Promise<Array<{ url: string; views?: number; likes?: number }>>;
@@ -149,7 +149,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
       const res = await fetch(url, { headers });
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
-    } catch {}
+    } catch { }
     if (i < attempts - 1) {
       await new Promise((r) => setTimeout(r, 300 + secureMathRandom() * 200));
     }
@@ -183,7 +183,7 @@ async function fetchXvideos(base: (typeof XVIDEO_BASES)[number], page: number): 
     }));
 
     // Cache for 60 min — fire-and-forget
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
     return reels;
   } catch {
     return [];
@@ -215,7 +215,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
       dislikes: v.dislikes,
       username: v.username,
     }));
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
     return reels;
   } catch {
     return [];
@@ -470,7 +470,7 @@ export async function fetchReelsPage(
 
   // Cache the assembled page (except for random mode and categories)
   if (!isRandom && !filter.startsWith("category:")) {
-    videoCache.set(feedCacheKey, result).catch(() => {});
+    videoCache.set(feedCacheKey, result).catch(() => { });
   }
 
   return result;
@@ -481,7 +481,7 @@ export async function fetchReelsPage(
  * Call this to warm the next page before the user scrolls to it.
  */
 export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): void {
-  fetchReelsPage(page, filter).catch(() => {});
+  fetchReelsPage(page, filter).catch(() => { });
 }
 
 export function warmAllFilters(): void {

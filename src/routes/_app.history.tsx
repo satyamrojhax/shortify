@@ -3,7 +3,7 @@ import DOMPurify from "dompurify";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { BackButton } from "@/components/ui/back-button";
 import { useEffect, useState } from "react";
-import { getHistory, set, KEYS } from "@/lib/storage";
+import { getHistory, get, set, KEYS } from "@/lib/storage";
 import type { Reel } from "@/lib/reels";
 import { Eye, Play, Trash2, X } from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
@@ -17,14 +17,32 @@ function HistoryPage() {
   const navigate = useNavigate();
   const hydrated = useHydrated();
   const [history, setHistory] = useState<Reel[]>([]);
+  const [watchCount, setWatchCount] = useState<number>(0);
 
   useEffect(() => {
-    if (hydrated) {
-      setHistory(getHistory());
-    }
+    if (!hydrated) return;
+
+    const updateHistoryData = () => {
+      const h = getHistory();
+      setHistory(h);
+      const apiWatched = get<number>(KEYS.watched, 0);
+      setWatchCount(Math.max(apiWatched, h.length));
+    };
+
+    updateHistoryData();
+
+    window.addEventListener("storage-sync", updateHistoryData);
+    window.addEventListener("storage-update", updateHistoryData);
+
+    return () => {
+      window.removeEventListener("storage-sync", updateHistoryData);
+      window.removeEventListener("storage-update", updateHistoryData);
+    };
   }, [hydrated]);
 
   if (!hydrated) return null;
+
+  const displayCount = Math.max(watchCount, history.length);
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
@@ -35,7 +53,7 @@ function HistoryPage() {
             your viewing trace —
           </p>
           <h1 className="mt-1 font-display text-4xl sm:text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
-            history <span className="text-marker">({history.length})</span>
+            history <span className="text-marker">({displayCount})</span>
           </h1>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
@@ -44,7 +62,9 @@ function HistoryPage() {
               onClick={() => {
                 if (confirm("clear all watch history?")) {
                   setHistory([]);
+                  setWatchCount(0);
                   set(KEYS.history, []);
+                  set(KEYS.watched, 0);
                 }
               }}
               className="btn-pill !px-3"
@@ -106,6 +126,7 @@ function HistoryPage() {
                   e.stopPropagation();
                   const newHistory = history.filter((h) => h.id !== r.id);
                   setHistory(newHistory);
+                  setWatchCount((prev) => Math.max(0, prev > 0 ? prev - 1 : 0));
                   set(KEYS.history, newHistory);
                 }}
                 className="absolute right-2 top-2 z-20 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 text-cream backdrop-blur transition hover:bg-red-500 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"

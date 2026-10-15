@@ -18,9 +18,9 @@
  * and wasted storage).
  */
 
-const STATIC_CACHE = "reels-static-v5";
-const API_CACHE = "reels-api-v5";
-const DB_CACHE = "reels-db-v5";
+const STATIC_CACHE = "reels-static-v6";
+const API_CACHE = "reels-api-v6";
+const DB_CACHE = "reels-db-v6";
 
 const STATIC_URLS = ["/", "/manifest.json", "/logo.png", "/PWA_ICON.png"];
 
@@ -65,20 +65,15 @@ self.addEventListener("fetch", (event) => {
   // ── Skip non-HTTP(S) ────────────────────────────────────────────────────────
   if (!url.protocol.startsWith("http")) return;
 
-  // ── Skip our own /api/* (offline-download video proxy streams large bodies) ──
-  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
-
-  // ── Skip external APIs and fonts to prevent SW from masking network errors ──
-  // (React Query handles caching for the API, and fonts are handled natively)
-  if (
-    url.hostname.endsWith("reelsbackend.satyamrojha") ||
-    url.hostname === "fonts.googleapis.com" ||
-    url.hostname === "fonts.gstatic.com" ||
-    url.hostname.includes("supabase.co") ||
-    url.pathname.startsWith("/shortify/")
-  ) {
+  // ── Only handle requests for our origin or our specific API origin ──────────
+  // Never intercept third-party analytics (Clarity, GTM, Cloudflare Insights, etc.).
+  // Intercepting them causes FetchEvent network errors if adblockers block them.
+  if (url.origin !== self.location.origin && url.hostname !== API_ORIGIN) {
     return;
   }
+
+  // ── Skip our own /api/* (offline-download video proxy streams large bodies) ──
+  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
 
   // ── Skip video / streaming URLs (identified by .mp4 / .m3u8 / common CDN patterns) ──
   // Let the browser handle range requests natively — SW caching breaks streaming.

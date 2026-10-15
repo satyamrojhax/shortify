@@ -11,7 +11,7 @@
  */
 
 /** Must match STATIC_CACHE in public/sw.js */
-const STATIC_CACHE = "reels-static-v5";
+const STATIC_CACHE = "reels-static-v6";
 
 export async function warmAppShell(): Promise<boolean> {
   try {

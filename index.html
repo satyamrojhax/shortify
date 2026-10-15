@@ -91,7 +91,7 @@
     <script>
       if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1") {
         const script = document.createElement("script");
-        script.type = "module";
+        script.defer = true;
         script.src = "https://static.cloudflareinsights.com/beacon.min.js";
         script.setAttribute("data-cf-beacon", '{"token": "3f0618dea4da4f96812a6881c467e6f9"}');
         document.body.appendChild(script);

@@ -160,14 +160,14 @@ export async function fetchViewerCountry(
   // If request is currently in-flight, return the active promise
   if (inFlightRequest) return inFlightRequest;
 
-  // Debounce rapid repeated triggers within 350ms while ensuring actions execute
-  if (now - lastRequestTime < 350 && cachedData) {
+  // If we already have geo data cached recently (within 5 minutes), reuse it
+  if (cachedData && now - lastRequestTime < 5 * 60 * 1000) {
     return cachedData;
   }
   lastRequestTime = now;
 
   inFlightRequest = (async () => {
-    const urls = ["/__viewer-country", "https://randomchat.now/__viewer-country"];
+    const urls = ["https://randomchat.now/__viewer-country", "/__viewer-country"];
 
     for (const url of urls) {
       try {

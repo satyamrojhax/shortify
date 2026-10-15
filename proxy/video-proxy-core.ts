@@ -80,7 +80,12 @@ export async function proxyVideo(request: Request): Promise<Response> {
     const value = upstream.headers.get(name);
     if (value) out.set(name, value);
   }
-  out.set("Cache-Control", "private, no-store");
+  out.set(
+    "Cache-Control",
+    "public, max-age=86400, s-maxage=604800, stale-while-revalidate=86400",
+  );
+  out.set("CDN-Cache-Control", "public, max-age=604800");
+  out.set("Cloudflare-CDN-Cache-Control", "public, max-age=604800");
 
   return new Response(request.method === "HEAD" ? null : upstream.body, {
     status: upstream.status,

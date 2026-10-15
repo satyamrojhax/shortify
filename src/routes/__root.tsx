@@ -56,9 +56,12 @@ function RootComponent() {
   useEffect(() => {
     initGlobalActionTracking();
     if ("serviceWorker" in navigator && typeof window !== "undefined") {
-      navigator.serviceWorker.register("/sw.js").catch((error) => {
-        console.error("Service worker registration failed:", error);
-      });
+      // In development, avoid registering production sw or avoid noisy errors if disabled
+      if (import.meta.env.PROD) {
+        navigator.serviceWorker.register("/sw.js").catch((error) => {
+          console.warn("Service worker registration skipped:", error);
+        });
+      }
     }
   }, []);
 

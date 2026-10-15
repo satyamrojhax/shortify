@@ -304,7 +304,7 @@ export function addToHistory(reel: Reel): void {
   const idx = list.findIndex((r) => r.id === reel.id);
   if (idx >= 0) list.splice(idx, 1);
   list.unshift(reel);
-  if (list.length > 100) list.pop();
+  if (list.length > 1000) list.pop();
   set(KEYS.history, list);
 }
 
