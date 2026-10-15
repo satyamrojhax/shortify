@@ -1,16 +1,11 @@
-name = "reels"
-compatibility_date = "2024-01-01"
+name = "shortify"
+compatibility_date = "2026-10-15"
 
 [build]
 command = "npm run build"
-cwd = "."
-watch_dirs = ["src"]
-watch_files = ["package.json", "vite.config.ts"]
 
-[build.environment]
-NODE_VERSION = "18"
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+html_handling = "auto-trailing-slash"
 
-[env.production]
-routes = [
-  { pattern = "/*", custom_domain = "reels.pages.dev" }
-]
