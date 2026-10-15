@@ -9,4 +9,4 @@ watch_dirs = ["src"]
 watch_files = ["package.json", "vite.config.ts"]
 
 [build.environment]
-NODE_VERSION = "20"
+NODE_VERSION = "18"
