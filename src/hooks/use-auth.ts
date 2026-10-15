@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useRouterState } from "@tanstack/react-router";
 import { KEYS, get, set, remove, initStorageData, isBrowser, setLocal } from "@/lib/storage";
 import {
   loginUserDb,
@@ -11,6 +11,52 @@ import {
 import { supabase } from "@/lib/supabase";
 
 const SESSION_PIN_KEY = "ig.session_pin_ok";
+
+let globalMaintenance: boolean | null = null;
+const maintenanceListeners = new Set<(val: boolean | null) => void>();
+let globalMaintenanceSubscribed = false;
+
+function subscribeGlobalMaintenance() {
+  if (globalMaintenanceSubscribed || typeof window === "undefined") return;
+  globalMaintenanceSubscribed = true;
+
+  supabase
+    .from("platform_settings")
+    .select("value")
+    .eq("key", "maintenance")
+    .single()
+    .then(({ data: setting }: { data: any }) => {
+      const isM = setting ? setting.value === "true" || setting.value === true : false;
+      globalMaintenance = isM;
+      maintenanceListeners.forEach((fn) => fn(isM));
+    })
+    .catch(() => {
+      globalMaintenance = false;
+      maintenanceListeners.forEach((fn) => fn(false));
+    });
+
+  const maintenanceChannel = `maintenance-sync-global`;
+  supabase
+    .channel(maintenanceChannel)
+    .on(
+      "postgres_changes",
+      {
+        event: "*",
+        schema: "public",
+        table: "platform_settings",
+        filter: `key=eq.maintenance`,
+      },
+      (payload: any) => {
+        const newData = payload.new as any;
+        if (newData && newData.value !== undefined) {
+          const isM = newData.value === "true" || newData.value === true;
+          globalMaintenance = isM;
+          maintenanceListeners.forEach((fn) => fn(isM));
+        }
+      },
+    )
+    .subscribe();
+}
 
 export function generatePinFromDob(dob: string): string {
   // dob format: YYYY-MM-DD → DDMMYY
@@ -56,58 +102,82 @@ function getDeviceInfo() {
   };
 }
 
+function checkIsPinOk(): boolean {
+  if (typeof sessionStorage !== "undefined") {
+    if (sessionStorage.getItem(SESSION_PIN_KEY) === "true" || sessionStorage.getItem("ig.pin_ok") === "true") return true;
+  }
+  if (typeof localStorage !== "undefined") {
+    if (localStorage.getItem(SESSION_PIN_KEY) === "true" || localStorage.getItem("ig.pin_ok") === "true") return true;
+  }
+  return false;
+}
+
+function checkIsAgeOk(): boolean {
+  if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true") return true;
+  if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true") return true;
+  if (typeof localStorage !== "undefined" && localStorage.getItem("ig.user_id")) return true;
+  return false;
+}
+
+function getStoredUsername(): string | null {
+  if (typeof localStorage !== "undefined") {
+    return localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name") || null;
+  }
+  return null;
+}
+
+function getInitialReadyState(): boolean {
+  if (typeof localStorage !== "undefined") {
+    const u = localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name");
+    const uid = localStorage.getItem("ig.user_id");
+    if (u || !uid) return true;
+  }
+  return false;
+}
+
 export function useAuth() {
-  const [ready, setReady] = useState(false);
-  const [ageOk, setAgeOk] = useState(false);
-  const [username, setUsername] = useState<string | null>(null);
-  const [pinOk, setPinOk] = useState(false);
-  const [pinCode, setPinCodeState] = useState<string | null>(null);
-  const [realName, setRealName] = useState<string | null>(null);
-  const [dob, setDob] = useState<string | null>(null);
-  const [hash, setHash] = useState<string | null>(null);
-  const [deviceId, setDeviceId] = useState<string | null>(null);
-  const [fingerprint, setFingerprint] = useState<string | null>(null);
-  const [isMaintenance, setIsMaintenance] = useState<boolean | null>(null);
+  const [ready, setReady] = useState<boolean>(getInitialReadyState);
+  const [ageOk, setAgeOk] = useState<boolean>(checkIsAgeOk);
+  const [username, setUsername] = useState<string | null>(getStoredUsername);
+  const [pinOk, setPinOkState] = useState<boolean>(checkIsPinOk);
+  const [pinCode, setPinCodeState] = useState<string | null>(() => get<string | null>(KEYS.pinCode, null));
+  const [realName, setRealName] = useState<string | null>(() => get<string | null>(KEYS.realName, null));
+  const [dob, setDob] = useState<string | null>(() => get<string | null>(KEYS.dob, null));
+  const [hash, setHash] = useState<string | null>(() => get<string | null>(KEYS.hash, null));
+  const [deviceId, setDeviceId] = useState<string | null>(() => get<string | null>(KEYS.deviceId, null));
+  const [fingerprint, setFingerprint] = useState<string | null>(() => get<string | null>(KEYS.fingerprint, null));
+  const [isMaintenance, setIsMaintenance] = useState<boolean | null>(() => globalMaintenance);
+
+  useEffect(() => {
+    subscribeGlobalMaintenance();
+    const listener = (val: boolean | null) => setIsMaintenance(val);
+    maintenanceListeners.add(listener);
+    if (globalMaintenance !== null) setIsMaintenance(globalMaintenance);
+    return () => {
+      maintenanceListeners.delete(listener);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handlePinSync = (e: Event) => {
+      const custom = e as CustomEvent<boolean>;
+      if (typeof custom.detail === "boolean") {
+        setPinOkState(custom.detail);
+      } else {
+        setPinOkState(checkIsPinOk());
+      }
+    };
+    window.addEventListener("auth-pin-change", handlePinSync);
+    window.addEventListener("storage", handlePinSync);
+    return () => {
+      window.removeEventListener("auth-pin-change", handlePinSync);
+      window.removeEventListener("storage", handlePinSync);
+    };
+  }, []);
 
   useEffect(() => {
     async function load() {
-      // 1. Fetch Maintenance Mode globally
-      (async () => {
-        try {
-          const { data: setting } = await supabase
-            .from("platform_settings")
-            .select("value")
-            .eq("key", "maintenance")
-            .single();
-          if (setting) setIsMaintenance(setting.value === "true" || setting.value === true);
-          else setIsMaintenance(false);
-        } catch (e) {
-          setIsMaintenance(false);
-        }
-
-        // Listen for maintenance mode changes globally
-        const maintenanceChannel = `maintenance-sync-${crypto.randomUUID()}`;
-        supabase
-          .channel(maintenanceChannel)
-          .on(
-            "postgres_changes",
-            {
-              event: "*",
-              schema: "public",
-              table: "platform_settings",
-              filter: `key=eq.maintenance`,
-            },
-            (payload) => {
-              const newData = payload.new as any;
-              if (newData && newData.value !== undefined) {
-                setIsMaintenance(newData.value === "true" || newData.value === true);
-              }
-            },
-          )
-          .subscribe();
-      })();
-
-      // 2. Fetch User Data if logged in
+      // 1. Fetch User Data if logged in
       const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
       const fallbackUserName =
         typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_name") : null;
@@ -122,11 +192,7 @@ export function useAuth() {
 
       setAgeOk(isAgeOk);
       setUsername(cachedUsername);
-      const isSessionPinOk =
-        typeof sessionStorage !== "undefined"
-          ? sessionStorage.getItem(SESSION_PIN_KEY) === "true"
-          : false;
-      setPinOk(isSessionPinOk);
+      setPinOkState(checkIsPinOk());
       setPinCodeState(get<string | null>(KEYS.pinCode, null));
       setRealName(get<string | null>(KEYS.realName, null));
       setDob(get<string | null>(KEYS.dob, null));
@@ -163,7 +229,7 @@ export function useAuth() {
             .on(
               "postgres_changes",
               { event: "*", schema: "public", table: "user_data", filter: `user_id=eq.${uid}` },
-              (payload) => {
+              (payload: any) => {
                 const newData = payload.new as any;
                 if (newData && newData.key !== undefined && newData.value !== undefined) {
                   setLocal(newData.key, newData.value);
@@ -183,22 +249,24 @@ export function useAuth() {
   }, []);
 
   const navigate = useNavigate();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+
   useEffect(() => {
     if (ready && isBrowser() && isMaintenance !== null) {
-      const isMaintenancePage = window.location.pathname === "/maintenance";
+      const isMaintenancePage = pathname === "/maintenance";
       if (isMaintenance && username !== "Admin" && !isMaintenancePage) {
-        navigate({ to: "/maintenance" });
+        navigate({ to: "/maintenance", replace: true });
       } else if (!isMaintenance && isMaintenancePage) {
         if (username && pinOk && ageOk) {
-          navigate({ to: "/home" });
+          navigate({ to: "/home", replace: true });
         } else if (username && !pinOk) {
-          navigate({ to: "/pin" });
+          navigate({ to: "/pin", replace: true });
         } else {
-          navigate({ to: "/login" });
+          navigate({ to: "/login", replace: true });
         }
       }
     }
-  }, [ready, isMaintenance, username, pinOk, ageOk, navigate]);
+  }, [ready, isMaintenance, username, pinOk, ageOk, navigate, pathname]);
 
   return {
     ready,
@@ -259,10 +327,27 @@ export function useAuth() {
     },
     setPinOk: (ok: boolean) => {
       if (typeof sessionStorage !== "undefined") {
-        if (ok) sessionStorage.setItem(SESSION_PIN_KEY, "true");
-        else sessionStorage.removeItem(SESSION_PIN_KEY);
+        if (ok) {
+          sessionStorage.setItem(SESSION_PIN_KEY, "true");
+          sessionStorage.setItem("ig.pin_ok", "true");
+        } else {
+          sessionStorage.removeItem(SESSION_PIN_KEY);
+          sessionStorage.removeItem("ig.pin_ok");
+        }
       }
-      setPinOk(ok);
+      if (typeof localStorage !== "undefined") {
+        if (ok) {
+          localStorage.setItem(SESSION_PIN_KEY, "true");
+          localStorage.setItem("ig.pin_ok", "true");
+        } else {
+          localStorage.removeItem(SESSION_PIN_KEY);
+          localStorage.removeItem("ig.pin_ok");
+        }
+      }
+      setPinOkState(ok);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: ok }));
+      }
     },
     savePinSetup: async (name: string, dobStr: string) => {
       const code = generatePinFromDob(dobStr);
@@ -303,8 +388,16 @@ export function useAuth() {
     logout: () => {
       if (typeof sessionStorage !== "undefined") {
         sessionStorage.removeItem(SESSION_PIN_KEY);
+        sessionStorage.removeItem("ig.pin_ok");
       }
-      setPinOk(false);
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem(SESSION_PIN_KEY);
+        localStorage.removeItem("ig.pin_ok");
+      }
+      setPinOkState(false);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: false }));
+      }
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem("ig.user_id");
         localStorage.removeItem("ig.user_name");

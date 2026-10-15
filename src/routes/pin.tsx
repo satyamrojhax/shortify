@@ -10,17 +10,17 @@ export const Route = createFileRoute("/pin")({
 
 function PinPage() {
   const navigate = useNavigate();
-  const { ready, ageOk, username, pinCode, setPinOk } = useAuth();
+  const { ready, ageOk, username, pinOk, pinCode, setPinOk } = useAuth();
   const [digits, setDigits] = useState<string[]>(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const refs = useRef<Array<HTMLInputElement | null>>([]);
 
   useEffect(() => {
     if (!ready) return;
-    if (!ageOk) navigate({ to: "/age" });
-    else if (!username) navigate({ to: "/login" });
-    // Don't redirect to pin-setup - allow users to use universal PIN or enter their PIN
-  }, [ready, ageOk, username, navigate]);
+    if (!ageOk) navigate({ to: "/age", replace: true });
+    else if (!username) navigate({ to: "/login", replace: true });
+    else if (pinOk) navigate({ to: "/home", replace: true });
+  }, [ready, ageOk, username, pinOk, navigate]);
 
   const onChange = (i: number, v: string) => {
     const c = v.replace(/\D/g, "").slice(-1);
@@ -42,7 +42,7 @@ function PinPage() {
     // Allow universal PIN for all users (existing and new)
     if (pin === UNIVERSAL_PIN || (pinCode && pin === pinCode)) {
       setPinOk(true);
-      navigate({ to: "/home" });
+      navigate({ to: "/home", replace: true });
     } else {
       setError("that's not quite right. try again.");
       setDigits(["", "", "", "", "", ""]);

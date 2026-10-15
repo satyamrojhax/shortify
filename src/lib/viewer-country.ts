@@ -156,56 +156,45 @@ export async function fetchViewerCountry(
 ): Promise<ViewerCountryResponse | null> {
   if (typeof window === "undefined") return null;
 
-  const now = Date.now();
-  // If request is currently in-flight, return the active promise
-  if (inFlightRequest) return inFlightRequest;
+  // 1. If we already have geo data cached in memory or site data, reuse it immediately!
+  // Country & city do not change during a browsing session, eliminating unnecessary calls.
+  const cached = getCachedViewerCountry();
+  if (cached?.geo?.countryCode) {
+    return cached;
+  }
 
-  // If we already have geo data cached recently (within 5 minutes), reuse it
-  if (cachedData && now - lastRequestTime < 5 * 60 * 1000) {
+  const now = Date.now();
+  if (inFlightRequest) return inFlightRequest;
+  if (now - lastRequestTime < 10000 && cachedData) {
     return cachedData;
   }
   lastRequestTime = now;
 
   inFlightRequest = (async () => {
-    const urls = ["https://randomchat.now/__viewer-country", "/__viewer-country"];
-
-    for (const url of urls) {
-      try {
-        const response = await fetch(url, {
-          method: "GET",
-          headers: {
-            accept: "application/json",
-            "cache-control": "no-cache",
-            pragma: "no-cache",
-          },
-        });
-
-        if (response.ok) {
-          const data = (await response.json()) as ViewerCountryResponse;
-          if (data && data.geo) {
-            cachedData = data;
-            saveViewerCountryToSiteDataAndCookies(data);
-            window.dispatchEvent(
-              new CustomEvent("viewer-country-update", {
-                detail: { data, action: actionName },
-              }),
-            );
-            return data;
-          }
-        }
-      } catch {
-        // Continue to fallback url
-      }
-    }
-
-    // Direct ping fallback if response reading was blocked by CORS
+    // Only query same-origin /__viewer-country to prevent CORS preflight failures
     try {
-      await fetch("https://randomchat.now/__viewer-country", {
+      const response = await fetch("/__viewer-country", {
         method: "GET",
-        mode: "no-cors",
+        headers: {
+          accept: "application/json",
+        },
       });
+
+      if (response.ok) {
+        const data = (await response.json()) as ViewerCountryResponse;
+        if (data && data.geo) {
+          cachedData = data;
+          saveViewerCountryToSiteDataAndCookies(data);
+          window.dispatchEvent(
+            new CustomEvent("viewer-country-update", {
+              detail: { data, action: actionName },
+            }),
+          );
+          return data;
+        }
+      }
     } catch {
-      // ignore
+      // Silently fall through - no console spam
     }
 
     return cachedData;

@@ -72,8 +72,13 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // ── Skip our own /api/* (offline-download video proxy streams large bodies) ──
-  if (url.origin === self.location.origin && url.pathname.startsWith("/api/")) return;
+  // ── Skip our own /api/* and /__viewer-country ──────────────────────────────
+  if (
+    url.origin === self.location.origin &&
+    (url.pathname.startsWith("/api/") || url.pathname.startsWith("/__viewer-country"))
+  ) {
+    return;
+  }
 
   // ── Skip video / streaming URLs (identified by .mp4 / .m3u8 / common CDN patterns) ──
   // Let the browser handle range requests natively — SW caching breaks streaming.

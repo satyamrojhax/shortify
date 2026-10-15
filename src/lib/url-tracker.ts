@@ -249,10 +249,6 @@ export function rotateCsrfToken(actionName?: string): string {
       } catch {
         // ignore
       }
-
-      const newSearch = currentUrl.searchParams.toString();
-      const newUrl = `${currentUrl.pathname}${newSearch ? `?${newSearch}` : ""}${currentUrl.hash}`;
-      window.history.replaceState(window.history.state, "", newUrl);
     }
     return newToken;
   } catch {
@@ -299,13 +295,14 @@ export function initGlobalActionTracking(): void {
           }
         });
         const { b64, jwt } = encodeUrlParamsToJwt(paramsObj, currentUrl.pathname);
-        currentUrl.searchParams.set("token", jwt);
-        currentUrl.searchParams.set("jwt", jwt);
-        currentUrl.searchParams.set("b64", b64);
-
-        const newSearch = currentUrl.searchParams.toString();
-        const newUrl = `${currentUrl.pathname}${newSearch ? `?${newSearch}` : ""}${currentUrl.hash}`;
-        window.history.replaceState(window.history.state, "", newUrl);
+        try {
+          setCookie("shortify_jwt_token", jwt);
+          setCookie("shortify_url_b64", b64);
+          localStorage.setItem("shortify_jwt_token", jwt);
+          localStorage.setItem("shortify_url_b64", b64);
+        } catch {
+          // ignore
+        }
       }
     } catch {
       // ignore sync errors
@@ -613,12 +610,6 @@ export function syncRouteUrl(pathname: string): void {
       sessionStorage.setItem("shortify_url_b64", b64);
     } catch {
       // ignore
-    }
-
-    if (modified) {
-      const newSearch = searchParams.toString();
-      const newUrl = `${currentUrl.pathname}${newSearch ? `?${newSearch}` : ""}${currentUrl.hash}`;
-      window.history.replaceState(window.history.state, "", newUrl);
     }
 
     // Record this route as previousRouteName for the subsequent navigation

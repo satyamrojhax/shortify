@@ -54,7 +54,8 @@ function FavoritesPage() {
               className="group flex items-center justify-between p-4 rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream dark:bg-dusk-indigo"
             >
               <Link
-                to={`/creator/${encodeURIComponent(fav.username)}` as any}
+                to="/creator/$username"
+                params={{ username: fav.username }}
                 className="flex items-center gap-4 flex-1 overflow-hidden cursor-pointer"
               >
                 <UserAvatar

@@ -98,7 +98,8 @@ function AdminUsers() {
                   </td>
                   <td className="px-6 py-4 text-right">
                     <Link
-                      to={`/admin/users/${user.id}`}
+                      to="/admin/users/$id"
+                      params={{ id: user.id }}
                       className="inline-flex items-center gap-1 text-xs font-display uppercase tracking-widest text-foreground hover:text-foreground/70 transition-colors"
                     >
                       manage <ChevronRight size={14} />

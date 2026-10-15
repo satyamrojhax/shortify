@@ -32,7 +32,7 @@ function MaintenancePage() {
         System <span className="text-marker">Maintenance</span>
       </h1>
       <p className="text-foreground/60 max-w-md text-lg leading-relaxed mb-8">
-        We are currently upgrading InstaReels for a better experience. We'll be back online shortly!
+        We are currently upgrading Shortify for a better experience. We'll be back online shortly!
       </p>
 
       {/* Small subtle text at the bottom for admin to login if needed */}

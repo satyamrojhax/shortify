@@ -41,17 +41,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const location = useRouterState({
-    select: (s) => ({
-      pathname: s.location.pathname,
-      searchStr: s.location.searchStr,
-      href: s.location.href,
-    }),
+  const pathname = useRouterState({
+    select: (s) => s.location.pathname,
   });
 
   useEffect(() => {
-    syncRouteUrl(location.pathname);
-  }, [location.pathname, location.searchStr, location.href]);
+    syncRouteUrl(pathname);
+  }, [pathname]);
 
   useEffect(() => {
     initGlobalActionTracking();
