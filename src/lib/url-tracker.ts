@@ -21,12 +21,26 @@ let previousRouteName = "direct";
 let lastActionTime = 0;
 let isListenerAttached = false;
 
+function getSecureRandomString(length = 8): string {
+  if (typeof crypto !== "undefined") {
+    if (typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().replace(/-/g, "").substring(0, length);
+    }
+    if (typeof crypto.getRandomValues === "function") {
+      const bytes = new Uint8Array(length);
+      crypto.getRandomValues(bytes);
+      return Array.from(bytes, (b) => (b % 36).toString(36)).join("");
+    }
+  }
+  return Date.now().toString(36).slice(-length);
+}
+
 export function getDeviceId(): string {
   if (typeof window === "undefined") return "dev_default";
   try {
     let devId = localStorage.getItem("shortify_device_id");
     if (!devId) {
-      devId = "dev_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      devId = "dev_" + getSecureRandomString(8) + Date.now().toString(36);
       localStorage.setItem("shortify_device_id", devId);
     }
     try {
@@ -56,7 +70,7 @@ export function getDeviceFingerprint(): string {
         hash |= 0;
       }
       const hex = Math.abs(hash).toString(16).padStart(8, "0");
-      maid = "maid_" + hex + Math.random().toString(36).substring(2, 6);
+      maid = "maid_" + hex + getSecureRandomString(4);
       localStorage.setItem("shortify_maid", maid);
     }
     try {
@@ -122,7 +136,7 @@ export function getClientId(): string {
   try {
     let clientId = localStorage.getItem("shortify_client_id");
     if (!clientId) {
-      clientId = "client_web_" + Math.random().toString(36).substring(2, 8) + "_lfrdca";
+      clientId = "client_web_" + getSecureRandomString(6) + "_lfrdca";
       localStorage.setItem("shortify_client_id", clientId);
     }
     try {
@@ -142,7 +156,7 @@ export function getSessionId(): string {
   try {
     let sid = sessionStorage.getItem("shortify_sid");
     if (!sid) {
-      sid = "sess_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      sid = "sess_" + getSecureRandomString(8) + Date.now().toString(36);
       sessionStorage.setItem("shortify_sid", sid);
     }
     try {
@@ -162,7 +176,7 @@ export function getCsrfToken(): string {
   try {
     let token = sessionStorage.getItem("shortify_csrf");
     if (!token) {
-      token = "csrf_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      token = "csrf_" + getSecureRandomString(8) + Date.now().toString(36);
       sessionStorage.setItem("shortify_csrf", token);
     }
     try {
@@ -181,7 +195,7 @@ export function rotateCsrfToken(actionName?: string): string {
   if (typeof window === "undefined") return "csrf_token";
   try {
     const newToken =
-      "csrf_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+      "csrf_" + getSecureRandomString(8) + Date.now().toString(36);
     sessionStorage.setItem("shortify_csrf", newToken);
     try {
       localStorage.setItem("shortify_csrf", newToken);

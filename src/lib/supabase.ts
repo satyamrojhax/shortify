@@ -19,10 +19,30 @@ const getSupabaseClient = () => {
     },
     global: {
       fetch: (input, init) => {
-        if (typeof input === "string" && input.startsWith(supabaseUrl)) {
-          return fetch(input.replace(supabaseUrl, proxyUrl), init);
-        } else if (input instanceof URL && input.href.startsWith(supabaseUrl)) {
-          return fetch(input.href.replace(supabaseUrl, proxyUrl), init);
+        try {
+          const rawUrl =
+            typeof input === "string"
+              ? input
+              : input instanceof URL
+                ? input.href
+                : input instanceof Request
+                  ? input.url
+                  : "";
+          if (rawUrl) {
+            const parsed = new URL(
+              rawUrl,
+              typeof window !== "undefined" ? window.location.origin : "http://localhost",
+            );
+            if (parsed.origin === "https://mcrhjyszrxbtiizhgacn.supabase.co") {
+              const newUrl = `${proxyUrl}${parsed.pathname}${parsed.search}`;
+              if (input instanceof Request) {
+                return fetch(new Request(newUrl, input), init);
+              }
+              return fetch(newUrl, init);
+            }
+          }
+        } catch {
+          // Fall through to standard fetch if parsing fails
         }
         return fetch(input, init);
       },
