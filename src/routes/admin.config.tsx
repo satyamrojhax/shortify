@@ -20,7 +20,7 @@ import {
 import { toast } from "sonner";
 import { DEFAULT_PAGES_CONFIG, DEFAULT_SITE_CONTENT_CONFIG, type PageConfig } from "@/lib/site-config";
 
-export const Route = createFileRoute("/admin/config" as any)({
+export const Route = createFileRoute("/admin/config")({
   component: AdminConfigPage,
 });
 

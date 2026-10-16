@@ -44,7 +44,37 @@ const getSupabaseClient = () => {
       detectSessionInUrl: true,
     },
     global: {
-      fetch: (input, init) => {
+      fetch: async (input, init) => {
+        const handleResponse = async (res: Response): Promise<Response> => {
+          if (res.status === 400 || res.status === 401) {
+            try {
+              const clone = res.clone();
+              const body = await clone.json();
+              if (
+                body?.code === "refresh_token_not_found" ||
+                body?.error_code === "refresh_token_not_found" ||
+                body?.error === "invalid_grant" ||
+                (typeof body?.message === "string" && body.message.toLowerCase().includes("refresh token")) ||
+                (typeof body?.error_description === "string" && body.error_description.toLowerCase().includes("refresh token"))
+              ) {
+                if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
+                  localStorage.removeItem(SUPABASE_STORAGE_KEY);
+                  localStorage.removeItem("sb-mcrhjyszrxbtiizhgacn-auth-token");
+                  localStorage.removeItem("sb-localhost-auth-token");
+                  localStorage.removeItem("sb-127-auth-token");
+                  localStorage.removeItem("sb-shortify-auth-token");
+                }
+                import("@/lib/idb-auth")
+                  .then(({ removeAuthKeyFromIdb }) => {
+                    removeAuthKeyFromIdb("sb_auth_token").catch(() => {});
+                  })
+                  .catch(() => {});
+              }
+            } catch {}
+          }
+          return res;
+        };
+
         try {
           const rawUrl =
             typeof input === "string"
@@ -62,15 +92,15 @@ const getSupabaseClient = () => {
             if (parsed.origin === "https://mcrhjyszrxbtiizhgacn.supabase.co") {
               const newUrl = `${proxyUrl}${parsed.pathname}${parsed.search}`;
               if (input instanceof Request) {
-                return fetch(new Request(newUrl, input), init);
+                return handleResponse(await fetch(new Request(newUrl, input), init));
               }
-              return fetch(newUrl, init);
+              return handleResponse(await fetch(newUrl, init));
             }
           }
         } catch {
           // Fall through to standard fetch if parsing fails
         }
-        return fetch(input, init);
+        return handleResponse(await fetch(input, init));
       },
     },
   });
@@ -87,11 +117,17 @@ if (globalWindow && !globalWindow.__supabaseClient) {
 
 if (typeof window !== "undefined") {
   try {
-    supabase.auth.onAuthStateChange((_event: any, session: any) => {
+    supabase.auth.onAuthStateChange((event: any, session: any) => {
       if (session) {
         import("@/lib/idb-auth")
           .then(({ saveAuthToIdb }) => {
             saveAuthToIdb({ sb_auth_token: JSON.stringify(session) }).catch(() => {});
+          })
+          .catch(() => {});
+      } else if (event === "SIGNED_OUT" || !session) {
+        import("@/lib/idb-auth")
+          .then(({ removeAuthKeyFromIdb }) => {
+            removeAuthKeyFromIdb("sb_auth_token").catch(() => {});
           })
           .catch(() => {});
       }

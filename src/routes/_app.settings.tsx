@@ -463,9 +463,9 @@ function SettingsPage() {
           </button>
 
           <button
-            onClick={() => {
-              logout();
-              navigate({ to: "/login" });
+            onClick={async () => {
+              await logout();
+              window.location.href = "/login";
             }}
             className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
           >

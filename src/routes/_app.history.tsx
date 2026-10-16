@@ -42,7 +42,8 @@ function HistoryPage() {
 
   if (!hydrated) return null;
 
-  const displayCount = Math.max(watchCount, history.length);
+  const validHistory = Array.isArray(history) ? history : [];
+  const displayCount = Math.max(watchCount, validHistory.length);
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10">
@@ -57,7 +58,7 @@ function HistoryPage() {
           </h1>
         </div>
         <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-          {history.length > 0 && (
+          {validHistory.length > 0 && (
             <button
               onClick={() => {
                 if (confirm("clear all watch history?")) {
@@ -79,7 +80,7 @@ function HistoryPage() {
         </div>
       </div>
 
-      {history.length === 0 ? (
+      {validHistory.length === 0 ? (
         <div className="paper-card flex flex-col items-center justify-center py-20 text-center">
           <Eye className="h-14 w-14 text-marker" strokeWidth={1.75} />
           <h2 className="mt-4 font-display text-2xl lowercase">no watch history</h2>
@@ -92,7 +93,7 @@ function HistoryPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {history.map((r, i) => (
+          {validHistory.map((r, i) => (
             <div
               key={`history-${r.id}-${i}`}
               className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"

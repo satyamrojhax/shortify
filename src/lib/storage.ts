@@ -37,6 +37,30 @@ export const isBrowser = () => typeof window !== "undefined";
 let currentUserId: string | null = null;
 const memoryCache = new Map<string, unknown>();
 
+export function parseJsonIfString<T = unknown>(val: unknown): T {
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (
+      (trimmed.startsWith("[") && trimmed.endsWith("]")) ||
+      (trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+      (trimmed.startsWith('"') && trimmed.endsWith('"'))
+    ) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return parseJsonIfString(parsed) as T;
+      } catch {
+        return val as T;
+      }
+    }
+  }
+  return val as T;
+}
+
+export function ensureArray<T>(val: unknown): T[] {
+  const parsed = parseJsonIfString(val);
+  return Array.isArray(parsed) ? (parsed as T[]) : [];
+}
+
 export function initStorageData(userId: string, data: Record<string, unknown>) {
   currentUserId = userId;
 
@@ -73,7 +97,7 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
       if (!existingLocalData.has(pk)) {
         const val = localStorage.getItem(pk);
         if (val !== null) {
-          existingLocalData.set(pk, val);
+          existingLocalData.set(pk, parseJsonIfString(val));
         }
       }
     }
@@ -95,7 +119,8 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
 
   memoryCache.clear();
 
-  for (const [k, v] of Object.entries(data)) {
+  for (const [k, rawV] of Object.entries(data)) {
+    const v = parseJsonIfString(rawV);
     if (k === KEYS.streak && v && typeof v === "object") {
       const remoteStreak = v as StreakData;
       const maxProgress = Math.max(
@@ -124,7 +149,8 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
   }
 
   // Merge back any keys that were set locally but not fetched remotely
-  for (const [k, v] of existingLocalData.entries()) {
+  for (const [k, rawV] of existingLocalData.entries()) {
+    const v = parseJsonIfString(rawV);
     if (!memoryCache.has(k)) {
       memoryCache.set(k, v);
       if (isBrowser() && typeof v !== "undefined") {
@@ -138,23 +164,31 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
 }
 
 export function get<T>(key: string, fallback: T): T {
+  let val: unknown = undefined;
   if (memoryCache.has(key)) {
-    return memoryCache.get(key) as T;
-  }
-  if (isBrowser()) {
+    val = memoryCache.get(key);
+  } else if (isBrowser()) {
     const local = localStorage.getItem(key);
     if (local !== null) {
       try {
-        const parsed = JSON.parse(local);
-        memoryCache.set(key, parsed);
-        return parsed;
+        val = JSON.parse(local);
       } catch (e) {
-        memoryCache.set(key, local);
-        return local as unknown as T;
+        val = local;
       }
+      val = parseJsonIfString(val);
+      memoryCache.set(key, val);
     }
   }
-  return fallback;
+
+  if (val === undefined || val === null) {
+    return fallback;
+  }
+
+  if (Array.isArray(fallback)) {
+    return ensureArray(val) as unknown as T;
+  }
+
+  return parseJsonIfString(val) as T;
 }
 
 export function setLocal<T>(key: string, value: T) {
@@ -210,7 +244,7 @@ export function remove(key: string) {
 }
 
 export function getLiked(): Reel[] {
-  return get<Reel[]>(KEYS.liked, []);
+  return ensureArray<Reel>(get<Reel[]>(KEYS.liked, []));
 }
 export function setLiked(list: Reel[]) {
   set(KEYS.liked, list);
@@ -234,7 +268,7 @@ export function toggleLike(reel: Reel): boolean {
 }
 
 export function getSaved(): Reel[] {
-  return get<Reel[]>(KEYS.saved, []);
+  return ensureArray<Reel>(get<Reel[]>(KEYS.saved, []));
 }
 export function setSaved(list: Reel[]) {
   set(KEYS.saved, list);
@@ -288,7 +322,7 @@ export function setAutoScroll(value: boolean): void {
 }
 
 export function getUnlocks(): string[] {
-  return get<string[]>(KEYS.unlocks, []);
+  return ensureArray<string>(get<string[]>(KEYS.unlocks, []));
 }
 
 export function hasUnlocked(id: string): boolean {
@@ -314,7 +348,7 @@ export function setRandomMode(value: boolean): void {
 export type FavoriteCreator = { username: string; timestamp: number };
 
 export function getFavorites(): FavoriteCreator[] {
-  const data = get<unknown[]>(KEYS.favorites, []);
+  const data = ensureArray<unknown>(get<unknown[]>(KEYS.favorites, []));
   return data.map((item) => {
     if (typeof item === "string") {
       return { username: item, timestamp: Date.now() };
@@ -352,7 +386,7 @@ export function setVolumeState(value: number): void {
 }
 
 export function getHistory(): Reel[] {
-  return get<Reel[]>(KEYS.history, []);
+  return ensureArray<Reel>(get<Reel[]>(KEYS.history, []));
 }
 
 export function addToHistory(reel: Reel): void {
@@ -552,3 +586,60 @@ export async function clearAllStats() {
 
   if (isBrowser()) window.dispatchEvent(new Event("coins-change"));
 }
+
+export function clearAllUserData() {
+  memoryCache.clear();
+  currentUserId = null;
+
+  if (isBrowser()) {
+    const userKeys = [
+      KEYS.username,
+      KEYS.pin,
+      KEYS.pinCode,
+      KEYS.realName,
+      KEYS.dob,
+      KEYS.hash,
+      KEYS.deviceId,
+      KEYS.fingerprint,
+      KEYS.liked,
+      KEYS.saved,
+      KEYS.watched,
+      KEYS.coins,
+      KEYS.unlocks,
+      KEYS.randomMode,
+      KEYS.favorites,
+      KEYS.history,
+      KEYS.avatarStyle,
+      KEYS.avatarSeed,
+      KEYS.memeSounds,
+      KEYS.streak,
+      "ig.username",
+      "ig.user_name",
+      "ig.user_id",
+      "ig.pin_code",
+      "ig.pin_ok",
+      "ig.session_pin_ok",
+      "ig.real_name",
+      "ig.dob",
+      "ig.bio",
+      "sb-mcrhjyszrxbtiizhgacn-auth-token",
+      "sb-localhost-auth-token",
+      "sb-127-auth-token",
+      "sb-shortify-auth-token",
+    ];
+
+    for (const k of userKeys) {
+      try {
+        localStorage.removeItem(k);
+      } catch {}
+    }
+
+    try {
+      sessionStorage.removeItem("ig.pin_ok");
+      sessionStorage.removeItem("ig.session_pin_ok");
+    } catch {}
+
+    window.dispatchEvent(new Event("storage-sync"));
+  }
+}
+

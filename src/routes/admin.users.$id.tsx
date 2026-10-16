@@ -15,7 +15,7 @@ function AdminUserEdit() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "", total_coins: 0 });
+  const [formData, setFormData] = useState({ name: "", email: "", total_coins: 0, password: "" });
 
   const loadUser = async (isManualRefresh = false) => {
     if (isManualRefresh) setRefreshing(true);
@@ -27,7 +27,12 @@ function AdminUserEdit() {
       ]);
       if (u) {
         setUser(u);
-        setFormData({ name: u.name || "", email: u.email || "", total_coins: u.total_coins || 0 });
+        setFormData({
+          name: u.name || "",
+          email: u.email || "",
+          total_coins: u.total_coins || 0,
+          password: u.password || "",
+        });
       }
       if (ud) setUserData(ud);
       if (isManualRefresh) {
@@ -54,6 +59,7 @@ function AdminUserEdit() {
           name: formData.name,
           email: formData.email,
           total_coins: formData.total_coins,
+          password: formData.password,
         })
         .eq("id", id);
       if (error) throw error;
@@ -223,6 +229,16 @@ function AdminUserEdit() {
                 value={formData.total_coins}
                 onChange={(e) => setFormData({ ...formData, total_coins: Number(e.target.value) })}
                 className="w-full bg-background border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-foreground/50 outline-none"
+              />
+            </label>
+            <label className="block">
+              <span className="text-xs font-medium text-foreground/60 mb-1 block">Password</span>
+              <input
+                type="text"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                placeholder="User password"
+                className="w-full bg-background border border-foreground/20 rounded-lg px-3 py-2 text-sm focus:border-foreground/50 outline-none font-mono"
               />
             </label>
             <div className="pt-2 text-xs text-foreground/40 font-mono">ID: {user.id}</div>

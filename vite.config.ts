@@ -61,7 +61,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [TanStackRouterVite(), react(), tailwindcss(), videoProxyDev()],
+  plugins: [TanStackRouterVite({ autoCodeSplitting: true }), react(), tailwindcss(), videoProxyDev()],
   // Vite 8+ natively supports tsconfig path aliases — no plugin needed
   resolve: {
     tsconfigPaths: true,

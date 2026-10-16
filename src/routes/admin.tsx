@@ -11,7 +11,7 @@ export const Route = createFileRoute("/admin")({
 });
 
 function AdminLayout() {
-  const { ready, username } = useAuth();
+  const { ready, username, logout } = useAuth();
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
@@ -38,15 +38,7 @@ function AdminLayout() {
     }
   }, [ready, isAdmin, navigate]);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      supabase.auth.getSession().then(({ data }: { data: any }) => {
-        if (!data?.session) {
-          supabase.auth.refreshSession().catch(() => {});
-        }
-      });
-    }
-  }, []);
+
 
   if (!ready) {
     return (
@@ -75,11 +67,8 @@ function AdminLayout() {
     );
   }
 
-  const handleLogout = () => {
-    supabase.auth.signOut().catch(() => {});
-    localStorage.removeItem("ig.user_id");
-    localStorage.removeItem("ig.user_name");
-    sessionStorage.clear();
+  const handleLogout = async () => {
+    await logout();
     window.location.href = "/login?admin=true";
   };
 

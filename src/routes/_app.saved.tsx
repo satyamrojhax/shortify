@@ -17,11 +17,24 @@ function SavedPage() {
   const [items, setItems] = useState<Reel[]>([]);
 
   useEffect(() => {
-    if (hydrated) setItems(getSaved());
+    if (!hydrated) return;
+    const update = () => {
+      const saved = getSaved();
+      setItems(Array.isArray(saved) ? saved : []);
+    };
+    update();
+    window.addEventListener("storage-sync", update);
+    window.addEventListener("storage-update", update);
+    return () => {
+      window.removeEventListener("storage-sync", update);
+      window.removeEventListener("storage-update", update);
+    };
   }, [hydrated]);
 
+  const validItems = Array.isArray(items) ? items : [];
+
   const remove = (id: string) => {
-    const next = items.filter((r) => r.id !== id);
+    const next = validItems.filter((r) => r.id !== id);
     setItems(next);
     saveSaved(next);
   };
@@ -34,11 +47,11 @@ function SavedPage() {
       <div className="mb-8">
         <p className="font-display text-marker text-xl lowercase italic">your saved collection —</p>
         <h1 className="mt-2 font-display text-[48px] leading-[1.05] lowercase text-cocoa md:text-[64px] dark:text-cream">
-          saved reels <span className="text-marker">({items.length})</span>
+          saved reels <span className="text-marker">({validItems.length})</span>
         </h1>
       </div>
 
-      {items.length === 0 ? (
+      {validItems.length === 0 ? (
         <div className="paper-card flex flex-col items-center justify-center py-20 text-center">
           <Bookmark className="h-14 w-14 text-marker" strokeWidth={1.75} />
           <h2 className="mt-4 font-display text-2xl lowercase">nothing saved yet</h2>
@@ -51,7 +64,7 @@ function SavedPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {items.map((r, i) => (
+          {validItems.map((r, i) => (
             <div
               key={r.id}
               className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"

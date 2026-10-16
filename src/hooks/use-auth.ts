@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { KEYS, get, set, remove, initStorageData, isBrowser, setLocal } from "@/lib/storage";
+import { KEYS, get, set, remove, initStorageData, isBrowser, setLocal, clearAllUserData } from "@/lib/storage";
 import {
   loginUserDb,
   signupUserDb,
@@ -13,6 +13,7 @@ import { setCookie, getCookie, removeCookie } from "@/lib/viewer-country";
 import { saveAuthToIdb, getAuthFromIdb, clearAuthFromIdb } from "@/lib/idb-auth";
 
 const SESSION_PIN_KEY = "ig.session_pin_ok";
+let isLoggingOut = false;
 
 let globalMaintenance: boolean | null = null;
 const maintenanceListeners = new Set<(val: boolean | null) => void>();
@@ -197,31 +198,58 @@ export function useAuth() {
         setPinOkState(checkIsPinOk());
       }
     };
+    const handleLogoutSync = () => {
+      setUsername(null);
+      setPinOkState(false);
+      setPinCodeState(null);
+      setRealName(null);
+      setDob(null);
+      setHash(null);
+      setDeviceId(null);
+      setFingerprint(null);
+    };
+
     window.addEventListener("auth-pin-change", handlePinSync);
+    window.addEventListener("auth-logout", handleLogoutSync);
     window.addEventListener("storage", handlePinSync);
     return () => {
       window.removeEventListener("auth-pin-change", handlePinSync);
+      window.removeEventListener("auth-logout", handleLogoutSync);
       window.removeEventListener("storage", handlePinSync);
     };
   }, []);
 
   useEffect(() => {
     async function load() {
-      // 0. Recover credentials from IndexedDB vault if local storage was cleared
+      if (isLoggingOut) {
+        setReady(true);
+        return;
+      }
+
+      // 0. Recover credentials from IndexedDB vault only if user wasn't intentionally logged out
       try {
-        const idbData = await getAuthFromIdb();
-        if (idbData && Object.keys(idbData).length > 0) {
-          const SUPABASE_KEY = "sb-mcrhjyszrxbtiizhgacn-auth-token";
-          if (idbData["sb_auth_token"] && typeof localStorage !== "undefined" && !localStorage.getItem(SUPABASE_KEY)) {
-            localStorage.setItem(SUPABASE_KEY, idbData["sb_auth_token"]);
-          }
-          for (const [k, v] of Object.entries(idbData)) {
-            if (k === "ig.pin_ok" || k === SESSION_PIN_KEY || k === "sb_auth_token") continue;
-            if (v && typeof localStorage !== "undefined" && !localStorage.getItem(k)) {
-              localStorage.setItem(k, v);
+        if (!isLoggingOut) {
+          const idbData = await getAuthFromIdb();
+          if (idbData && Object.keys(idbData).length > 0 && (idbData["ig.user_id"] || idbData["ig.username"])) {
+            const SUPABASE_KEY = "sb-mcrhjyszrxbtiizhgacn-auth-token";
+            if (idbData["sb_auth_token"] && typeof localStorage !== "undefined" && !localStorage.getItem(SUPABASE_KEY)) {
+              try {
+                const parsed = JSON.parse(idbData["sb_auth_token"]);
+                if (parsed && (parsed.refresh_token || parsed.currentSession?.refresh_token)) {
+                  localStorage.setItem(SUPABASE_KEY, idbData["sb_auth_token"]);
+                }
+              } catch {
+                // ignore corrupt token
+              }
             }
-            if (v && !getCookie(k)) {
-              setCookie(k, v, 365);
+            for (const [k, v] of Object.entries(idbData)) {
+              if (k === "ig.pin_ok" || k === SESSION_PIN_KEY || k === "sb_auth_token") continue;
+              if (v && typeof localStorage !== "undefined" && !localStorage.getItem(k)) {
+                localStorage.setItem(k, v);
+              }
+              if (v && !getCookie(k)) {
+                setCookie(k, v, 365);
+              }
             }
           }
         }
@@ -240,7 +268,9 @@ export function useAuth() {
       // 1. Fetch User Data if logged in
       const uid = getStoredUserId();
       const fallbackUserName = getStoredUsername();
-      const cachedUsername = get<string | null>(KEYS.username, null) || fallbackUserName;
+      const cachedUsername = (uid || fallbackUserName)
+        ? (get<string | null>(KEYS.username, null) || fallbackUserName)
+        : null;
 
       const isAgeOk = checkIsAgeOk() || Boolean(uid) || Boolean(cachedUsername);
       if (isAgeOk) {
@@ -250,17 +280,19 @@ export function useAuth() {
       }
 
       const isPinOk = checkIsPinOk();
-      const storedPin = get<string | null>(KEYS.pinCode, null) || getStoredPinCode();
+      const storedPin = (uid || fallbackUserName)
+        ? (get<string | null>(KEYS.pinCode, null) || getStoredPinCode())
+        : null;
 
       setAgeOk(isAgeOk);
       setUsername(cachedUsername);
       setPinOkState(isPinOk);
       setPinCodeState(storedPin);
-      setRealName(get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name"));
-      setDob(get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob"));
-      setHash(get<string | null>(KEYS.hash, null));
-      setDeviceId(get<string | null>(KEYS.deviceId, null));
-      setFingerprint(get<string | null>(KEYS.fingerprint, null));
+      setRealName((uid || fallbackUserName) ? (get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name")) : null);
+      setDob((uid || fallbackUserName) ? (get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob")) : null);
+      setHash((uid || fallbackUserName) ? get<string | null>(KEYS.hash, null) : null);
+      setDeviceId((uid || fallbackUserName) ? get<string | null>(KEYS.deviceId, null) : null);
+      setFingerprint((uid || fallbackUserName) ? get<string | null>(KEYS.fingerprint, null) : null);
 
       // If we have cached data, we are ready instantly! No UI hang.
       if (cachedUsername || !uid) {
@@ -605,31 +637,68 @@ export function useAuth() {
       setPinOkState(false);
       return code;
     },
-    logout: () => {
+    logout: async () => {
+      isLoggingOut = true;
+
+      // 1. Sign out of Supabase GoTrue to clear in-memory auth tokens and listeners
+      try {
+        await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+      } catch {}
+
+      // 2. Clear IndexedDB auth vault completely
+      try {
+        await clearAuthFromIdb().catch(() => {});
+      } catch {}
+
+      // 3. Clear all user storage keys and in-memory cache
+      clearAllUserData();
+
+      // 4. Remove all auth and session cookies
+      const cookieKeys = [
+        "ig.user_id",
+        "ig.user_name",
+        "ig.username",
+        "ig.pin_code",
+        "ig.pin_ok",
+        "ig.session_pin_ok",
+        "ig.real_name",
+        "ig.dob",
+        "ig.hash",
+        "ig.device_id",
+        "ig.fingerprint",
+        "ig.bio",
+        "sb_auth_token",
+      ];
+      for (const ck of cookieKeys) {
+        removeCookie(ck);
+      }
+
+      // 5. Clear session storage
       if (typeof sessionStorage !== "undefined") {
         sessionStorage.removeItem(SESSION_PIN_KEY);
         sessionStorage.removeItem("ig.pin_ok");
       }
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem(SESSION_PIN_KEY);
-        localStorage.removeItem("ig.pin_ok");
-        localStorage.removeItem("ig.user_id");
-        localStorage.removeItem("ig.user_name");
-        localStorage.removeItem("ig.username");
-        localStorage.removeItem("ig.pin_code");
-      }
-      removeCookie("ig.user_id");
-      removeCookie("ig.user_name");
-      removeCookie("ig.username");
-      removeCookie("ig.pin_code");
-      removeCookie("ig.pin_ok");
-      removeCookie(SESSION_PIN_KEY);
-      clearAuthFromIdb();
-      setPinOkState(false);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: false }));
-      }
+
+      // 6. Reset all local states
       setUsername(null);
+      setPinOkState(false);
+      setPinCodeState(null);
+      setRealName(null);
+      setDob(null);
+      setHash(null);
+      setDeviceId(null);
+      setFingerprint(null);
+
+      // 7. Dispatch events to all active components
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("auth-logout"));
+        window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: false }));
+        window.dispatchEvent(new Event("storage"));
+      }
+
+      setTimeout(() => {
+        isLoggingOut = false;
+      }, 500);
     },
   };
 }
