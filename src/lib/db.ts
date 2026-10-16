@@ -75,19 +75,55 @@ export async function updateUserDob(userId: string, dob: string) {
 }
 
 export async function fetchUserData(userId: string) {
-  const { data, error } = await supabase
-    .from("user_data")
-    .select("key, value")
-    .eq("user_id", userId);
+  try {
+    const { data, error } = await supabase
+      .from("user_data")
+      .select("key, value")
+      .eq("user_id", userId);
 
-  if (error) throw error;
-  return data;
+    if (error) {
+      if (error.code === "42501" || (error as any).status === 401) {
+        return [];
+      }
+      throw error;
+    }
+    return data || [];
+  } catch {
+    return [];
+  }
 }
 
 export async function setRemoteData(userId: string, key: string, value: any) {
-  // Always update the generic user_data table for compatibility and quick restore
-  const { error } = await supabase.from("user_data").upsert({ user_id: userId, key, value });
-  if (error) throw error;
+  // Check if we have an active GoTrue auth session matching this userId
+  const { data: sessionData } = await supabase.auth
+    .getSession()
+    .catch(() => ({ data: { session: null } }));
+  let activeSession = sessionData?.session;
+
+  if (!activeSession || activeSession.user.id !== userId) {
+    // Attempt automatic session refresh
+    const { data: refreshed } = await supabase.auth
+      .refreshSession()
+      .catch(() => ({ data: { session: null } }));
+    activeSession = refreshed?.session;
+  }
+
+  // If user is not authenticated in GoTrue, skip remote sync to avoid 401 / 42501 RLS rejection
+  if (!activeSession || activeSession.user.id !== userId) {
+    return;
+  }
+
+  // Update generic user_data table for compatibility and quick restore
+  try {
+    const { error } = await supabase.from("user_data").upsert({ user_id: userId, key, value });
+    if (error) {
+      if (error.code === "42501" || (error as any).status === 401) return;
+      throw error;
+    }
+  } catch (err: any) {
+    if (err?.code === "42501" || err?.status === 401) return;
+    throw err;
+  }
 
   // Sync to relational tables
   try {

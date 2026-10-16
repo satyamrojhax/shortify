@@ -42,6 +42,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useSiteConfig } from "@/hooks/use-site-config";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -53,6 +54,7 @@ function SettingsPage() {
   const { canInstall, install } = usePwa();
   const { theme, setTheme } = useTheme();
   const { unreadCount } = useNotifications();
+  const { isRouteEnabled } = useSiteConfig();
   const hydrated = useHydrated();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -224,80 +226,90 @@ function SettingsPage() {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Link
-            to="/liked"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                liked reels
+          {isRouteEnabled("/liked") && (
+            <Link
+              to="/liked"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  liked reels
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  view your {likedCount} liked reels.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                view your {likedCount} liked reels.
-              </div>
-            </div>
-            <Heart className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Heart className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/saved"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                saved reels
+          {isRouteEnabled("/saved") && (
+            <Link
+              to="/saved"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  saved reels
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  view your {savedCount} saved reels.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                view your {savedCount} saved reels.
-              </div>
-            </div>
-            <Bookmark className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Bookmark className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/favorites"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                favorites
+          {isRouteEnabled("/favorites") && (
+            <Link
+              to="/favorites"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  favorites
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  view your {favoritesCount} favorite creators.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                view your {favoritesCount} favorite creators.
-              </div>
-            </div>
-            <Users className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Users className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/history"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                watch history
+          {isRouteEnabled("/history") && (
+            <Link
+              to="/history"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  watch history
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  revisit reels you've watched ({watched}).
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                revisit reels you've watched ({watched}).
-              </div>
-            </div>
-            <Eye className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Eye className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/downloaded"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                downloads
+          {isRouteEnabled("/downloaded") && (
+            <Link
+              to="/downloaded"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  downloads
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  manage offline reels and download more.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                manage offline reels and download more.
-              </div>
-            </div>
-            <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
         </div>
       </section>
 
@@ -308,50 +320,56 @@ function SettingsPage() {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Link
-            to="/leaderboard"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                leaderboard
+          {isRouteEnabled("/leaderboard") && (
+            <Link
+              to="/leaderboard"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  leaderboard
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  see the top creators and rankings.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                see the top creators and rankings.
-              </div>
-            </div>
-            <Trophy className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Trophy className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/shop"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                shop
+          {isRouteEnabled("/shop") && (
+            <Link
+              to="/shop"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  shop
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  browse the store and redeem your coins.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                browse the store and redeem your coins.
-              </div>
-            </div>
-            <ShoppingBag className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <ShoppingBag className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/redeem"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md border-magenta-haze/30 bg-magenta-haze/5 dark:border-periwinkle-sky/30 dark:bg-periwinkle-sky/5 group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity">
-                earnings
+          {isRouteEnabled("/redeem") && (
+            <Link
+              to="/redeem"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md border-magenta-haze/30 bg-magenta-haze/5 dark:border-periwinkle-sky/30 dark:bg-periwinkle-sky/5 group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity">
+                  earnings
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  you have {coins} coins. redeem them for rewards.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                you have {coins} coins. redeem them for rewards.
-              </div>
-            </div>
-            <Gift className="h-6 w-6 text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity" />
-          </Link>
+              <Gift className="h-6 w-6 text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity" />
+            </Link>
+          )}
         </div>
       </section>
 
@@ -362,42 +380,46 @@ function SettingsPage() {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Link
-            to="/notifications"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                  notifications
-                </span>
-                {unreadCount > 0 && (
-                  <span className="rounded-full bg-marker px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
-                    {unreadCount} new
+          {isRouteEnabled("/notifications") && (
+            <Link
+              to="/notifications"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                    notifications
                   </span>
-                )}
+                  {unreadCount > 0 && (
+                    <span className="rounded-full bg-marker px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                      {unreadCount} new
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  realtime broadcasts, announcements & individual alerts.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                realtime broadcasts, announcements & individual alerts.
-              </div>
-            </div>
-            <Bell className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Bell className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
-          <Link
-            to="/feedback"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                help & suggestions
+          {isRouteEnabled("/feedback") && (
+            <Link
+              to="/feedback"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  help & suggestions
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  share your feedback, ideas, or ask admin for help.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                share your feedback, ideas, or ask admin for help.
-              </div>
-            </div>
-            <MessageSquare className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <MessageSquare className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
         </div>
       </section>
 
@@ -408,20 +430,22 @@ function SettingsPage() {
         </h2>
 
         <div className="flex flex-col gap-2">
-          <Link
-            to="/about"
-            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-          >
-            <div>
-              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                about us
+          {isRouteEnabled("/about") && (
+            <Link
+              to="/about"
+              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+            >
+              <div>
+                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  about us
+                </div>
+                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                  learn more about this app.
+                </div>
               </div>
-              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                learn more about this app.
-              </div>
-            </div>
-            <Info className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-          </Link>
+              <Info className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+            </Link>
+          )}
 
           <button
             onClick={() => setShowResetConfirm(true)}

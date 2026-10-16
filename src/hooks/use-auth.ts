@@ -211,8 +211,12 @@ export function useAuth() {
       try {
         const idbData = await getAuthFromIdb();
         if (idbData && Object.keys(idbData).length > 0) {
+          const SUPABASE_KEY = "sb-mcrhjyszrxbtiizhgacn-auth-token";
+          if (idbData["sb_auth_token"] && typeof localStorage !== "undefined" && !localStorage.getItem(SUPABASE_KEY)) {
+            localStorage.setItem(SUPABASE_KEY, idbData["sb_auth_token"]);
+          }
           for (const [k, v] of Object.entries(idbData)) {
-            if (k === "ig.pin_ok" || k === SESSION_PIN_KEY) continue;
+            if (k === "ig.pin_ok" || k === SESSION_PIN_KEY || k === "sb_auth_token") continue;
             if (v && typeof localStorage !== "undefined" && !localStorage.getItem(k)) {
               localStorage.setItem(k, v);
             }
@@ -430,11 +434,13 @@ export function useAuth() {
       setCookie("ig.age_ok", "true", 365);
       removeCookie("ig.pin_ok");
       removeCookie(SESSION_PIN_KEY);
+      const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
       saveAuthToIdb({
         "ig.user_id": user.id,
         "ig.user_name": user.name,
         "ig.username": user.name,
         "ig.age_ok": "true",
+        ...(sessionData?.session ? { "sb_auth_token": JSON.stringify(sessionData.session) } : {}),
       });
 
       const info = getDeviceInfo();
@@ -493,11 +499,13 @@ export function useAuth() {
       setCookie("ig.age_ok", "true", 365);
       removeCookie("ig.pin_ok");
       removeCookie(SESSION_PIN_KEY);
+      const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
       saveAuthToIdb({
         "ig.user_id": user.id,
         "ig.user_name": user.name,
         "ig.username": user.name,
         "ig.age_ok": "true",
+        ...(sessionData?.session ? { "sb_auth_token": JSON.stringify(sessionData.session) } : {}),
       });
 
       const info = getDeviceInfo();

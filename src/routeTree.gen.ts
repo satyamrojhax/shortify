@@ -40,6 +40,7 @@ import { Route as AppShopRouteImport } from './routes/_app.shop'
 import { Route as AppSkillsRouteImport } from './routes/_app.skills'
 import { Route as AppSuggestionsRouteImport } from './routes/_app.suggestions'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminConfigRouteImport } from './routes/admin.config'
 import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
 import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
@@ -204,6 +205,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminConfigRoute = AdminConfigRouteImport.update({
+  id: '/config',
+  path: '/config',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
   id: '/feedback',
   path: '/feedback',
@@ -281,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
   '/suggestions': typeof AppSuggestionsRoute
+  '/admin/config': typeof AdminConfigRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -321,6 +328,7 @@ export interface FileRoutesByTo {
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
   '/suggestions': typeof AppSuggestionsRoute
+  '/admin/config': typeof AdminConfigRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -364,6 +372,7 @@ export interface FileRoutesById {
   '/_app/shop': typeof AppShopRoute
   '/_app/skills': typeof AppSkillsRoute
   '/_app/suggestions': typeof AppSuggestionsRoute
+  '/admin/config': typeof AdminConfigRoute
   '/admin/feedback': typeof AdminFeedbackRoute
   '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
@@ -407,6 +416,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/skills'
     | '/suggestions'
+    | '/admin/config'
     | '/admin/feedback'
     | '/admin/notifications'
     | '/admin/settings'
@@ -447,6 +457,7 @@ export interface FileRouteTypes {
     | '/shop'
     | '/skills'
     | '/suggestions'
+    | '/admin/config'
     | '/admin/feedback'
     | '/admin/notifications'
     | '/admin/settings'
@@ -489,6 +500,7 @@ export interface FileRouteTypes {
     | '/_app/shop'
     | '/_app/skills'
     | '/_app/suggestions'
+    | '/admin/config'
     | '/admin/feedback'
     | '/admin/notifications'
     | '/admin/settings'
@@ -731,6 +743,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/config': {
+      id: '/admin/config'
+      path: '/config'
+      fullPath: '/admin/config'
+      preLoaderRoute: typeof AdminConfigRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/feedback': {
       id: '/admin/feedback'
       path: '/feedback'
@@ -858,6 +877,7 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
+  AdminConfigRoute: typeof AdminConfigRoute
   AdminFeedbackRoute: typeof AdminFeedbackRoute
   AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
@@ -867,6 +887,7 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminConfigRoute: AdminConfigRoute,
   AdminFeedbackRoute: AdminFeedbackRoute,
   AdminNotificationsRoute: AdminNotificationsRoute,
   AdminSettingsRoute: AdminSettingsRoute,

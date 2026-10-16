@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useAuth } from "@/hooks/use-auth";
+import { useSiteConfig } from "@/hooks/use-site-config";
 import {
   Play,
   Compass,
@@ -21,6 +22,7 @@ export const Route = createFileRoute("/_app/home")({
 
 function HomePage() {
   const { username } = useAuth();
+  const { isRouteEnabled } = useSiteConfig();
 
   return (
     <div className="mx-auto max-w-[1200px] px-6 py-10 md:py-16">
@@ -36,22 +38,30 @@ function HomePage() {
           speaking courses. tap play, hold to 2x speed, double-tap to like. it's that easy.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          <Link to="/reels" className="btn-pill">
-            <PlaySquare className="h-4 w-4" strokeWidth={2.25} />
-            watch reels
-          </Link>
-          <Link to="/category" className="btn-pill">
-            <Flame className="h-4 w-4" strokeWidth={2.25} />
-            instant reels
-          </Link>
-          <Link to="/skills" className="btn-pill">
-            <Wrench className="h-4 w-4" strokeWidth={2.25} />
-            learn skills
-          </Link>
-          <Link to="/english-course" className="btn-pill">
-            <AudioLines className="h-4 w-4" strokeWidth={2.25} />
-            speaking
-          </Link>
+          {isRouteEnabled("/reels") && (
+            <Link to="/reels" className="btn-pill">
+              <PlaySquare className="h-4 w-4" strokeWidth={2.25} />
+              watch reels
+            </Link>
+          )}
+          {isRouteEnabled("/category") && (
+            <Link to="/category" className="btn-pill">
+              <Flame className="h-4 w-4" strokeWidth={2.25} />
+              instant reels
+            </Link>
+          )}
+          {isRouteEnabled("/skills") && (
+            <Link to="/skills" className="btn-pill">
+              <Wrench className="h-4 w-4" strokeWidth={2.25} />
+              learn skills
+            </Link>
+          )}
+          {isRouteEnabled("/english-course") && (
+            <Link to="/english-course" className="btn-pill">
+              <AudioLines className="h-4 w-4" strokeWidth={2.25} />
+              speaking
+            </Link>
+          )}
         </div>
       </section>
 

@@ -25,7 +25,11 @@ function AdminDashboard() {
         const [usersReq, userDataReq, recentViewsReq, recentLikesReq, recentSavesReq] =
           await Promise.all([
             supabase.from("users").select("id", { count: "exact", head: true }),
-            supabase.from("user_data").select("key, value"),
+            supabase
+              .from("user_data")
+              .select("key, value")
+              .then((r: any) => (r.error ? { data: [] } : r))
+              .catch(() => ({ data: [] })),
             supabase
               .from("user_watch_history")
               .select("user_id, reel_id, watched_at, users(name, profile_details)")

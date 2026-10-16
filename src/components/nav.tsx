@@ -31,6 +31,7 @@ import { UserAvatar } from "@/components/ui/user-avatar";
 import { useState, useEffect } from "react";
 import { syncRouteUrl } from "@/lib/url-tracker";
 import { useNotifications } from "@/hooks/use-notifications";
+import { useSiteConfig } from "@/hooks/use-site-config";
 
 const CourseIcon = ({ className }: { className?: string; strokeWidth?: number }) => (
   <img
@@ -94,6 +95,8 @@ export function Sidebar({ username }: { username: string | null }) {
   const isVip = hasUnlocked("badge_vip");
   const avatarStyle = getAvatarStyle();
   const avatarSeed = getAvatarSeed(username || "");
+  const { isRouteEnabled } = useSiteConfig();
+  const visibleSidebarItems = sidebarItems.filter((it) => isRouteEnabled(it.to));
   return (
     <aside className="group/sidebar sticky top-0 z-30 hidden h-screen shrink-0 w-[72px] hover:w-[244px] transition-all duration-300 flex-col border-r border-twilight-navy bg-cloud-white px-3 hover:px-6 py-8 md:flex dark:bg-dusk-indigo dark:border-periwinkle-sky/40 overflow-hidden">
       <Link
@@ -111,7 +114,7 @@ export function Sidebar({ username }: { username: string | null }) {
         </div>
       </Link>
       <nav className="flex-1 space-y-2 w-full">
-        {sidebarItems.map((it) => {
+        {visibleSidebarItems.map((it) => {
           const active = pathname === it.to;
           const Icon = it.icon;
           return (
@@ -168,9 +171,11 @@ export function Sidebar({ username }: { username: string | null }) {
 
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const { isRouteEnabled } = useSiteConfig();
+  const visibleBottomItems = bottomItems.filter((it) => isRouteEnabled(it.to));
   return (
     <nav className="fixed bottom-4 left-1/2 z-40 flex h-14 -translate-x-1/2 items-center gap-1 sm:gap-2 rounded-full border border-twilight-navy bg-cloud-white px-2.5 shadow-lg backdrop-blur-md md:hidden dark:border-periwinkle-sky/50 dark:bg-dusk-indigo">
-      {bottomItems.map((it) => {
+      {visibleBottomItems.map((it) => {
         const active = pathname === it.to || (it.to === "/my-courses" && pathname.startsWith("/my-courses"));
         const Icon = it.icon;
         return (
@@ -219,10 +224,12 @@ export function MobileHeader({ username }: { username?: string | null }) {
   const avatarStyle = getAvatarStyle();
   const avatarSeed = getAvatarSeed(username || "");
   const { unreadCount } = useNotifications();
+  const { isRouteEnabled } = useSiteConfig();
+  const visibleMenuItems = allItems.filter((it) => isRouteEnabled(it.to));
 
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-twilight-navy/10 bg-background/80 px-4 backdrop-blur-md md:hidden dark:border-periwinkle-sky/10">
+      <header className="relative z-40 flex h-14 items-center justify-between border-b border-twilight-navy/10 bg-background/80 px-4 backdrop-blur-md md:hidden dark:border-periwinkle-sky/10">
         <Link
           to="/home"
           className="flex items-center gap-2"
@@ -230,7 +237,7 @@ export function MobileHeader({ username }: { username?: string | null }) {
           <BrandMark size={24} />
         </Link>
         <div className="flex items-center gap-2.5">
-          {username && (
+          {username && isRouteEnabled("/notifications") && (
             <Link
               to="/notifications"
               className="relative flex h-8 w-8 items-center justify-center rounded-full text-twilight-navy transition-colors hover:bg-slate-mist/20 dark:text-cream-linen dark:hover:bg-secondary/60"
@@ -303,7 +310,7 @@ export function MobileHeader({ username }: { username?: string | null }) {
               </Link>
             )}
             <nav className="flex flex-col space-y-2">
-              {allItems.map((it) => {
+              {visibleMenuItems.map((it) => {
                 const active = pathname === it.to;
                 const Icon = it.icon;
                 return (

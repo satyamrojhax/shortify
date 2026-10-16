@@ -389,8 +389,7 @@ export async function fetchReelsPage(
       break;
     }
 
-    case "trending":
-    case "all": {
+    case "trending": {
       const offset = page - 1;
       const sourceIndex = offset % 3;
       const apiPage = Math.floor(offset / 3) + 1;
@@ -398,6 +397,47 @@ export async function fetchReelsPage(
       const safePage = ((apiPage - 1) % base.maxPage) + 1;
       const res = await fetchXvideos(base, safePage);
       selectedReels.push(...res);
+      break;
+    }
+
+    case "all": {
+      // 1. Fetch trending reels from v1/v2/v4
+      const offset = page - 1;
+      const sourceIndex = offset % 3;
+      const apiPage = Math.floor(offset / 3) + 1;
+      const base = XVIDEO_BASES[sourceIndex];
+      const safePage = ((apiPage - 1) % base.maxPage) + 1;
+      const trending = await fetchXvideos(base, safePage);
+
+      // 2. Fetch local reels from localDb
+      let localSlice: Reel[] = [];
+      if (localDb.length > 0) {
+        if (isRandom) {
+          localSlice = shuffle(localDb).slice(0, 15);
+        } else {
+          const lOffset = ((page - 1) * 15) % localDb.length;
+          localSlice = localDb.slice(lOffset, lOffset + 15);
+          if (localSlice.length < 15) {
+            localSlice = [...localSlice, ...localDb.slice(0, 15 - localSlice.length)];
+          }
+        }
+      }
+
+      // 3. Interleave trending and local reels evenly: trending, local, trending, local...
+      const mixed: Reel[] = [];
+      const maxLen = Math.max(trending.length, localSlice.length);
+      for (let i = 0; i < maxLen; i++) {
+        if (i < trending.length) mixed.push(trending[i]);
+        if (i < localSlice.length) mixed.push(localSlice[i]);
+      }
+
+      if (mixed.length > 0) {
+        selectedReels.push(...mixed);
+      } else if (trending.length > 0) {
+        selectedReels.push(...trending);
+      } else if (localSlice.length > 0) {
+        selectedReels.push(...localSlice);
+      }
       break;
     }
 

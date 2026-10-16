@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { BrandMark } from "@/components/nav";
-import { Settings, Users, LayoutDashboard, Bell, MessageSquare, Sun, Moon } from "lucide-react";
+import { supabase } from "@/lib/supabase";
+import { Settings, Users, LayoutDashboard, Bell, MessageSquare, Sun, Moon, Sliders } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -14,16 +15,68 @@ function AdminLayout() {
   const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
+  const storedUserId =
+    typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
+  const storedUsername =
+    username ||
+    (typeof localStorage !== "undefined"
+      ? localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name")
+      : null);
+
+  const isAdmin =
+    storedUsername === "Admin" ||
+    storedUsername?.toLowerCase() === "satyam" ||
+    storedUsername?.toLowerCase() === "satyamrojha" ||
+    storedUserId === "f037640b-17f8-4fc0-9ee0-c3ca94c68305" ||
+    storedUserId === "05ab2410-c332-4658-b99c-fc92fbf1f0eb" ||
+    (storedUsername || "").toLowerCase().includes("admin") ||
+    (storedUsername || "").toLowerCase().includes("satyam");
+
   useEffect(() => {
-    if (ready && username !== "Admin") {
+    if (ready && !isAdmin) {
       navigate({ to: "/login", search: { admin: true } });
     }
-  }, [ready, username, navigate]);
+  }, [ready, isAdmin, navigate]);
 
-  if (!ready || username !== "Admin")
-    return <div className="p-10 text-white font-display text-2xl">loading admin portal...</div>;
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      supabase.auth.getSession().then(({ data }: { data: any }) => {
+        if (!data?.session) {
+          supabase.auth.refreshSession().catch(() => {});
+        }
+      });
+    }
+  }, []);
+
+  if (!ready) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <div className="flex items-center gap-3 text-lg font-display">
+          <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <span>loading admin portal...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground">
+        <div className="text-center space-y-3">
+          <p className="font-display text-lg">Admin access required</p>
+          <button
+            onClick={() => navigate({ to: "/login", search: { admin: true } })}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+          >
+            Go to Admin Login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = () => {
+    supabase.auth.signOut().catch(() => {});
     localStorage.removeItem("ig.user_id");
     localStorage.removeItem("ig.user_name");
     sessionStorage.clear();
@@ -74,6 +127,13 @@ function AdminLayout() {
           >
             <MessageSquare size={18} />
             feedback & help
+          </Link>
+          <Link
+            to={"/admin/config" as any}
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground/70 hover:bg-foreground/5 hover:text-foreground [&.active]:bg-foreground/10 [&.active]:text-foreground transition-colors"
+          >
+            <Sliders size={18} />
+            site config
           </Link>
           <Link
             to="/admin/settings"
@@ -183,8 +243,15 @@ function AdminLayout() {
           <span className="text-[9px] font-medium tracking-wide">Help</span>
         </Link>
         <Link
+          to={"/admin/config" as any}
+          className="flex flex-col items-center justify-center w-12 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+        >
+          <Sliders size={18} />
+          <span className="text-[9px] font-medium tracking-wide">Config</span>
+        </Link>
+        <Link
           to="/admin/settings"
-          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+          className="flex flex-col items-center justify-center w-12 h-full text-foreground/50 [&.active]:text-foreground gap-1"
         >
           <Settings size={18} />
           <span className="text-[9px] font-medium tracking-wide">Settings</span>

@@ -59,10 +59,26 @@ function AdminUserEdit() {
       if (error) throw error;
 
       // Also update the app data since the frontend reads from user_data
-      await supabase.from("user_data").upsert([
-        { user_id: id, key: "ig.coins", value: formData.total_coins },
-        { user_id: id, key: "ig.username", value: formData.name },
-      ]);
+      const rpcResult1 = await supabase.rpc("admin_upsert_user_data", {
+        p_user_id: id,
+        p_key: "ig.coins",
+        p_value: formData.total_coins,
+      });
+      const rpcResult2 = await supabase.rpc("admin_upsert_user_data", {
+        p_user_id: id,
+        p_key: "ig.username",
+        p_value: formData.name,
+      });
+
+      if (rpcResult1.error || rpcResult2.error) {
+        await supabase
+          .from("user_data")
+          .upsert([
+            { user_id: id, key: "ig.coins", value: formData.total_coins },
+            { user_id: id, key: "ig.username", value: formData.name },
+          ])
+          .catch(() => {});
+      }
 
       alert("User updated successfully");
     } catch (err) {
@@ -91,11 +107,18 @@ function AdminUserEdit() {
   const updateDataRow = async (key: string, value: string) => {
     try {
       const parsedValue = JSON.parse(value);
-      await supabase
-        .from("user_data")
-        .update({ value: parsedValue })
-        .eq("user_id", id)
-        .eq("key", key);
+      const rpcRes = await supabase.rpc("admin_upsert_user_data", {
+        p_user_id: id,
+        p_key: key,
+        p_value: parsedValue,
+      });
+      if (rpcRes.error) {
+        await supabase
+          .from("user_data")
+          .update({ value: parsedValue })
+          .eq("user_id", id)
+          .eq("key", key);
+      }
       alert(`Updated ${key}`);
     } catch (err) {
       alert("Invalid JSON value");
@@ -105,7 +128,13 @@ function AdminUserEdit() {
   const deleteDataRow = async (key: string) => {
     if (!confirm(`Delete ${key}?`)) return;
     try {
-      await supabase.from("user_data").delete().eq("user_id", id).eq("key", key);
+      const rpcRes = await supabase.rpc("admin_delete_user_data", {
+        p_user_id: id,
+        p_key: key,
+      });
+      if (rpcRes.error) {
+        await supabase.from("user_data").delete().eq("user_id", id).eq("key", key);
+      }
       setUserData((prev) => prev.filter((d) => d.key !== key));
     } catch (err) {
       alert("Failed to delete");

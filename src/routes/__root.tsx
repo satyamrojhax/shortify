@@ -9,6 +9,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { NotFoundComponent } from "@/components/not-found";
 import { syncRouteUrl, initGlobalActionTracking } from "@/lib/url-tracker";
+import { Toaster } from "@/components/ui/sonner";
 
 function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
@@ -64,6 +65,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Outlet />
+      <Toaster richColors position="top-center" closeButton />
     </QueryClientProvider>
   );
 }

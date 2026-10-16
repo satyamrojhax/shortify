@@ -191,7 +191,7 @@ export function set<T>(key: string, value: T) {
   if (uid) {
     if (!currentUserId) currentUserId = uid;
     // Fire and forget to supabase
-    setRemoteData(uid, key, value).catch((err) => console.error("Failed to sync", key, err));
+    setRemoteData(uid, key, value).catch(() => {});
   }
 }
 
