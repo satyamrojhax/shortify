@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { fetchCreatorReelsPage, type Reel } from "@/lib/reels";
+import { fetchCreatorReelsPage, isTrendingVersion, type Reel } from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
-import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite } from "@/lib/storage";
+import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite, isOldUser } from "@/lib/storage";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { BubbleLoader } from "@/components/ui/bubble-loader";
@@ -29,11 +29,15 @@ function CreatorPage() {
   const [activeTab, setActiveTab] = useState<"latest" | "popular">("latest");
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch } =
+  const trendVer = isTrendingVersion(username);
+  const isTrending = Boolean(trendVer);
+  const isOld = useMemo(() => isOldUser(), []);
+
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch, isRefetching } =
     useInfiniteQuery({
-      queryKey: ["creator-reels", username, activeTab],
-      queryFn: ({ pageParam }) => fetchCreatorReelsPage(username, activeTab, pageParam),
-      initialPageParam: 0,
+      queryKey: ["creator-reels", trendVer || username, activeTab],
+      queryFn: ({ pageParam }) => fetchCreatorReelsPage(trendVer || username, activeTab, pageParam),
+      initialPageParam: isTrending ? 1 : 0,
       getNextPageParam: (last) => last.nextPage,
       staleTime: 5 * 60_000,
     });
@@ -41,11 +45,23 @@ function CreatorPage() {
   const { data: stats } = useQuery({
     queryKey: ["creator-stats", username],
     queryFn: () => fetchCreatorStats(username!),
+    enabled: !isTrending && Boolean(username),
     staleTime: 5 * 60_000,
   });
 
   const reels = useMemo(() => {
-    return data?.pages.flatMap((p) => p.items) ?? [];
+    const all = data?.pages.flatMap((p) => p.items) ?? [];
+    const seen = new Set<string>();
+    const unique: Reel[] = [];
+    for (const r of all) {
+      const keyId = r.id;
+      const keyUrl = r.videoUrl;
+      if (seen.has(keyId) || (keyUrl && seen.has(keyUrl))) continue;
+      seen.add(keyId);
+      if (keyUrl) seen.add(keyUrl);
+      unique.push(r);
+    }
+    return unique;
   }, [data]);
 
   // Full Screen Player State
@@ -193,7 +209,7 @@ function CreatorPage() {
               >
                 {near ? (
                   <ReelPlayer
-                    key={`player::${r.id}`}
+                    key={`player::${r.id}::${i}`}
                     reel={r}
                     active={i === activeIdx}
                     distance={Math.abs(i - activeIdx)}
@@ -203,7 +219,7 @@ function CreatorPage() {
                     onWatched={bumpWatched}
                   />
                 ) : (
-                  <div key={`ph::${r.id}`} className="h-full w-full bg-black">
+                  <div key={`ph::${r.id}::${i}`} className="h-full w-full bg-black">
                     {r.thumbnail && (
                       <img
                         src={r.thumbnail}
@@ -276,7 +292,9 @@ function CreatorPage() {
           <div className="flex items-center gap-8 md:gap-12 mt-6 w-full justify-center">
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
-                {stats?.postsCount !== undefined ? formatViews(stats.postsCount) : "..."}
+                {isTrending
+                  ? (reels.length > 0 ? formatViews(reels.length) : isLoading ? "..." : "0")
+                  : (stats?.postsCount !== undefined ? formatViews(stats.postsCount) : "...")}
               </span>
               <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
                 Videos
@@ -284,7 +302,9 @@ function CreatorPage() {
             </div>
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
-                {stats?.followersCount !== undefined ? formatViews(stats.followersCount) : "..."}
+                {isTrending
+                  ? (isOld ? (favSince ? "344+" : "343+") : (favSince ? "124" : "123"))
+                  : (stats?.followersCount !== undefined ? formatViews(stats.followersCount) : "...")}
               </span>
               <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
                 Followers
@@ -350,9 +370,10 @@ function CreatorPage() {
             <p className="text-sm text-muted-foreground mb-4">Couldn't load reels.</p>
             <button
               onClick={() => refetch()}
-              className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium"
+              disabled={isRefetching}
+              className="flex items-center gap-2 rounded-full bg-secondary px-4 py-2 text-sm font-medium hover:bg-secondary/80 transition disabled:opacity-50"
             >
-              <RefreshCw className="h-4 w-4" /> Retry
+              <RefreshCw className={`h-4 w-4 ${isRefetching ? "animate-spin" : ""}`} /> Retry
             </button>
           </div>
         ) : reels.length === 0 ? (
@@ -363,7 +384,7 @@ function CreatorPage() {
           <div className="grid grid-cols-3 md:grid-cols-4 gap-0.5 md:gap-3 lg:gap-4">
             {reels.map((reel, idx) => (
               <div
-                key={reel.id}
+                key={`creator-grid-${reel.id}-${idx}`}
                 className="group relative aspect-[9/16] cursor-pointer overflow-hidden bg-muted md:rounded-md"
                 onClick={() => {
                   setActiveIdx(idx);
@@ -472,10 +493,11 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
 }
 
 function CreatorProfileImage({ username }: { username: string }) {
+  const isTrend = Boolean(isTrendingVersion(username));
   return (
     <UserAvatar
       username={username}
-      src={`https://love.viraly.wtf/profileImages/${username}.jpg`}
+      src={isTrend ? null : `https://love.viraly.wtf/profileImages/${username}.jpg`}
       size="2xl"
       showBorder={false}
       className="h-full w-full"

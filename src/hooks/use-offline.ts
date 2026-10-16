@@ -23,10 +23,12 @@ export function useOfflineLibrary() {
 
   const refresh = useCallback(async () => {
     try {
-      setItems(await getAllOfflineMeta());
+      const data = await getAllOfflineMeta();
+      setItems(data);
       setError(null);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not open offline storage.");
+    } catch {
+      setItems([]);
+      setError(null);
     } finally {
       setLoaded(true);
     }

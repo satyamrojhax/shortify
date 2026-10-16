@@ -60,8 +60,6 @@ function ensureWarmedUp() {
   if (warmupStarted) return;
   warmupStarted = true;
   warmCacheOnStartup().catch(() => {});
-  // Warm pages 1–2 of all four tabs in the background
-  warmAllFilters();
 }
 ensureWarmedUp();
 
@@ -211,10 +209,18 @@ function ReelsPage() {
     return () => obs.disconnect();
   }, [reels]);
 
-  // Aggressive prefetch — start loading the next page when 15 reels remain
+  // Reset active reel and scroll when switching tabs
+  useEffect(() => {
+    setActiveIdx(0);
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
+  }, [filter]);
+
+  // Load the next page only when the user reaches the end of current batch
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
-    if (reels.length - activeIdx <= 15) fetchNextPage();
+    if (reels.length > 0 && activeIdx >= reels.length - 1) fetchNextPage();
   }, [activeIdx, reels.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Safe cache eviction: cap in-memory pages
@@ -264,6 +270,9 @@ function ReelsPage() {
 
   const handleReelEnd = useCallback(() => {
     bumpWatched();
+    if (reels.length > 0 && activeIdx >= reels.length - 1 && hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
     if (getAutoScroll()) {
       setTimeout(() => {
         if (activeIdx < reels.length - 1) {
@@ -273,7 +282,7 @@ function ReelsPage() {
         }
       }, 500);
     }
-  }, [activeIdx, reels.length, scrollToIdx, bumpWatched]);
+  }, [activeIdx, reels.length, scrollToIdx, bumpWatched, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const jumpToResume = () => {
     if (!resumeTarget) return;
@@ -422,7 +431,7 @@ function ReelsPage() {
             >
               {near ? (
                 <ReelPlayer
-                  key={`player::${r.id}`}
+                  key={`player::${r.id}::${i}`}
                   reel={r}
                   active={i === activeIdx}
                   distance={Math.abs(i - activeIdx)}
@@ -433,7 +442,7 @@ function ReelsPage() {
                   feedType={filter}
                 />
               ) : (
-                <div key={`ph::${r.id}`} className="h-full w-full bg-background">
+                <div key={`ph::${r.id}::${i}`} className="h-full w-full bg-background">
                   {r.thumbnail && (
                     <img
                       src={r.thumbnail}
@@ -474,9 +483,10 @@ function ReelsPage() {
             </div>
             <button
               onClick={() => fetchNextPage()}
-              className="inline-flex items-center gap-1 rounded-full border border-periwinkle-sky/60 px-3 py-1 text-cream-linen hover:bg-periwinkle-sky/20"
+              disabled={isFetchingNextPage}
+              className="inline-flex items-center gap-1 rounded-full border border-periwinkle-sky/60 px-3 py-1 text-cream-linen hover:bg-periwinkle-sky/20 transition disabled:opacity-50"
             >
-              <RefreshCw className="h-3 w-3" /> Retry
+              <RefreshCw className={`h-3 w-3 ${isFetchingNextPage ? "animate-spin" : ""}`} /> Retry
             </button>
           </div>
         )}

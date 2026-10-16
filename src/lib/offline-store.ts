@@ -30,40 +30,128 @@ export type OfflineMeta = {
   downloadedAt: number;
 };
 
-// ─── Connection ───────────────────────────────────────────────────────────────
+// ─── Connection & Persistent Fallback ──────────────────────────────────────────
 
-let dbPromise: Promise<IDBDatabase> | null = null;
+const BACKUP_DB_NAME = "reels-offline-store";
+const FALLBACK_STORAGE_KEY = "ig.offline_meta_fallback";
 
-function getDb(): Promise<IDBDatabase> {
-  if (!dbPromise) {
-    dbPromise = new Promise((resolve, reject) => {
-      if (typeof indexedDB === "undefined") {
-        reject(new Error("IndexedDB is not available in this browser."));
-        return;
+function loadFallbackStore(): Map<string, { meta: OfflineMeta; blob?: Blob }> {
+  const map = new Map<string, { meta: OfflineMeta; blob?: Blob }>();
+  if (typeof localStorage !== "undefined") {
+    try {
+      const raw = localStorage.getItem(FALLBACK_STORAGE_KEY);
+      if (raw) {
+        const parsed: OfflineMeta[] = JSON.parse(raw);
+        for (const meta of parsed) {
+          map.set(meta.url, { meta });
+        }
       }
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
+    } catch {}
+  }
+  return map;
+}
+
+const fallbackStore = loadFallbackStore();
+
+function persistFallbackMeta(): void {
+  if (typeof localStorage !== "undefined") {
+    try {
+      const metas = Array.from(fallbackStore.values()).map((v) => v.meta);
+      localStorage.setItem(FALLBACK_STORAGE_KEY, JSON.stringify(metas));
+    } catch {}
+  }
+}
+
+let dbPromise: Promise<IDBDatabase | null> | null = null;
+let isDbDenied = false;
+
+export function resetOfflineDb(): void {
+  dbPromise = null;
+  isDbDenied = false;
+}
+
+function tryOpenDb(name: string, version?: number): Promise<IDBDatabase | null> {
+  return new Promise((resolve) => {
+    if (typeof indexedDB === "undefined") {
+      resolve(null);
+      return;
+    }
+    try {
+      const req = version ? indexedDB.open(name, version) : indexedDB.open(name);
       req.onupgradeneeded = () => {
-        const db = req.result;
-        if (!db.objectStoreNames.contains(VIDEO_STORE)) {
-          db.createObjectStore(VIDEO_STORE, { keyPath: "url" });
-        }
-        if (!db.objectStoreNames.contains(META_STORE)) {
-          db.createObjectStore(META_STORE, { keyPath: "url" });
-        }
+        try {
+          const db = req.result;
+          if (!db.objectStoreNames.contains(VIDEO_STORE)) {
+            db.createObjectStore(VIDEO_STORE, { keyPath: "url" });
+          }
+          if (!db.objectStoreNames.contains(META_STORE)) {
+            db.createObjectStore(META_STORE, { keyPath: "url" });
+          }
+        } catch {}
       };
       req.onsuccess = () => {
         const db = req.result;
-        // If another tab upgrades/deletes the DB, drop our cached connection.
         db.onversionchange = () => {
-          db.close();
+          try {
+            db.close();
+          } catch {}
           dbPromise = null;
         };
         resolve(db);
       };
       req.onerror = () => {
-        dbPromise = null;
-        reject(req.error);
+        resolve(null);
       };
+      req.onblocked = () => {
+        resolve(null);
+      };
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+async function initDb(): Promise<IDBDatabase | null> {
+  if (typeof indexedDB === "undefined") {
+    isDbDenied = true;
+    return null;
+  }
+
+  // 1. Try opening primary database with version 1
+  let db = await tryOpenDb(DB_NAME, DB_VERSION);
+  if (db && db.objectStoreNames.contains(VIDEO_STORE) && db.objectStoreNames.contains(META_STORE)) {
+    return db;
+  }
+
+  // 2. If version error or upgrade needed, try opening primary database at current version
+  if (!db) {
+    db = await tryOpenDb(DB_NAME);
+    if (db && db.objectStoreNames.contains(VIDEO_STORE) && db.objectStoreNames.contains(META_STORE)) {
+      return db;
+    }
+  }
+
+  // 3. If primary database is locked/corrupted, try backup database
+  if (!db) {
+    db = await tryOpenDb(BACKUP_DB_NAME, 1);
+    if (db && db.objectStoreNames.contains(VIDEO_STORE) && db.objectStoreNames.contains(META_STORE)) {
+      return db;
+    }
+  }
+
+  // 4. Gracefully use persistent fallback storage if IndexedDB is blocked
+  isDbDenied = true;
+  return null;
+}
+
+function getDb(): Promise<IDBDatabase | null> {
+  if (isDbDenied) return Promise.resolve(null);
+  if (!dbPromise) {
+    dbPromise = initDb().then((db) => {
+      if (!db) {
+        isDbDenied = true;
+      }
+      return db;
     });
   }
   return dbPromise;
@@ -102,14 +190,26 @@ export function subscribeOffline(listener: () => void): () => void {
 // ─── Reads ────────────────────────────────────────────────────────────────────
 
 export async function getAllOfflineMeta(): Promise<OfflineMeta[]> {
-  const db = await getDb();
-  const metas = await reqToPromise(
-    db.transaction(META_STORE, "readonly").objectStore(META_STORE).getAll() as IDBRequest<
-      OfflineMeta[]
-    >,
-  );
-  urlIndex = new Set(metas.map((m) => m.url));
-  return metas;
+  try {
+    const db = await getDb();
+    if (!db) {
+      const items = Array.from(fallbackStore.values()).map((v) => v.meta);
+      urlIndex = new Set(items.map((m) => m.url));
+      return items;
+    }
+    const metas = await reqToPromise(
+      db.transaction(META_STORE, "readonly").objectStore(META_STORE).getAll() as IDBRequest<
+        OfflineMeta[]
+      >,
+    );
+    urlIndex = new Set(metas.map((m) => m.url));
+    return metas;
+  } catch (err) {
+    console.warn("Could not retrieve offline metadata from IndexedDB:", err);
+    const items = Array.from(fallbackStore.values()).map((v) => v.meta);
+    urlIndex = new Set(items.map((m) => m.url));
+    return items;
+  }
 }
 
 /** Cached set of downloaded URLs (loaded lazily, kept in sync on writes). */
@@ -129,6 +229,9 @@ export async function hasOfflineVideo(url: string): Promise<boolean> {
 export async function getOfflineBlob(url: string): Promise<Blob | null> {
   try {
     const db = await getDb();
+    if (!db) {
+      return fallbackStore.get(url)?.blob ?? null;
+    }
     const rec = await reqToPromise(
       db.transaction(VIDEO_STORE, "readonly").objectStore(VIDEO_STORE).get(url) as IDBRequest<
         { url: string; blob: Blob } | undefined
@@ -136,7 +239,7 @@ export async function getOfflineBlob(url: string): Promise<Blob | null> {
     );
     return rec?.blob ?? null;
   } catch {
-    return null;
+    return fallbackStore.get(url)?.blob ?? null;
   }
 }
 
@@ -145,6 +248,13 @@ export async function getOfflineBlob(url: string): Promise<Blob | null> {
 /** Atomically store a video + its metadata. Rejects with QuotaExceededError when full. */
 export async function saveOfflineVideo(meta: OfflineMeta, blob: Blob): Promise<void> {
   const db = await getDb();
+  if (!db) {
+    fallbackStore.set(meta.url, { meta, blob });
+    persistFallbackMeta();
+    urlIndex?.add(meta.url);
+    notify();
+    return;
+  }
   const tx = db.transaction([VIDEO_STORE, META_STORE], "readwrite");
   tx.objectStore(VIDEO_STORE).put({ url: meta.url, blob });
   tx.objectStore(META_STORE).put(meta);
@@ -156,6 +266,15 @@ export async function saveOfflineVideo(meta: OfflineMeta, blob: Blob): Promise<v
 export async function deleteOfflineVideos(urls: string[]): Promise<void> {
   if (urls.length === 0) return;
   const db = await getDb();
+  if (!db) {
+    for (const url of urls) {
+      fallbackStore.delete(url);
+      urlIndex?.delete(url);
+    }
+    persistFallbackMeta();
+    notify();
+    return;
+  }
   const tx = db.transaction([VIDEO_STORE, META_STORE], "readwrite");
   for (const url of urls) {
     tx.objectStore(VIDEO_STORE).delete(url);
@@ -168,10 +287,14 @@ export async function deleteOfflineVideos(urls: string[]): Promise<void> {
 
 export async function clearOfflineVideos(): Promise<void> {
   const db = await getDb();
-  const tx = db.transaction([VIDEO_STORE, META_STORE], "readwrite");
-  tx.objectStore(VIDEO_STORE).clear();
-  tx.objectStore(META_STORE).clear();
-  await txDone(tx);
+  fallbackStore.clear();
+  persistFallbackMeta();
+  if (db) {
+    const tx = db.transaction([VIDEO_STORE, META_STORE], "readwrite");
+    tx.objectStore(VIDEO_STORE).clear();
+    tx.objectStore(META_STORE).clear();
+    await txDone(tx);
+  }
   urlIndex = new Set();
   notify();
 }

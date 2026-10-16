@@ -9,6 +9,8 @@ import {
   updateDeviceInfo,
 } from "@/lib/db";
 import { supabase } from "@/lib/supabase";
+import { setCookie, getCookie, removeCookie } from "@/lib/viewer-country";
+import { saveAuthToIdb, getAuthFromIdb, clearAuthFromIdb } from "@/lib/idb-auth";
 
 const SESSION_PIN_KEY = "ig.session_pin_ok";
 
@@ -35,27 +37,38 @@ function subscribeGlobalMaintenance() {
       maintenanceListeners.forEach((fn) => fn(false));
     });
 
-  const maintenanceChannel = `maintenance-sync-global`;
-  supabase
-    .channel(maintenanceChannel)
-    .on(
-      "postgres_changes",
-      {
-        event: "*",
-        schema: "public",
-        table: "platform_settings",
-        filter: `key=eq.maintenance`,
-      },
-      (payload: any) => {
-        const newData = payload.new as any;
-        if (newData && newData.value !== undefined) {
-          const isM = newData.value === "true" || newData.value === true;
-          globalMaintenance = isM;
-          maintenanceListeners.forEach((fn) => fn(isM));
-        }
-      },
-    )
-    .subscribe();
+  try {
+    const existing = (supabase.getChannels() as any[]).find((ch: any) => ch.topic && String(ch.topic).includes("maintenance-sync-global"));
+    if (existing) {
+      supabase.removeChannel(existing);
+    }
+  } catch {}
+
+  const maintenanceChannel = `maintenance-sync-global-${Math.random().toString(36).slice(2, 8)}`;
+  try {
+    supabase
+      .channel(maintenanceChannel)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "platform_settings",
+          filter: `key=eq.maintenance`,
+        },
+        (payload: any) => {
+          const newData = payload.new as any;
+          if (newData && newData.value !== undefined) {
+            const isM = newData.value === "true" || newData.value === true;
+            globalMaintenance = isM;
+            maintenanceListeners.forEach((fn) => fn(isM));
+          }
+        },
+      )
+      .subscribe();
+  } catch (err) {
+    console.warn("subscribeGlobalMaintenance realtime error:", err);
+  }
 }
 
 export function generatePinFromDob(dob: string): string {
@@ -102,36 +115,53 @@ function getDeviceInfo() {
   };
 }
 
-function checkIsPinOk(): boolean {
+export function checkIsPinOk(): boolean {
   if (typeof sessionStorage !== "undefined") {
-    if (sessionStorage.getItem(SESSION_PIN_KEY) === "true" || sessionStorage.getItem("ig.pin_ok") === "true") return true;
-  }
-  if (typeof localStorage !== "undefined") {
-    if (localStorage.getItem(SESSION_PIN_KEY) === "true" || localStorage.getItem("ig.pin_ok") === "true") return true;
+    return (
+      sessionStorage.getItem(SESSION_PIN_KEY) === "true" ||
+      sessionStorage.getItem("ig.pin_ok") === "true"
+    );
   }
   return false;
 }
 
-function checkIsAgeOk(): boolean {
+export function getStoredUserId(): string | null {
+  if (typeof localStorage !== "undefined") {
+    const uid = localStorage.getItem("ig.user_id");
+    if (uid) return uid;
+  }
+  return getCookie("ig.user_id");
+}
+
+export function getStoredUsername(): string | null {
+  if (typeof localStorage !== "undefined") {
+    const u = localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name");
+    if (u) return u;
+  }
+  return getCookie("ig.username") || getCookie("ig.user_name");
+}
+
+export function getStoredPinCode(): string | null {
+  if (typeof localStorage !== "undefined") {
+    const p = localStorage.getItem("ig.pin_code");
+    if (p) return p;
+  }
+  return getCookie("ig.pin_code");
+}
+
+export function checkIsAgeOk(): boolean {
   if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true") return true;
   if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true") return true;
-  if (typeof localStorage !== "undefined" && localStorage.getItem("ig.user_id")) return true;
+  if (getCookie("ig.age_ok") === "true") return true;
+  // If user is already identified by user_id or username, they have inherently passed age verification
+  if (getStoredUserId() || getStoredUsername()) return true;
   return false;
-}
-
-function getStoredUsername(): string | null {
-  if (typeof localStorage !== "undefined") {
-    return localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name") || null;
-  }
-  return null;
 }
 
 function getInitialReadyState(): boolean {
-  if (typeof localStorage !== "undefined") {
-    const u = localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name");
-    const uid = localStorage.getItem("ig.user_id");
-    if (u || !uid) return true;
-  }
+  const u = getStoredUsername();
+  const uid = getStoredUserId();
+  if (u || !uid) return true;
   return false;
 }
 
@@ -140,9 +170,9 @@ export function useAuth() {
   const [ageOk, setAgeOk] = useState<boolean>(checkIsAgeOk);
   const [username, setUsername] = useState<string | null>(getStoredUsername);
   const [pinOk, setPinOkState] = useState<boolean>(checkIsPinOk);
-  const [pinCode, setPinCodeState] = useState<string | null>(() => get<string | null>(KEYS.pinCode, null));
-  const [realName, setRealName] = useState<string | null>(() => get<string | null>(KEYS.realName, null));
-  const [dob, setDob] = useState<string | null>(() => get<string | null>(KEYS.dob, null));
+  const [pinCode, setPinCodeState] = useState<string | null>(() => get<string | null>(KEYS.pinCode, null) || getStoredPinCode());
+  const [realName, setRealName] = useState<string | null>(() => get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name"));
+  const [dob, setDob] = useState<string | null>(() => get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob"));
   const [hash, setHash] = useState<string | null>(() => get<string | null>(KEYS.hash, null));
   const [deviceId, setDeviceId] = useState<string | null>(() => get<string | null>(KEYS.deviceId, null));
   const [fingerprint, setFingerprint] = useState<string | null>(() => get<string | null>(KEYS.fingerprint, null));
@@ -177,25 +207,53 @@ export function useAuth() {
 
   useEffect(() => {
     async function load() {
+      // 0. Recover credentials from IndexedDB vault if local storage was cleared
+      try {
+        const idbData = await getAuthFromIdb();
+        if (idbData && Object.keys(idbData).length > 0) {
+          for (const [k, v] of Object.entries(idbData)) {
+            if (k === "ig.pin_ok" || k === SESSION_PIN_KEY) continue;
+            if (v && typeof localStorage !== "undefined" && !localStorage.getItem(k)) {
+              localStorage.setItem(k, v);
+            }
+            if (v && !getCookie(k)) {
+              setCookie(k, v, 365);
+            }
+          }
+        }
+      } catch {
+        // ignore idb recovery errors
+      }
+
+      // Purge any persistent pin_ok keys from previous sessions or legacy storage
+      if (typeof localStorage !== "undefined") {
+        localStorage.removeItem("ig.pin_ok");
+        localStorage.removeItem(SESSION_PIN_KEY);
+      }
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+
       // 1. Fetch User Data if logged in
-      const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
-      const fallbackUserName =
-        typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_name") : null;
+      const uid = getStoredUserId();
+      const fallbackUserName = getStoredUsername();
       const cachedUsername = get<string | null>(KEYS.username, null) || fallbackUserName;
 
-      let isAgeOk = false;
-      if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true")
-        isAgeOk = true;
-      if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true")
-        isAgeOk = true;
-      if (uid) isAgeOk = true;
+      const isAgeOk = checkIsAgeOk() || Boolean(uid) || Boolean(cachedUsername);
+      if (isAgeOk) {
+        if (typeof localStorage !== "undefined") localStorage.setItem("ig.age_ok", "true");
+        setCookie("ig.age_ok", "true", 365);
+        saveAuthToIdb({ "ig.age_ok": "true" });
+      }
+
+      const isPinOk = checkIsPinOk();
+      const storedPin = get<string | null>(KEYS.pinCode, null) || getStoredPinCode();
 
       setAgeOk(isAgeOk);
       setUsername(cachedUsername);
-      setPinOkState(checkIsPinOk());
-      setPinCodeState(get<string | null>(KEYS.pinCode, null));
-      setRealName(get<string | null>(KEYS.realName, null));
-      setDob(get<string | null>(KEYS.dob, null));
+      setPinOkState(isPinOk);
+      setPinCodeState(storedPin);
+      setRealName(get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name"));
+      setDob(get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob"));
       setHash(get<string | null>(KEYS.hash, null));
       setDeviceId(get<string | null>(KEYS.deviceId, null));
       setFingerprint(get<string | null>(KEYS.fingerprint, null));
@@ -215,13 +273,74 @@ export function useAuth() {
           }
           initStorageData(uid, data);
 
-          // CRITICAL: Update states after fetching so we don't stay null
-          setUsername(data[KEYS.username] || null);
-          setRealName(data[KEYS.realName] || null);
-          setDob(data[KEYS.dob] || null);
-          setHash(data[KEYS.hash] || null);
-          setDeviceId(data[KEYS.deviceId] || null);
-          setFingerprint(data[KEYS.fingerprint] || null);
+          // Find the best username - NEVER overwrite with null if we have an existing username
+          let finalUsername = data[KEYS.username] || cachedUsername || fallbackUserName;
+          let finalDob = data[KEYS.dob] || get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob");
+          let finalRealName = data[KEYS.realName] || get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name");
+
+          if (!finalUsername || !finalDob) {
+            try {
+              const { data: userRow } = await supabase
+                .from("users")
+                .select("name, dob")
+                .eq("id", uid)
+                .single();
+              if (userRow) {
+                if (userRow.name && !finalUsername) finalUsername = userRow.name;
+                if (userRow.dob && !finalDob) finalDob = userRow.dob;
+              }
+            } catch {
+              // ignore
+            }
+          }
+
+          if (finalUsername) {
+            setUsername(finalUsername);
+            setLocal(KEYS.username, finalUsername);
+            if (typeof localStorage !== "undefined") {
+              localStorage.setItem("ig.username", finalUsername);
+              localStorage.setItem("ig.user_name", finalUsername);
+              localStorage.setItem("ig.age_ok", "true");
+            }
+            setCookie("ig.username", finalUsername, 365);
+            setCookie("ig.user_name", finalUsername, 365);
+            setCookie("ig.age_ok", "true", 365);
+            saveAuthToIdb({
+              "ig.username": finalUsername,
+              "ig.user_name": finalUsername,
+              "ig.age_ok": "true",
+            });
+            setAgeOk(true);
+          }
+
+          if (finalDob) {
+            setDob(finalDob);
+            setLocal(KEYS.dob, finalDob);
+            const derivedPin = generatePinFromDob(finalDob);
+            if (derivedPin) {
+              setPinCodeState(derivedPin);
+              setLocal(KEYS.pinCode, derivedPin);
+              if (typeof localStorage !== "undefined") {
+                localStorage.setItem("ig.pin_code", derivedPin);
+                localStorage.setItem("ig.dob", finalDob);
+              }
+              setCookie("ig.pin_code", derivedPin, 365);
+              setCookie("ig.dob", finalDob, 365);
+              saveAuthToIdb({
+                "ig.pin_code": derivedPin,
+                "ig.dob": finalDob,
+              });
+            }
+          }
+
+          if (finalRealName) {
+            setRealName(finalRealName);
+            setLocal(KEYS.realName, finalRealName);
+          }
+
+          if (data[KEYS.hash]) setHash(data[KEYS.hash]);
+          if (data[KEYS.deviceId]) setDeviceId(data[KEYS.deviceId]);
+          if (data[KEYS.fingerprint]) setFingerprint(data[KEYS.fingerprint]);
 
           const userDataChannel = `user-data-sync-${uid}-${crypto.randomUUID()}`;
           supabase
@@ -242,6 +361,8 @@ export function useAuth() {
         } finally {
           setReady(true);
         }
+      } else {
+        setReady(true);
       }
     }
 
@@ -271,6 +392,7 @@ export function useAuth() {
   return {
     ready,
     ageOk,
+    userId: getStoredUserId(),
     username,
     pinOk,
     pinCode,
@@ -283,6 +405,8 @@ export function useAuth() {
     confirmAge: () => {
       if (typeof sessionStorage !== "undefined") sessionStorage.setItem("ig.age_ok", "true");
       if (typeof localStorage !== "undefined") localStorage.setItem("ig.age_ok", "true");
+      setCookie("ig.age_ok", "true", 365);
+      saveAuthToIdb({ "ig.age_ok": "true" });
       setAgeOk(true);
     },
     loginUser: async (email: string, pass: string) => {
@@ -290,7 +414,28 @@ export function useAuth() {
       if (typeof localStorage !== "undefined") {
         localStorage.setItem("ig.user_id", user.id);
         localStorage.setItem("ig.user_name", user.name);
+        localStorage.setItem("ig.username", user.name);
+        localStorage.setItem("ig.age_ok", "true");
+        localStorage.removeItem("ig.pin_ok");
+        localStorage.removeItem(SESSION_PIN_KEY);
       }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("ig.age_ok", "true");
+        sessionStorage.removeItem("ig.pin_ok");
+        sessionStorage.removeItem(SESSION_PIN_KEY);
+      }
+      setCookie("ig.user_id", user.id, 365);
+      setCookie("ig.user_name", user.name, 365);
+      setCookie("ig.username", user.name, 365);
+      setCookie("ig.age_ok", "true", 365);
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+      saveAuthToIdb({
+        "ig.user_id": user.id,
+        "ig.user_name": user.name,
+        "ig.username": user.name,
+        "ig.age_ok": "true",
+      });
 
       const info = getDeviceInfo();
       await updateDeviceInfo(user.id, info.device, info.browser).catch(console.error);
@@ -304,13 +449,56 @@ export function useAuth() {
 
       set(KEYS.username, user.name);
       setUsername(user.name);
+      setAgeOk(true);
+      setPinOkState(false);
+
+      if (user.dob) {
+        const pin = generatePinFromDob(user.dob);
+        if (pin) {
+          set(KEYS.pinCode, pin);
+          set(KEYS.dob, user.dob);
+          setPinCodeState(pin);
+          setDob(user.dob);
+          if (typeof localStorage !== "undefined") {
+            localStorage.setItem("ig.pin_code", pin);
+            localStorage.setItem("ig.dob", user.dob);
+          }
+          setCookie("ig.pin_code", pin, 365);
+          setCookie("ig.dob", user.dob, 365);
+          saveAuthToIdb({
+            "ig.pin_code": pin,
+            "ig.dob": user.dob,
+          });
+        }
+      }
     },
     signupUser: async (name: string, email: string, pass: string) => {
       const user = await signupUserDb(name, email, pass);
       if (typeof localStorage !== "undefined") {
         localStorage.setItem("ig.user_id", user.id);
         localStorage.setItem("ig.user_name", user.name);
+        localStorage.setItem("ig.username", user.name);
+        localStorage.setItem("ig.age_ok", "true");
+        localStorage.removeItem("ig.pin_ok");
+        localStorage.removeItem(SESSION_PIN_KEY);
       }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.setItem("ig.age_ok", "true");
+        sessionStorage.removeItem("ig.pin_ok");
+        sessionStorage.removeItem(SESSION_PIN_KEY);
+      }
+      setCookie("ig.user_id", user.id, 365);
+      setCookie("ig.user_name", user.name, 365);
+      setCookie("ig.username", user.name, 365);
+      setCookie("ig.age_ok", "true", 365);
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+      saveAuthToIdb({
+        "ig.user_id": user.id,
+        "ig.user_name": user.name,
+        "ig.username": user.name,
+        "ig.age_ok": "true",
+      });
 
       const info = getDeviceInfo();
       await updateDeviceInfo(user.id, info.device, info.browser).catch(console.error);
@@ -324,6 +512,8 @@ export function useAuth() {
 
       set(KEYS.username, user.name);
       setUsername(user.name);
+      setAgeOk(true);
+      setPinOkState(false);
     },
     setPinOk: (ok: boolean) => {
       if (typeof sessionStorage !== "undefined") {
@@ -335,15 +525,14 @@ export function useAuth() {
           sessionStorage.removeItem("ig.pin_ok");
         }
       }
+      // Never store pin_ok in persistent storage (localStorage, cookies, or IndexedDB)
       if (typeof localStorage !== "undefined") {
-        if (ok) {
-          localStorage.setItem(SESSION_PIN_KEY, "true");
-          localStorage.setItem("ig.pin_ok", "true");
-        } else {
-          localStorage.removeItem(SESSION_PIN_KEY);
-          localStorage.removeItem("ig.pin_ok");
-        }
+        localStorage.removeItem(SESSION_PIN_KEY);
+        localStorage.removeItem("ig.pin_ok");
       }
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+
       setPinOkState(ok);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: ok }));
@@ -353,8 +542,31 @@ export function useAuth() {
       const code = generatePinFromDob(dobStr);
       set(KEYS.realName, name);
       set(KEYS.dob, dobStr);
+      set(KEYS.pinCode, code);
 
-      const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
+      if (typeof localStorage !== "undefined") {
+        localStorage.setItem("ig.pin_code", code);
+        localStorage.setItem("ig.dob", dobStr);
+        localStorage.removeItem("ig.pin_ok");
+        localStorage.removeItem(SESSION_PIN_KEY);
+        if (name) localStorage.setItem("ig.real_name", name);
+      }
+      if (typeof sessionStorage !== "undefined") {
+        sessionStorage.removeItem("ig.pin_ok");
+        sessionStorage.removeItem(SESSION_PIN_KEY);
+      }
+      setCookie("ig.pin_code", code, 365);
+      setCookie("ig.dob", dobStr, 365);
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+      if (name) setCookie("ig.real_name", name, 365);
+      saveAuthToIdb({
+        "ig.pin_code": code,
+        "ig.dob": dobStr,
+        ...(name ? { "ig.real_name": name } : {}),
+      });
+
+      const uid = getStoredUserId();
       if (uid) {
         await updateUserDob(uid, dobStr).catch(console.error);
       }
@@ -376,13 +588,13 @@ export function useAuth() {
       set(KEYS.deviceId, newDeviceId);
       set(KEYS.fingerprint, newFingerprint);
 
-      set(KEYS.pinCode, code);
       setRealName(name);
       setDob(dobStr);
       setHash(hashHex);
       setDeviceId(newDeviceId);
       setFingerprint(newFingerprint);
       setPinCodeState(code);
+      setPinOkState(false);
       return code;
     },
     logout: () => {
@@ -393,14 +605,21 @@ export function useAuth() {
       if (typeof localStorage !== "undefined") {
         localStorage.removeItem(SESSION_PIN_KEY);
         localStorage.removeItem("ig.pin_ok");
+        localStorage.removeItem("ig.user_id");
+        localStorage.removeItem("ig.user_name");
+        localStorage.removeItem("ig.username");
+        localStorage.removeItem("ig.pin_code");
       }
+      removeCookie("ig.user_id");
+      removeCookie("ig.user_name");
+      removeCookie("ig.username");
+      removeCookie("ig.pin_code");
+      removeCookie("ig.pin_ok");
+      removeCookie(SESSION_PIN_KEY);
+      clearAuthFromIdb();
       setPinOkState(false);
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("auth-pin-change", { detail: false }));
-      }
-      if (typeof localStorage !== "undefined") {
-        localStorage.removeItem("ig.user_id");
-        localStorage.removeItem("ig.user_name");
       }
       setUsername(null);
     },

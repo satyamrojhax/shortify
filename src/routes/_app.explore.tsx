@@ -12,6 +12,19 @@ export const Route = createFileRoute("/_app/explore")({
 let cachedForYouReels: Reel[] = [];
 let cachedTrendingReels: Reel[] = [];
 
+function dedupeReelsList(list: Reel[]): Reel[] {
+  const seen = new Set<string>();
+  const out: Reel[] = [];
+  for (const r of list) {
+    const k = r.id || r.videoUrl;
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    if (r.videoUrl) seen.add(r.videoUrl);
+    out.push(r);
+  }
+  return out;
+}
+
 function ExplorePage() {
   const [activeTab, setActiveTab] = useState<"foryou" | "trending">("foryou");
   const [forYouReels, setForYouReels] = useState<Reel[]>(cachedForYouReels);
@@ -38,7 +51,7 @@ function ExplorePage() {
       const res = await fetch("https://love.shortify.cc.cd/api/for-you");
       const json = await res.json();
       const newItems = json.data || [];
-      cachedForYouReels = [...cachedForYouReels, ...newItems];
+      cachedForYouReels = dedupeReelsList([...cachedForYouReels, ...newItems]);
       setForYouReels(cachedForYouReels);
     } catch (e) {
       console.error(e);
@@ -57,7 +70,7 @@ function ExplorePage() {
       const res = await fetch("https://love.shortify.cc.cd/api/trending/videos");
       const json = await res.json();
       const newItems = json.data || [];
-      cachedTrendingReels = [...cachedTrendingReels, ...newItems];
+      cachedTrendingReels = dedupeReelsList([...cachedTrendingReels, ...newItems]);
       setTrendingReels(cachedTrendingReels);
     } catch (e) {
       console.error(e);
@@ -142,9 +155,9 @@ function ExplorePage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
-          {currentReels.map((reel) => (
+          {currentReels.map((reel, idx) => (
             <div
-              key={reel.id}
+              key={`explore-${reel.id}-${idx}`}
               className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
               onClick={() => setSelectedReel(reel)}
             >

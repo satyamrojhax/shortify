@@ -202,11 +202,43 @@ export async function updateDeviceInfo(userId: string, deviceInfo: any, browserI
 export async function fetchUserProfile(userId: string) {
   const { data, error } = await supabase
     .from("users")
-    .select("email, password")
+    .select("email, password, name, profile_details")
     .eq("id", userId)
     .single();
   if (error) throw error;
   return data;
+}
+
+export async function updateUserProfileDetails(
+  userId: string,
+  updates: { name?: string; bio?: string; avatar_style?: string; avatar_seed?: string },
+) {
+  const userUpdates: Record<string, any> = {};
+  if (updates.name) userUpdates.name = updates.name.trim();
+
+  const { data: u } = await supabase
+    .from("users")
+    .select("profile_details")
+    .eq("id", userId)
+    .single();
+
+  const currentDetails = u?.profile_details || {};
+  const newDetails = {
+    ...currentDetails,
+    ...(updates.bio !== undefined ? { bio: updates.bio.trim() } : {}),
+    ...(updates.avatar_style !== undefined ? { avatar_style: updates.avatar_style } : {}),
+    ...(updates.avatar_seed !== undefined ? { avatar_seed: updates.avatar_seed } : {}),
+  };
+
+  userUpdates.profile_details = newDetails;
+
+  const { error } = await supabase
+    .from("users")
+    .update(userUpdates)
+    .eq("id", userId);
+
+  if (error) throw error;
+  return newDetails;
 }
 
 export async function resetAllStatsDb(userId: string) {

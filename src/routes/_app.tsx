@@ -37,9 +37,9 @@ function AppLayout() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!ageOk) navigate({ to: "/age" });
-    else if (!username) navigate({ to: "/login" });
-    else if (!pinOk && pathname !== "/pin" && pathname !== "/pin-setup") navigate({ to: "/pin" });
+    if (!ageOk) navigate({ to: "/age", replace: true });
+    else if (!username) navigate({ to: "/login", replace: true });
+    else if (!pinOk && pathname !== "/pin" && pathname !== "/pin-setup") navigate({ to: "/pin", replace: true });
   }, [ready, ageOk, username, pinOk, navigate, pathname]);
 
   if (!ready || !ageOk || !username || !pinOk) {

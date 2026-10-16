@@ -22,11 +22,13 @@ import { Route as AppCategoryRouteImport } from './routes/_app.category'
 import { Route as AppDownloadedRouteImport } from './routes/_app.downloaded'
 import { Route as AppExploreRouteImport } from './routes/_app.explore'
 import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
+import { Route as AppFeedbackRouteImport } from './routes/_app.feedback'
 import { Route as AppHistoryRouteImport } from './routes/_app.history'
 import { Route as AppHomeRouteImport } from './routes/_app.home'
 import { Route as AppLeaderboardRouteImport } from './routes/_app.leaderboard'
 import { Route as AppLikedRouteImport } from './routes/_app.liked'
 import { Route as AppMyCoursesRouteImport } from './routes/_app.my-courses'
+import { Route as AppNotificationsRouteImport } from './routes/_app.notifications'
 import { Route as AppProfileRouteImport } from './routes/_app.profile'
 import { Route as AppRedeemRouteImport } from './routes/_app.redeem'
 import { Route as AppRedeemHistoryRouteImport } from './routes/_app.redeem-history'
@@ -36,7 +38,10 @@ import { Route as AppSearchRouteImport } from './routes/_app.search'
 import { Route as AppSettingsRouteImport } from './routes/_app.settings'
 import { Route as AppShopRouteImport } from './routes/_app.shop'
 import { Route as AppSkillsRouteImport } from './routes/_app.skills'
+import { Route as AppSuggestionsRouteImport } from './routes/_app.suggestions'
 import { Route as AdminIndexRouteImport } from './routes/admin.index'
+import { Route as AdminFeedbackRouteImport } from './routes/admin.feedback'
+import { Route as AdminNotificationsRouteImport } from './routes/admin.notifications'
 import { Route as AdminSettingsRouteImport } from './routes/admin.settings'
 import { Route as AppCourseSlugRouteImport } from './routes/_app.course.$slug'
 import { Route as AppCreatorUsernameRouteImport } from './routes/_app.creator.$username'
@@ -109,6 +114,11 @@ const AppFavoritesRoute = AppFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => AppRoute,
 } as any)
+const AppFeedbackRoute = AppFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppHistoryRoute = AppHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -132,6 +142,11 @@ const AppLikedRoute = AppLikedRouteImport.update({
 const AppMyCoursesRoute = AppMyCoursesRouteImport.update({
   id: '/my-courses',
   path: '/my-courses',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppProfileRoute = AppProfileRouteImport.update({
@@ -179,9 +194,24 @@ const AppSkillsRoute = AppSkillsRouteImport.update({
   path: '/skills',
   getParentRoute: () => AppRoute,
 } as any)
+const AppSuggestionsRoute = AppSuggestionsRouteImport.update({
+  id: '/suggestions',
+  path: '/suggestions',
+  getParentRoute: () => AppRoute,
+} as any)
 const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminFeedbackRoute = AdminFeedbackRouteImport.update({
+  id: '/feedback',
+  path: '/feedback',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminNotificationsRoute = AdminNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminSettingsRoute = AdminSettingsRouteImport.update({
@@ -234,11 +264,13 @@ export interface FileRoutesByFullPath {
   '/downloaded': typeof AppDownloadedRoute
   '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
+  '/feedback': typeof AppFeedbackRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/liked': typeof AppLikedRoute
   '/my-courses': typeof AppMyCoursesRoute
+  '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/redeem': typeof AppRedeemRoute
   '/redeem-history': typeof AppRedeemHistoryRoute
@@ -248,6 +280,9 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
+  '/suggestions': typeof AppSuggestionsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
   '/course/$slug': typeof AppCourseSlugRoute
@@ -269,11 +304,13 @@ export interface FileRoutesByTo {
   '/downloaded': typeof AppDownloadedRoute
   '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
+  '/feedback': typeof AppFeedbackRoute
   '/history': typeof AppHistoryRoute
   '/home': typeof AppHomeRoute
   '/leaderboard': typeof AppLeaderboardRoute
   '/liked': typeof AppLikedRoute
   '/my-courses': typeof AppMyCoursesRoute
+  '/notifications': typeof AppNotificationsRoute
   '/profile': typeof AppProfileRoute
   '/redeem': typeof AppRedeemRoute
   '/redeem-history': typeof AppRedeemHistoryRoute
@@ -283,6 +320,9 @@ export interface FileRoutesByTo {
   '/settings': typeof AppSettingsRoute
   '/shop': typeof AppShopRoute
   '/skills': typeof AppSkillsRoute
+  '/suggestions': typeof AppSuggestionsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin': typeof AdminIndexRoute
   '/course/$slug': typeof AppCourseSlugRoute
@@ -307,11 +347,13 @@ export interface FileRoutesById {
   '/_app/downloaded': typeof AppDownloadedRoute
   '/_app/explore': typeof AppExploreRoute
   '/_app/favorites': typeof AppFavoritesRoute
+  '/_app/feedback': typeof AppFeedbackRoute
   '/_app/history': typeof AppHistoryRoute
   '/_app/home': typeof AppHomeRoute
   '/_app/leaderboard': typeof AppLeaderboardRoute
   '/_app/liked': typeof AppLikedRoute
   '/_app/my-courses': typeof AppMyCoursesRoute
+  '/_app/notifications': typeof AppNotificationsRoute
   '/_app/profile': typeof AppProfileRoute
   '/_app/redeem': typeof AppRedeemRoute
   '/_app/redeem-history': typeof AppRedeemHistoryRoute
@@ -321,6 +363,9 @@ export interface FileRoutesById {
   '/_app/settings': typeof AppSettingsRoute
   '/_app/shop': typeof AppShopRoute
   '/_app/skills': typeof AppSkillsRoute
+  '/_app/suggestions': typeof AppSuggestionsRoute
+  '/admin/feedback': typeof AdminFeedbackRoute
+  '/admin/notifications': typeof AdminNotificationsRoute
   '/admin/settings': typeof AdminSettingsRoute
   '/admin/': typeof AdminIndexRoute
   '/_app/course/$slug': typeof AppCourseSlugRoute
@@ -345,11 +390,13 @@ export interface FileRouteTypes {
     | '/downloaded'
     | '/explore'
     | '/favorites'
+    | '/feedback'
     | '/history'
     | '/home'
     | '/leaderboard'
     | '/liked'
     | '/my-courses'
+    | '/notifications'
     | '/profile'
     | '/redeem'
     | '/redeem-history'
@@ -359,6 +406,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/skills'
+    | '/suggestions'
+    | '/admin/feedback'
+    | '/admin/notifications'
     | '/admin/settings'
     | '/admin/'
     | '/course/$slug'
@@ -380,11 +430,13 @@ export interface FileRouteTypes {
     | '/downloaded'
     | '/explore'
     | '/favorites'
+    | '/feedback'
     | '/history'
     | '/home'
     | '/leaderboard'
     | '/liked'
     | '/my-courses'
+    | '/notifications'
     | '/profile'
     | '/redeem'
     | '/redeem-history'
@@ -394,6 +446,9 @@ export interface FileRouteTypes {
     | '/settings'
     | '/shop'
     | '/skills'
+    | '/suggestions'
+    | '/admin/feedback'
+    | '/admin/notifications'
     | '/admin/settings'
     | '/admin'
     | '/course/$slug'
@@ -417,11 +472,13 @@ export interface FileRouteTypes {
     | '/_app/downloaded'
     | '/_app/explore'
     | '/_app/favorites'
+    | '/_app/feedback'
     | '/_app/history'
     | '/_app/home'
     | '/_app/leaderboard'
     | '/_app/liked'
     | '/_app/my-courses'
+    | '/_app/notifications'
     | '/_app/profile'
     | '/_app/redeem'
     | '/_app/redeem-history'
@@ -431,6 +488,9 @@ export interface FileRouteTypes {
     | '/_app/settings'
     | '/_app/shop'
     | '/_app/skills'
+    | '/_app/suggestions'
+    | '/admin/feedback'
+    | '/admin/notifications'
     | '/admin/settings'
     | '/admin/'
     | '/_app/course/$slug'
@@ -545,6 +605,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppFavoritesRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/feedback': {
+      id: '/_app/feedback'
+      path: '/feedback'
+      fullPath: '/feedback'
+      preLoaderRoute: typeof AppFeedbackRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/_app/history': {
       id: '/_app/history'
       path: '/history'
@@ -578,6 +645,13 @@ declare module '@tanstack/react-router' {
       path: '/my-courses'
       fullPath: '/my-courses'
       preLoaderRoute: typeof AppMyCoursesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/_app/notifications': {
+      id: '/_app/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/profile': {
@@ -643,11 +717,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSkillsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/_app/suggestions': {
+      id: '/_app/suggestions'
+      path: '/suggestions'
+      fullPath: '/suggestions'
+      preLoaderRoute: typeof AppSuggestionsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/admin/': {
       id: '/admin/'
       path: '/'
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/feedback': {
+      id: '/admin/feedback'
+      path: '/feedback'
+      fullPath: '/admin/feedback'
+      preLoaderRoute: typeof AdminFeedbackRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/notifications': {
+      id: '/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AdminNotificationsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/settings': {
@@ -708,11 +803,13 @@ interface AppRouteChildren {
   AppDownloadedRoute: typeof AppDownloadedRoute
   AppExploreRoute: typeof AppExploreRoute
   AppFavoritesRoute: typeof AppFavoritesRoute
+  AppFeedbackRoute: typeof AppFeedbackRoute
   AppHistoryRoute: typeof AppHistoryRoute
   AppHomeRoute: typeof AppHomeRoute
   AppLeaderboardRoute: typeof AppLeaderboardRoute
   AppLikedRoute: typeof AppLikedRoute
   AppMyCoursesRoute: typeof AppMyCoursesRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppProfileRoute: typeof AppProfileRoute
   AppRedeemRoute: typeof AppRedeemRoute
   AppRedeemHistoryRoute: typeof AppRedeemHistoryRoute
@@ -722,6 +819,7 @@ interface AppRouteChildren {
   AppSettingsRoute: typeof AppSettingsRoute
   AppShopRoute: typeof AppShopRoute
   AppSkillsRoute: typeof AppSkillsRoute
+  AppSuggestionsRoute: typeof AppSuggestionsRoute
   AppCourseSlugRoute: typeof AppCourseSlugRoute
   AppCreatorUsernameRoute: typeof AppCreatorUsernameRoute
   AppEnglishCourseCourseIdRoute: typeof AppEnglishCourseCourseIdRoute
@@ -734,11 +832,13 @@ const AppRouteChildren: AppRouteChildren = {
   AppDownloadedRoute: AppDownloadedRoute,
   AppExploreRoute: AppExploreRoute,
   AppFavoritesRoute: AppFavoritesRoute,
+  AppFeedbackRoute: AppFeedbackRoute,
   AppHistoryRoute: AppHistoryRoute,
   AppHomeRoute: AppHomeRoute,
   AppLeaderboardRoute: AppLeaderboardRoute,
   AppLikedRoute: AppLikedRoute,
   AppMyCoursesRoute: AppMyCoursesRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppProfileRoute: AppProfileRoute,
   AppRedeemRoute: AppRedeemRoute,
   AppRedeemHistoryRoute: AppRedeemHistoryRoute,
@@ -748,6 +848,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppSettingsRoute: AppSettingsRoute,
   AppShopRoute: AppShopRoute,
   AppSkillsRoute: AppSkillsRoute,
+  AppSuggestionsRoute: AppSuggestionsRoute,
   AppCourseSlugRoute: AppCourseSlugRoute,
   AppCreatorUsernameRoute: AppCreatorUsernameRoute,
   AppEnglishCourseCourseIdRoute: AppEnglishCourseCourseIdRoute,
@@ -757,6 +858,8 @@ const AppRouteChildren: AppRouteChildren = {
 const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
 
 interface AdminRouteChildren {
+  AdminFeedbackRoute: typeof AdminFeedbackRoute
+  AdminNotificationsRoute: typeof AdminNotificationsRoute
   AdminSettingsRoute: typeof AdminSettingsRoute
   AdminIndexRoute: typeof AdminIndexRoute
   AdminUsersIdRoute: typeof AdminUsersIdRoute
@@ -764,6 +867,8 @@ interface AdminRouteChildren {
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminFeedbackRoute: AdminFeedbackRoute,
+  AdminNotificationsRoute: AdminNotificationsRoute,
   AdminSettingsRoute: AdminSettingsRoute,
   AdminIndexRoute: AdminIndexRoute,
   AdminUsersIdRoute: AdminUsersIdRoute,

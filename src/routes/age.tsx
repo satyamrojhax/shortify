@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { rotateCsrfToken } from "@/lib/url-tracker";
 
@@ -9,7 +10,19 @@ export const Route = createFileRoute("/age")({
 
 function AgePage() {
   const navigate = useNavigate();
-  const { confirmAge } = useAuth();
+  const { ready, ageOk, username, pinOk, confirmAge } = useAuth();
+
+  useEffect(() => {
+    if (!ready) return;
+    if (ageOk) {
+      if (username) {
+        if (pinOk) navigate({ to: "/home", replace: true });
+        else navigate({ to: "/pin", replace: true });
+      } else {
+        navigate({ to: "/login", replace: true });
+      }
+    }
+  }, [ready, ageOk, username, pinOk, navigate]);
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-6 py-10">

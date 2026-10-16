@@ -38,6 +38,7 @@ function RedeemHistoryPage() {
   const [history, setHistory] = useState<RedeemRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchHistory = async () => {
     const uid = typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null;
@@ -61,6 +62,12 @@ function RedeemHistoryPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await fetchHistory();
+    setTimeout(() => setIsRefreshing(false), 600);
   };
 
   useEffect(() => {
@@ -104,15 +111,12 @@ function RedeemHistoryPage() {
           </h1>
         </div>
         <button
-          onClick={() => {
-            setLoading(true);
-            fetchHistory();
-          }}
-          disabled={loading}
-          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border-[1.5px] border-charcoal/30 bg-dew/40 px-3 py-1.5 text-xs font-semibold text-cocoa transition hover:bg-dew dark:border-cream/30 dark:bg-secondary/40 dark:text-cream"
+          onClick={handleRefresh}
+          disabled={isRefreshing || loading}
+          className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border-[1.5px] border-charcoal/30 bg-dew/40 px-3 py-1.5 text-xs font-semibold text-cocoa transition hover:bg-dew dark:border-cream/30 dark:bg-secondary/40 dark:text-cream shadow-xs"
           title="Refresh history"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
           refresh
         </button>
       </div>

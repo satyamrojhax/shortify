@@ -14,10 +14,10 @@ function IndexRedirect() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!ageOk) navigate({ to: "/age" });
-    else if (!username) navigate({ to: "/login" });
-    else if (!pinOk) navigate({ to: "/pin" });
-    else navigate({ to: "/home" });
+    if (!ageOk) navigate({ to: "/age", replace: true });
+    else if (!username) navigate({ to: "/login", replace: true });
+    else if (!pinOk) navigate({ to: "/pin", replace: true });
+    else navigate({ to: "/home", replace: true });
   }, [ready, ageOk, username, pinOk, navigate]);
 
   return (

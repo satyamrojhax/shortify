@@ -81,13 +81,7 @@ function MyCoursesPage() {
             </Link>
           </div>
         ) : (
-          <div
-            className={
-              activeTab === "speaking"
-                ? "grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3"
-                : "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5"
-            }
-          >
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {displayCourses.map((course) => {
               const fullCourseData = courses.find((c: Course) => c.slug === course.slug);
               const imageUrl = fullCourseData?.courseimage || course.courseimage;
@@ -103,7 +97,7 @@ function MyCoursesPage() {
               return (
                 <div
                   key={course.slug}
-                  className="group relative flex flex-col items-center justify-center overflow-hidden rounded-[20px] border border-magenta-haze/30 bg-cloud-white p-4 text-center transition-all hover:scale-[1.02] hover:shadow-lg dark:border-periwinkle-sky/30 dark:bg-dusk-indigo min-h-[200px]"
+                  className="group relative flex flex-col justify-between overflow-hidden rounded-[20px] border border-magenta-haze/30 bg-cloud-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl dark:border-periwinkle-sky/30 dark:bg-dusk-indigo"
                 >
                   {/* Delete Button */}
                   <button
@@ -112,8 +106,9 @@ function MyCoursesPage() {
                       e.stopPropagation();
                       unenroll(course.slug);
                     }}
-                    className="absolute right-2 top-2 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white border border-red-200 text-red-600 shadow-sm transition hover:bg-red-50 hover:text-red-700 dark:bg-red-500/10 dark:border-red-500/20 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white"
+                    className="absolute right-3 top-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 border border-red-200 text-red-600 shadow-sm backdrop-blur-sm transition hover:bg-red-50 hover:text-red-700 dark:bg-red-500/20 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500 dark:hover:text-white"
                     title="Unenroll"
+                    aria-label="Unenroll from course"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
@@ -122,13 +117,9 @@ function MyCoursesPage() {
                     to={targetRoute as any}
                     params={targetParams as any}
                     search={targetSearch as any}
-                    className="flex h-full w-full flex-col items-center justify-center"
+                    className="flex h-full w-full flex-col"
                   >
-                    <div
-                      className={`mb-3 shrink-0 overflow-hidden rounded-2xl bg-slate-mist/20 text-magenta-haze dark:bg-secondary dark:text-periwinkle-sky ${
-                        activeTab === "speaking" ? "aspect-[16/9] w-full" : "h-24 w-24"
-                      }`}
-                    >
+                    <div className="relative mb-3 flex w-full items-center justify-center overflow-hidden rounded-2xl bg-slate-mist/10 dark:bg-secondary/30 min-h-[140px]">
                       {imageUrl ? (
                         <img
                           src={DOMPurify.sanitize(
@@ -137,20 +128,25 @@ function MyCoursesPage() {
                               : "about:blank",
                           )}
                           alt={course.title}
-                          className="h-full w-full object-cover"
+                          className="h-auto max-h-[280px] w-full max-w-full rounded-2xl object-contain transition-transform duration-500 group-hover:scale-105"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center">
+                        <div className="flex h-36 w-full items-center justify-center">
                           <span className="text-3xl font-bold">{course.title.charAt(0)}</span>
                         </div>
                       )}
+                      {course.folder && (
+                        <div className="absolute left-3 top-3 rounded-full bg-black/65 px-2.5 py-1 text-[11px] font-semibold text-white backdrop-blur-md shadow-sm">
+                          {course.folder}
+                        </div>
+                      )}
                     </div>
-                    <h3 className="mb-4 line-clamp-2 text-sm font-bold text-magenta-haze dark:text-periwinkle-sky">
+                    <h3 className="mb-4 line-clamp-2 text-base font-bold text-magenta-haze dark:text-periwinkle-sky text-left">
                       {course.title}
                     </h3>
-                    <div className="mt-auto w-full">
-                      <button className="w-full rounded-full bg-magenta-haze py-2 text-sm font-bold text-white transition-colors hover:bg-magenta-haze/90 shadow-sm dark:bg-periwinkle-sky dark:text-twilight-navy">
+                    <div className="mt-auto w-full pt-2">
+                      <button className="w-full rounded-full bg-magenta-haze py-2.5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-magenta-haze/90 dark:bg-periwinkle-sky dark:text-twilight-navy">
                         Continue Learning
                       </button>
                     </div>

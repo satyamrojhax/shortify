@@ -82,10 +82,19 @@ function SearchPage() {
         }
       } else {
         setHasMore(true);
+        const dedupe = (items: Reel[]) => {
+          const seen = new Set<string>();
+          return items.filter((r) => {
+            const k = r.id || r.videoUrl;
+            if (!k || seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          });
+        };
         if (isNewSearch) {
-          setResults(newItems);
+          setResults(dedupe(newItems));
         } else {
-          setResults((prev) => [...prev, ...newItems]);
+          setResults((prev) => dedupe([...prev, ...newItems]));
         }
       }
     } catch (e: unknown) {
@@ -282,7 +291,7 @@ function SearchPage() {
           {results.map((reel, index) => (
             <div
               ref={index === results.length - 1 ? lastElementRef : null}
-              key={reel.id}
+              key={`search-${reel.id}-${index}`}
               className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
               onClick={() => setSelectedReel(reel)}
             >

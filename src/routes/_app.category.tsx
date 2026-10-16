@@ -130,7 +130,7 @@ function CategoryPage() {
 
   useEffect(() => {
     if (!hasNextPage || isFetchingNextPage) return;
-    if (reels.length - activeIdx <= 15) fetchNextPage();
+    if (reels.length > 0 && activeIdx >= reels.length - 1) fetchNextPage();
   }, [activeIdx, reels.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   useEffect(() => {
@@ -301,7 +301,7 @@ function CategoryPage() {
             >
               {near ? (
                 <ReelPlayer
-                  key={`player::${r.id}`}
+                  key={`player::${r.id}::${i}`}
                   reel={r}
                   active={i === activeIdx}
                   distance={Math.abs(i - activeIdx)}
@@ -312,7 +312,7 @@ function CategoryPage() {
                   feedType={`category_${filter}`}
                 />
               ) : (
-                <div key={`ph::${r.id}`} className="h-full w-full bg-background">
+                <div key={`ph::${r.id}::${i}`} className="h-full w-full bg-background">
                   {r.thumbnail && (
                     <img
                       src={r.thumbnail}

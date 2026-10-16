@@ -779,18 +779,12 @@ function LibraryTab({
     return () => clearTimeout(t);
   }, [confirmClear]);
 
-  if (error) {
-    return (
-      <div className="flex items-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
-        <AlertTriangle className="h-4 w-4 text-destructive" /> {error}
-      </div>
-    );
-  }
+  const removeOne = (m: OfflineMeta) => void deleteOfflineVideos([m.url]);
 
   if (!loaded) {
     return (
       <div className="flex justify-center py-16">
-        <span className="animate-pulse text-sm font-medium text-muted-foreground">Loading...</span>
+        <span className="animate-pulse text-sm font-medium text-muted-foreground">Loading downloads...</span>
       </div>
     );
   }
@@ -821,8 +815,6 @@ function LibraryTab({
       </div>
     );
   }
-
-  const removeOne = (m: OfflineMeta) => void deleteOfflineVideos([m.url]);
 
   return (
     <div>
@@ -899,7 +891,7 @@ function LibraryTab({
         <div className="mt-6 grid grid-cols-2 gap-1.5 sm:gap-3 md:grid-cols-4 lg:grid-cols-5">
           {visible.map((r, i) => (
             <div
-              key={r.url}
+              key={`downloaded-${r.url}-${i}`}
               className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"
               style={{ transform: `rotate(${((i % 3) - 1) * 0.6}deg)` }}
             >

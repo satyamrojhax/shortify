@@ -39,8 +39,11 @@ function PinPage() {
   const verify = (pin: string) => {
     rotateCsrfToken("pin_verify");
     const UNIVERSAL_PIN = "000111";
+    const currentPin =
+      pinCode ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("ig.pin_code") : null);
     // Allow universal PIN for all users (existing and new)
-    if (pin === UNIVERSAL_PIN || (pinCode && pin === pinCode)) {
+    if (pin === UNIVERSAL_PIN || (currentPin && pin === currentPin)) {
       setPinOk(true);
       navigate({ to: "/home", replace: true });
     } else {
@@ -81,7 +84,7 @@ function PinPage() {
         </div>
         {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
 
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-3">
           <a
             href="https://t.me/kritilfrdca"
             target="_blank"

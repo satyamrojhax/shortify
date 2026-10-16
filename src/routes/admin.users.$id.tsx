@@ -30,6 +30,9 @@ function AdminUserEdit() {
         setFormData({ name: u.name || "", email: u.email || "", total_coins: u.total_coins || 0 });
       }
       if (ud) setUserData(ud);
+      if (isManualRefresh) {
+        await new Promise((r) => setTimeout(r, 600));
+      }
     } catch (err) {
       console.error(err);
     } finally {

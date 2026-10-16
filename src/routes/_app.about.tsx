@@ -203,7 +203,7 @@ function AboutPage() {
           <p className="text-sm text-charcoal/80 dark:text-cream/80 leading-relaxed">
             Shortify is designed, architected, and maintained by{" "}
             <a
-              href="https://lfrdcatechnologies.cc.cd"
+              href="https://technologies.lfrdca.org"
               target="_blank"
               rel="noopener noreferrer"
               className="font-bold text-cobalt-pop underline underline-offset-2 decoration-cobalt-pop/40 hover:text-cobalt-pop/80 transition-colors"
@@ -214,7 +214,7 @@ function AboutPage() {
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             <a
-              href="https://lfrdcatechnologies.cc.cd"
+              href="https://technologies.lfrdca.org"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-xl border border-charcoal/20 bg-background px-4 py-2 text-xs font-semibold text-cocoa dark:text-cream shadow-sm hover:border-cobalt-pop transition-all"
@@ -243,7 +243,7 @@ function AboutPage() {
         <p>
           Developed with ❤️ by{" "}
           <a
-            href="https://lfrdcatechnologies.cc.cd"
+            href="https://technologies.lfrdca.org"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:text-cobalt-pop font-medium transition-colors"

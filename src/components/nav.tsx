@@ -22,12 +22,15 @@ import {
   Wrench,
   AudioLines,
   Search,
+  Bell,
+  MessageSquare,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { hasUnlocked, getAvatarStyle, getAvatarSeed, getStreak } from "@/lib/storage";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useState, useEffect } from "react";
-import { getTrackingSearch, syncRouteUrl } from "@/lib/url-tracker";
+import { syncRouteUrl } from "@/lib/url-tracker";
+import { useNotifications } from "@/hooks/use-notifications";
 
 const CourseIcon = ({ className }: { className?: string; strokeWidth?: number }) => (
   <img
@@ -48,6 +51,7 @@ const bottomItems: NavItem[] = [
   { to: "/explore", label: "search", icon: Search },
   { to: "/reels", label: "reels", icon: PlaySquare },
   { to: "/skills", label: "skills", icon: Wrench },
+  { to: "/my-courses", label: "my batches", icon: CourseIcon },
   { to: "/settings", label: "settings", icon: Settings },
 ];
 
@@ -94,8 +98,6 @@ export function Sidebar({ username }: { username: string | null }) {
     <aside className="group/sidebar sticky top-0 z-30 hidden h-screen shrink-0 w-[72px] hover:w-[244px] transition-all duration-300 flex-col border-r border-twilight-navy bg-cloud-white px-3 hover:px-6 py-8 md:flex dark:bg-dusk-indigo dark:border-periwinkle-sky/40 overflow-hidden">
       <Link
         to="/home"
-        search={() => getTrackingSearch("/home", "brand_logo")}
-        onClick={() => syncRouteUrl("/home")}
         className="mb-10 flex items-center shrink-0 w-full overflow-hidden whitespace-nowrap pl-1 h-10 group-hover/sidebar:pl-0 transition-all"
       >
         <div className="flex h-10 w-10 shrink-0 items-center justify-center transition-all duration-300 group-hover/sidebar:hidden">
@@ -167,22 +169,25 @@ export function Sidebar({ username }: { username: string | null }) {
 export function BottomNav() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   return (
-    <nav className="fixed bottom-4 left-1/2 z-40 flex h-14 -translate-x-1/2 items-center gap-1 rounded-full border border-twilight-navy bg-cloud-white px-2 md:hidden dark:border-periwinkle-sky dark:bg-dusk-indigo">
+    <nav className="fixed bottom-4 left-1/2 z-40 flex h-14 -translate-x-1/2 items-center gap-1 sm:gap-2 rounded-full border border-twilight-navy bg-cloud-white px-2.5 shadow-lg backdrop-blur-md md:hidden dark:border-periwinkle-sky/50 dark:bg-dusk-indigo">
       {bottomItems.map((it) => {
-        const active = pathname === it.to;
+        const active = pathname === it.to || (it.to === "/my-courses" && pathname.startsWith("/my-courses"));
         const Icon = it.icon;
         return (
           <Link
             key={it.to}
             to={it.to}
+            aria-label={it.label}
+            title={it.label}
             onClick={() => syncRouteUrl(it.to)}
             replace={true}
-            className={`flex h-10 min-w-10 items-center justify-center rounded-full px-3 text-twilight-navy transition dark:text-cream-linen ${
-              active ? "bg-periwinkle-sky dark:bg-secondary" : ""
+            className={`flex h-10 w-10 items-center justify-center rounded-full text-twilight-navy transition-all dark:text-cream-linen ${
+              active
+                ? "bg-periwinkle-sky shadow-xs scale-105 dark:bg-secondary font-bold"
+                : "hover:bg-slate-mist/20 dark:hover:bg-secondary/50 opacity-80 hover:opacity-100"
             }`}
           >
-            <Icon className="h-5 w-5" strokeWidth={active ? 2.25 : 1.75} />
-            {active && <span className="ml-2 text-xs lowercase">{it.label}</span>}
+            <Icon className="h-5 w-5 object-contain" strokeWidth={active ? 2.5 : 1.75} />
           </Link>
         );
       })}
@@ -213,21 +218,34 @@ export function MobileHeader({ username }: { username?: string | null }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const avatarStyle = getAvatarStyle();
   const avatarSeed = getAvatarSeed(username || "");
+  const { unreadCount } = useNotifications();
 
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-40 flex h-14 items-center justify-between border-b border-twilight-navy/10 bg-background/80 px-4 backdrop-blur-md md:hidden dark:border-periwinkle-sky/10">
         <Link
           to="/home"
-          search={() => getTrackingSearch("/home", "mobile_header_logo")}
-          onClick={() => syncRouteUrl("/home")}
           className="flex items-center gap-2"
         >
           <BrandMark size={24} />
         </Link>
         <div className="flex items-center gap-2.5">
           {username && (
-            <Link to="/profile" aria-label="Profile">
+            <Link
+              to="/notifications"
+              className="relative flex h-8 w-8 items-center justify-center rounded-full text-twilight-navy transition-colors hover:bg-slate-mist/20 dark:text-cream-linen dark:hover:bg-secondary/60"
+              aria-label="Notifications"
+            >
+              <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-marker px-1 text-[9px] font-bold text-white shadow-xs ring-1 ring-background animate-pulse">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              )}
+            </Link>
+          )}
+          {username && (
+            <Link to="/profile" aria-label="Profile" className="flex items-center justify-center">
               <UserAvatar
                 username={username}
                 style={avatarStyle}
@@ -239,7 +257,8 @@ export function MobileHeader({ username }: { username?: string | null }) {
           )}
           <button
             onClick={() => setOpen(true)}
-            className="rounded-md p-1.5 text-twilight-navy transition-colors hover:bg-slate-mist/20 dark:text-cream-linen dark:hover:bg-secondary/60"
+            className="flex h-8 w-8 items-center justify-center rounded-md p-1 text-twilight-navy transition-colors hover:bg-slate-mist/20 dark:text-cream-linen dark:hover:bg-secondary/60"
+            aria-label="Open menu"
           >
             <Menu className="h-6 w-6" />
           </button>

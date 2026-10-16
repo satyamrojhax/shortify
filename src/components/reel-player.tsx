@@ -121,11 +121,45 @@ const Timeline = memo(
 );
 
 const ProfileAvatar = memo(
-  ({ name, size = "h-8 w-8" }: { name: string; size?: string; textClass?: string }) => {
+  ({
+    name,
+    size = "h-8 w-8",
+    src,
+  }: {
+    name: string;
+    size?: string;
+    textClass?: string;
+    src?: string | null;
+  }) => {
+    const isGenericOrForbidden =
+      !name ||
+      name === "local" ||
+      name === "v1" ||
+      name === "v2" ||
+      name === "v4" ||
+      name.startsWith("local") ||
+      name.startsWith("v1") ||
+      name.startsWith("v2") ||
+      name.startsWith("v4");
+
+    let avatarSrc: string | null | undefined = src;
+    if (!avatarSrc && !isGenericOrForbidden) {
+      avatarSrc = `https://love.viraly.wtf/profileImages/${name}.jpg`;
+    }
+    if (
+      avatarSrc &&
+      (avatarSrc.includes("/local.jpg") ||
+        avatarSrc.includes("/v2.jpg") ||
+        avatarSrc.includes("/v1.jpg") ||
+        avatarSrc.includes("/v4.jpg"))
+    ) {
+      avatarSrc = null;
+    }
+
     return (
       <UserAvatar
         username={name}
-        src={`https://love.viraly.wtf/profileImages/${name}.jpg`}
+        src={avatarSrc}
         className={size}
       />
     );
@@ -635,34 +669,40 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="overflow-y-auto">
               {/* Video details */}
               <div className="px-4 pt-2 pb-3 border-b border-border">
-                {showProfile &&
-                  (showFollowButton ? (
+                {showProfile && (() => {
+                  const creatorTargetUsername = reel.username || reel.source;
+                  const isTrendingSrc = ["v1", "v2", "v3", "v4"].includes(reel.source?.toLowerCase() || "");
+                  const creatorDisplayName = reel.username || (isTrendingSrc ? reel.source : `${reel.source}_reels`);
+                  const canLink = reel.source !== "local" && feedType !== "offline";
+
+                  return canLink ? (
                     <Link
                       to="/creator/$username"
-                      params={{ username: reel.username || reel.source }}
+                      params={{ username: creatorTargetUsername }}
                       className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
                     >
                       <ProfileAvatar
-                        name={reel.username || reel.source}
+                        name={creatorTargetUsername}
                         size="h-8 w-8"
                         textClass="text-xs"
                       />
                       <span className="text-sm font-semibold text-card-foreground truncate">
-                        {reel.username || `${reel.source}_reels`}
+                        {creatorDisplayName}
                       </span>
                     </Link>
                   ) : (
                     <div className="flex items-center gap-3 mb-2 w-fit">
                       <ProfileAvatar
-                        name={reel.username || reel.source}
+                        name={creatorTargetUsername}
                         size="h-8 w-8"
                         textClass="text-xs"
                       />
                       <span className="text-sm font-semibold text-card-foreground truncate">
-                        {reel.username || `${reel.source}_reels`}
+                        {creatorDisplayName}
                       </span>
                     </div>
-                  ))}
+                  );
+                })()}
                 {reel.title && (
                   <p className="text-sm text-card-foreground font-medium leading-snug">
                     {reel.title}
@@ -823,55 +863,61 @@ export const ReelPlayer = memo(function ReelPlayer({
   // ── Profile info ──────────────────────────────────────────────────────────
   const showFollowButton = feedType !== "offline" && reel.source !== "local" && showProfile;
 
-  const ProfileInfo = ({ overlay }: { overlay: boolean }) => (
-    <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
-      {showProfile && (
-        <div className="flex items-center gap-3 w-full max-w-full">
-          {showFollowButton ? (
-            <Link
-              to="/creator/$username"
-              params={{ username: reel.username || reel.source }}
-              className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
-            >
-              <ProfileAvatar
-                name={reel.username || reel.source}
-                size="h-10 w-10"
-                textClass="text-sm"
-              />
-              <span
-                className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+  const ProfileInfo = ({ overlay }: { overlay: boolean }) => {
+    const creatorTargetUsername = reel.username || reel.source;
+    const isTrendingSrc = ["v1", "v2", "v3", "v4"].includes(reel.source?.toLowerCase() || "");
+    const creatorDisplayName = reel.username || (isTrendingSrc ? reel.source : `${reel.source}_reels`);
+    const canLink = reel.source !== "local" && feedType !== "offline";
+
+    return (
+      <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
+        {showProfile && (
+          <div className="flex items-center gap-3 w-full max-w-full">
+            {canLink ? (
+              <Link
+                to="/creator/$username"
+                params={{ username: creatorTargetUsername }}
+                className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
               >
-                {reel.username || `${reel.source}_reels`}
-              </span>
-            </Link>
-          ) : (
-            <div className="flex items-center gap-2 min-w-0 shrink">
-              <ProfileAvatar
-                name={reel.username || reel.source}
-                size="h-10 w-10"
-                textClass="text-sm"
-              />
-              <span
-                className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+                <ProfileAvatar
+                  name={creatorTargetUsername}
+                  size="h-10 w-10"
+                  textClass="text-sm"
+                />
+                <span
+                  className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+                >
+                  {creatorDisplayName}
+                </span>
+              </Link>
+            ) : (
+              <div className="flex items-center gap-2 min-w-0 shrink">
+                <ProfileAvatar
+                  name={creatorTargetUsername}
+                  size="h-10 w-10"
+                  textClass="text-sm"
+                />
+                <span
+                  className={`text-sm font-bold truncate min-w-0 ${overlay ? "text-white drop-shadow-md" : "text-twilight-navy dark:text-cream-linen"}`}
+                >
+                  {creatorDisplayName}
+                </span>
+              </div>
+            )}
+            {showFollowButton && reel.source !== "local" && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const fav = toggleFavorite(creatorTargetUsername);
+                  setIsFav(fav);
+                }}
+                className={`ml-1 shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-black/50 border-white/30 text-white hover:bg-black/60" : "bg-charcoal/10 border-charcoal/20 text-charcoal dark:bg-cream/10 dark:border-cream/20 dark:text-cream hover:opacity-80") : "bg-[#0095f6] border-[#0095f6] text-white hover:bg-[#0077c5]"}`}
               >
-                {reel.username || `${reel.source}_reels`}
-              </span>
-            </div>
-          )}
-          {showFollowButton && reel.source !== "local" && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                const fav = toggleFavorite(reel.username || reel.source);
-                setIsFav(fav);
-              }}
-              className={`ml-1 shrink-0 px-3 py-1 rounded-full text-[11px] font-bold transition-all border ${isFav ? (overlay ? "bg-black/50 border-white/30 text-white hover:bg-black/60" : "bg-charcoal/10 border-charcoal/20 text-charcoal dark:bg-cream/10 dark:border-cream/20 dark:text-cream hover:opacity-80") : "bg-[#0095f6] border-[#0095f6] text-white hover:bg-[#0077c5]"}`}
-            >
-              {isFav ? "Following" : "Follow"}
-            </button>
-          )}
-        </div>
-      )}
+                {isFav ? "Following" : "Follow"}
+              </button>
+            )}
+          </div>
+        )}
       {reel.title && (
         <p
           className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}
@@ -890,6 +936,7 @@ export const ReelPlayer = memo(function ReelPlayer({
       </div>
     </div>
   );
+};
 
   // ─────────────────────────────────────────────────────────────────────────
   // DESKTOP LAYOUT

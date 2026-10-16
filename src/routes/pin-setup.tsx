@@ -64,8 +64,8 @@ function PinSetupPage() {
 
   useEffect(() => {
     if (!ready) return;
-    if (!ageOk) navigate({ to: "/age" });
-    else if (!username) navigate({ to: "/login" });
+    if (!ageOk) navigate({ to: "/age", replace: true });
+    else if (!username) navigate({ to: "/login", replace: true });
   }, [ready, ageOk, username, navigate]);
 
   const submit = async (e: React.FormEvent) => {

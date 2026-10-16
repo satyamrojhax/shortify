@@ -1,7 +1,7 @@
 import type { Reel } from "./reels";
 import { setRemoteData } from "@/lib/db";
 import { rotateCsrfToken } from "@/lib/url-tracker";
-import { fetchViewerCountry } from "@/lib/viewer-country";
+import { fetchViewerCountry, setCookie, getCookie } from "@/lib/viewer-country";
 
 export const KEYS = {
   username: "ig.username",
@@ -43,11 +43,47 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
   // Preserve keys that exist locally before login (e.g. age verification)
   const existingLocalData = new Map(memoryCache);
 
+  // Also preserve credentials and age verification from localStorage
+  if (isBrowser()) {
+    const preserveKeys = [
+      KEYS.username,
+      KEYS.pinCode,
+      KEYS.dob,
+      KEYS.realName,
+      KEYS.hash,
+      KEYS.deviceId,
+      KEYS.fingerprint,
+      KEYS.streak,
+      KEYS.coins,
+      KEYS.watched,
+      KEYS.theme,
+      KEYS.liked,
+      KEYS.saved,
+      KEYS.history,
+      KEYS.favorites,
+      KEYS.unlocks,
+      KEYS.avatarStyle,
+      KEYS.avatarSeed,
+      "ig.streak",
+      "ig.age_ok",
+      "ig.user_name",
+      "ig.user_id",
+    ];
+    for (const pk of preserveKeys) {
+      if (!existingLocalData.has(pk)) {
+        const val = localStorage.getItem(pk);
+        if (val !== null) {
+          existingLocalData.set(pk, val);
+        }
+      }
+    }
+  }
+
   // Preserve local streak if present
   let localStreak: StreakData | null = null;
   if (isBrowser()) {
     try {
-      const s = localStorage.getItem(KEYS.streak);
+      const s = localStorage.getItem(KEYS.streak) || getCookie("ig.streak");
       if (s) localStreak = JSON.parse(s) as StreakData;
     } catch {
       // ignore invalid json
@@ -62,15 +98,22 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
   for (const [k, v] of Object.entries(data)) {
     if (k === KEYS.streak && v && typeof v === "object") {
       const remoteStreak = v as StreakData;
+      const maxProgress = Math.max(
+        localStreak?.current || 0,
+        remoteStreak.current || 0,
+        localStreak?.best || 0,
+        remoteStreak.best || 0,
+      );
       const mergedStreak: StreakData = {
-        current: Math.max(localStreak?.current || 0, remoteStreak.current || 0),
-        best: Math.max(localStreak?.best || 0, remoteStreak.best || 0),
+        current: maxProgress > 0 ? maxProgress : 1,
+        best: Math.max(maxProgress, localStreak?.best || 0, remoteStreak.best || 0, 1),
         lastActive: remoteStreak.lastActive || localStreak?.lastActive || getLocalDateString(),
         lastShown: Math.max(localStreak?.lastShown || 0, remoteStreak.lastShown || 0),
       };
       memoryCache.set(KEYS.streak, mergedStreak);
       if (isBrowser()) {
         localStorage.setItem(KEYS.streak, JSON.stringify(mergedStreak));
+        setCookie("ig.streak", JSON.stringify(mergedStreak), 365);
       }
       continue;
     }
@@ -84,6 +127,9 @@ export function initStorageData(userId: string, data: Record<string, unknown>) {
   for (const [k, v] of existingLocalData.entries()) {
     if (!memoryCache.has(k)) {
       memoryCache.set(k, v);
+      if (isBrowser() && typeof v !== "undefined") {
+        localStorage.setItem(k, typeof v === "object" ? JSON.stringify(v) : String(v));
+      }
       // Sync it up since the user is now authenticated
       setRemoteData(userId, k, v).catch(() => {});
     }
@@ -115,6 +161,11 @@ export function setLocal<T>(key: string, value: T) {
   memoryCache.set(key, value);
   if (isBrowser()) {
     localStorage.setItem(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+    if (key === KEYS.username && typeof value === "string") {
+      localStorage.setItem("ig.user_name", value);
+      setCookie("ig.username", value, 365);
+      setCookie("ig.user_name", value, 365);
+    }
     if (key === KEYS.coins) window.dispatchEvent(new Event("coins-change"));
     if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
     window.dispatchEvent(new CustomEvent("storage-update", { detail: { key, value } }));
@@ -125,6 +176,11 @@ export function set<T>(key: string, value: T) {
   memoryCache.set(key, value);
   if (isBrowser()) {
     localStorage.setItem(key, typeof value === "object" ? JSON.stringify(value) : String(value));
+    if (key === KEYS.username && typeof value === "string") {
+      localStorage.setItem("ig.user_name", value);
+      setCookie("ig.username", value, 365);
+      setCookie("ig.user_name", value, 365);
+    }
     if (key === KEYS.streak) window.dispatchEvent(new Event("streak-change"));
     window.dispatchEvent(new CustomEvent("storage-update", { detail: { key, value } }));
   }
@@ -367,7 +423,22 @@ export function getDaysBetween(dateStrA: string, dateStrB: string): number {
 
 export function getStreak(): StreakData {
   const fallback: StreakData = { current: 0, lastActive: "", best: 0 };
-  return get<StreakData>(KEYS.streak, fallback);
+  let data = get<StreakData>(KEYS.streak, fallback);
+  if (!data || typeof data !== "object") {
+    if (isBrowser()) {
+      try {
+        const c = getCookie("ig.streak");
+        if (c) data = JSON.parse(c);
+      } catch {}
+    }
+  }
+  if (!data || typeof data !== "object") return fallback;
+  // If user previously had a higher best streak, don't leave current at 0/1
+  const maxVal = Math.max(data.current || 0, data.best || 0);
+  if (maxVal > 0 && (!data.current || data.current < maxVal)) {
+    data.current = maxVal;
+  }
+  return data;
 }
 
 export function updateStreak(): { updated: boolean; streak: StreakData } {
@@ -386,30 +457,27 @@ export function updateStreak(): { updated: boolean; streak: StreakData } {
     return { updated: false, streak: currentStreak };
   }
 
-  let newCurrent = currentStreak.current || 0;
+  // Preserve user's existing streak progress - NEVER reset down to 1
+  const existingProgress = Math.max(currentStreak.current || 0, currentStreak.best || 0);
+
+  let newCurrent = 1;
 
   if (lastActive) {
     const diffDays = getDaysBetween(lastActive, today);
 
-    if (diffDays === 1) {
-      // Consecutive calendar day (~24h later) -> streak + 1
-      newCurrent = (currentStreak.current || 0) + 1;
-    } else if (diffDays === 2) {
-      // 1-day grace period to prevent unfair streak resets
-      newCurrent = (currentStreak.current || 0) + 1;
-    } else if (diffDays <= 0) {
+    if (diffDays <= 0) {
       // Same day or clock skew
       return { updated: false, streak: currentStreak };
     } else {
-      // Missed 3+ days -> reset to 1
-      newCurrent = 1;
+      // User active on a new day -> increment streak!
+      newCurrent = existingProgress > 0 ? existingProgress + 1 : 1;
     }
   } else {
-    // First streak
-    newCurrent = 1;
+    // First time or continuing unrecorded day
+    newCurrent = existingProgress > 0 ? existingProgress + 1 : 1;
   }
 
-  const newBest = Math.max(currentStreak.best || 0, newCurrent);
+  const newBest = Math.max(currentStreak.best || 0, existingProgress, newCurrent);
 
   const newStreak: StreakData = {
     current: newCurrent,
@@ -419,13 +487,40 @@ export function updateStreak(): { updated: boolean; streak: StreakData } {
   };
 
   set(KEYS.streak, newStreak);
-  if (isBrowser()) window.dispatchEvent(new Event("streak-change"));
+  if (isBrowser()) {
+    setCookie("ig.streak", JSON.stringify(newStreak), 365);
+    window.dispatchEvent(new Event("streak-change"));
+  }
   return { updated: true, streak: newStreak };
+}
+
+/** Check if current user is an existing/old user based on activity and streak */
+export function isOldUser(): boolean {
+  try {
+    const watched = get<number>(KEYS.watched, 0);
+    const history = getHistory();
+    const streak = getStreak();
+    const liked = getLiked();
+    const saved = getSaved();
+    if (
+      watched > 2 ||
+      history.length > 2 ||
+      liked.length > 0 ||
+      saved.length > 0 ||
+      (streak.best && streak.best > 1) ||
+      (streak.current && streak.current > 1)
+    ) {
+      return true;
+    }
+  } catch {}
+  return false;
 }
 
 export async function clearAllStats() {
   const keepKeys = [
     "ig.age_ok",
+    "ig.user_id",
+    "ig.user_name",
     KEYS.username,
     KEYS.pin,
     KEYS.pinCode,
@@ -434,6 +529,8 @@ export async function clearAllStats() {
     KEYS.hash,
     KEYS.deviceId,
     KEYS.fingerprint,
+    KEYS.streak,
+    "ig.streak",
   ];
 
   for (const key of Array.from(memoryCache.keys())) {

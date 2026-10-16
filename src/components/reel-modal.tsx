@@ -195,8 +195,30 @@ export function ReelModal({
     setSaved(active);
   };
 
-  const profileImageUrl =
-    reel.creator_image || `https://love.viraly.wtf/profileImages/${reel.username}.jpg`;
+  const isGeneric =
+    !reel.username ||
+    reel.username === "local" ||
+    reel.username === "v1" ||
+    reel.username === "v2" ||
+    reel.username === "v4" ||
+    reel.source === "local" ||
+    reel.source === "v1" ||
+    reel.source === "v2" ||
+    reel.source === "v4";
+
+  let profileImageUrl: string | undefined = reel.creator_image;
+  if (!profileImageUrl && !isGeneric) {
+    profileImageUrl = `https://love.viraly.wtf/profileImages/${reel.username}.jpg`;
+  }
+  if (
+    profileImageUrl &&
+    (profileImageUrl.includes("/local.jpg") ||
+      profileImageUrl.includes("/v2.jpg") ||
+      profileImageUrl.includes("/v1.jpg") ||
+      profileImageUrl.includes("/v4.jpg"))
+  ) {
+    profileImageUrl = undefined;
+  }
 
   const handleShare = async () => {
     try {

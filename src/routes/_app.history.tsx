@@ -94,7 +94,7 @@ function HistoryPage() {
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {history.map((r, i) => (
             <div
-              key={r.id}
+              key={`history-${r.id}-${i}`}
               className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"
               style={{ transform: `rotate(${((i % 3) - 1) * 0.6}deg)` }}
             >

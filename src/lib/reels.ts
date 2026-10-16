@@ -389,22 +389,15 @@ export async function fetchReelsPage(
       break;
     }
 
-    case "trending": {
-      if (isRandom) {
-        const randomBaseIndex = Math.floor(secureMathRandom() * XVIDEO_BASES.length);
-        const base = XVIDEO_BASES[randomBaseIndex];
-        const randomPage = Math.floor(secureMathRandom() * base.maxPage) + 1;
-        const res = await fetchXvideos(base, randomPage);
-        selectedReels.push(...res);
-      } else {
-        const offset = page - 1;
-        const sourceIndex = offset % 3;
-        const apiPage = Math.floor(offset / 3) + 1;
-        const base = XVIDEO_BASES[sourceIndex];
-        const safePage = ((apiPage - 1) % base.maxPage) + 1;
-        const res = await fetchXvideos(base, safePage);
-        selectedReels.push(...res);
-      }
+    case "trending":
+    case "all": {
+      const offset = page - 1;
+      const sourceIndex = offset % 3;
+      const apiPage = Math.floor(offset / 3) + 1;
+      const base = XVIDEO_BASES[sourceIndex];
+      const safePage = ((apiPage - 1) % base.maxPage) + 1;
+      const res = await fetchXvideos(base, safePage);
+      selectedReels.push(...res);
       break;
     }
 
@@ -414,38 +407,12 @@ export async function fetchReelsPage(
       break;
     }
 
-    case "all":
     default: {
       if (filter.startsWith("category:")) {
         const categoryName = filter.split(":")[1] || "Explore";
         const res = await fetchCategoryReels(categoryName);
         selectedReels.push(...res);
         break;
-      }
-
-      if (filter === "all") {
-        if (isRandom) {
-          selectedReels.push(...shuffle(localDb).slice(0, 50));
-          const base = XVIDEO_BASES[Math.floor(secureMathRandom() * XVIDEO_BASES.length)];
-          const randomPage = Math.floor(secureMathRandom() * base.maxPage) + 1;
-          const res = await fetchXvideos(base, randomPage);
-          selectedReels.push(...res);
-        } else {
-          let slice = localDb.slice(localDbOffset, localDbOffset + 50);
-          if (slice.length < 50) {
-            slice = [...slice, ...localDb.slice(0, 50 - slice.length)];
-          }
-          localDbOffset = (localDbOffset + 50) % localDb.length;
-          selectedReels.push(...slice);
-
-          const offset = page - 1;
-          const sourceIndex = offset % 3;
-          const apiPage = Math.floor(offset / 3) + 1;
-          const base = XVIDEO_BASES[sourceIndex];
-          const safePage = ((apiPage - 1) % base.maxPage) + 1;
-          const res = await fetchXvideos(base, safePage);
-          selectedReels.push(...res);
-        }
       }
       break;
     }
@@ -485,8 +452,17 @@ export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): voi
 }
 
 export function warmAllFilters(): void {
-  // Only prefetch the local feed to avoid unnecessary API calls
-  prefetchReelsPage(1, "local");
+  // Avoid unnecessary API calls upfront
+}
+
+export function isTrendingVersion(u?: string | null): "v1" | "v2" | "v3" | "v4" | null {
+  if (!u) return null;
+  const cleaned = u.toLowerCase().trim();
+  if (cleaned === "v1" || cleaned === "v1_reels") return "v1";
+  if (cleaned === "v2" || cleaned === "v2_reels") return "v2";
+  if (cleaned === "v3" || cleaned === "v3_reels") return "v3";
+  if (cleaned === "v4" || cleaned === "v4_reels") return "v4";
+  return null;
 }
 
 export async function fetchCreatorReelsPage(
@@ -494,6 +470,51 @@ export async function fetchCreatorReelsPage(
   type: "latest" | "popular",
   page: number,
 ): Promise<{ items: Reel[]; nextPage: number | undefined }> {
+  const trendVer = isTrendingVersion(username);
+  if (trendVer) {
+    const baseInfo = XVIDEO_BASES.find((b) => b.key === trendVer);
+    const maxP = baseInfo?.maxPage ?? 62;
+    const safePage = Math.max(1, page);
+    if (safePage > maxP) {
+      return { items: [], nextPage: undefined };
+    }
+    const url = `https://api.shortify.cc.cd/${trendVer}/xvideos?page=${safePage}`;
+    const res = await fetchWithRetry(url);
+    if (!res) {
+      return { items: [], nextPage: undefined };
+    }
+    try {
+      const json = (await res.json()) as { videos?: XvideoItem[] };
+      const arr = json.videos || [];
+      const seen = new Set<string>();
+      const reels: Reel[] = [];
+      for (const v of arr) {
+        const reelId = `${trendVer}-${v.id}`;
+        if (seen.has(reelId) || (v.videoUrl && seen.has(v.videoUrl))) continue;
+        seen.add(reelId);
+        if (v.videoUrl) seen.add(v.videoUrl);
+        reels.push({
+          id: reelId,
+          source: trendVer as any,
+          videoUrl: v.videoUrl,
+          thumbnail: v.thumbnail,
+          title: v.name,
+          description: v.description,
+          duration: v.duration,
+          views: v.views,
+          timeAgo: v.timeAgo,
+          username: trendVer,
+        });
+      }
+      return {
+        items: reels,
+        nextPage: arr.length > 0 && safePage < maxP ? safePage + 1 : undefined,
+      };
+    } catch {
+      return { items: [], nextPage: undefined };
+    }
+  }
+
   const res = await fetchWithRetry(
     `https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`,
   );

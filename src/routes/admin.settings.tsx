@@ -1,12 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { useTheme, type Theme } from "@/hooks/use-theme";
+import { Sun, Moon, Monitor } from "lucide-react";
 
 export const Route = createFileRoute("/admin/settings")({
   component: AdminSettings,
 });
 
 function AdminSettings() {
+  const { theme, setTheme } = useTheme();
   const [maintenance, setMaintenance] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -61,6 +64,38 @@ function AdminSettings() {
       <div className="bg-background border border-foreground/10 rounded-2xl p-6 shadow-sm max-w-2xl">
         <div className="space-y-6">
           <div>
+            <h3 className="font-medium text-foreground mb-1">Theme & Appearance</h3>
+            <p className="text-sm text-foreground/60 mb-3">
+              Switch admin panel between light, dark, and system themes.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "light" as Theme, label: "Light", icon: Sun },
+                { id: "dark" as Theme, label: "Dark", icon: Moon },
+                { id: "system" as Theme, label: "System", icon: Monitor },
+              ].map((t) => {
+                const Icon = t.icon;
+                const active = theme === t.id;
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setTheme(t.id)}
+                    className={`flex items-center gap-2 rounded-xl border px-4 py-2.5 text-xs font-semibold transition ${
+                      active
+                        ? "border-marker bg-marker/15 text-marker ring-1 ring-marker/30"
+                        : "border-foreground/15 text-foreground/70 hover:bg-foreground/5 hover:text-foreground"
+                    }`}
+                  >
+                    <Icon size={16} />
+                    <span>{t.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-foreground/10">
             <h3 className="font-medium text-foreground mb-1">Maintenance Mode</h3>
             <p className="text-sm text-foreground/60 mb-3">
               Temporarily disable access to the platform for all non-admin users.

@@ -37,7 +37,11 @@ import {
   ChevronRight,
   LogOut,
   Info,
+  Bell,
+  MessageSquare,
+  Lightbulb,
 } from "lucide-react";
+import { useNotifications } from "@/hooks/use-notifications";
 
 export const Route = createFileRoute("/_app/settings")({
   component: SettingsPage,
@@ -48,6 +52,7 @@ function SettingsPage() {
   const { username, logout } = useAuth();
   const { canInstall, install } = usePwa();
   const { theme, setTheme } = useTheme();
+  const { unreadCount } = useNotifications();
   const hydrated = useHydrated();
 
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -346,6 +351,52 @@ function SettingsPage() {
               </div>
             </div>
             <Gift className="h-6 w-6 text-magenta-haze dark:text-periwinkle-sky group-hover:opacity-80 transition-opacity" />
+          </Link>
+        </div>
+      </section>
+
+      {/* Center & Support */}
+      <section className="mt-8">
+        <h2 className="text-[11px] font-bold uppercase tracking-[0.2em] text-charcoal/50 dark:text-cream/50 mb-3 px-2">
+          Center & Support
+        </h2>
+
+        <div className="flex flex-col gap-2">
+          <Link
+            to="/notifications"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                  notifications
+                </span>
+                {unreadCount > 0 && (
+                  <span className="rounded-full bg-marker px-2 py-0.5 text-[10px] font-bold text-white shadow-xs">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                realtime broadcasts, announcements & individual alerts.
+              </div>
+            </div>
+            <Bell className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+          </Link>
+
+          <Link
+            to="/feedback"
+            className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
+          >
+            <div>
+              <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
+                help & suggestions
+              </div>
+              <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
+                share your feedback, ideas, or ask admin for help.
+              </div>
+            </div>
+            <MessageSquare className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
           </Link>
         </div>
       </section>

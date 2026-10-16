@@ -39,7 +39,8 @@ export function setCookie(name: string, value: string, days = 365): void {
   if (typeof document === "undefined") return;
   try {
     const expires = new Date(Date.now() + days * 864e5).toUTCString();
-    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; path=/; SameSite=Lax`;
+    const maxAge = Math.floor(days * 86400);
+    document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${expires}; max-age=${maxAge}; path=/; SameSite=Lax`;
   } catch {
     // ignore cookie errors
   }
@@ -59,6 +60,15 @@ export function getCookie(name: string): string | null {
     // ignore cookie read errors
   }
   return null;
+}
+
+export function removeCookie(name: string): void {
+  if (typeof document === "undefined") return;
+  try {
+    document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax`;
+  } catch {
+    // ignore cookie remove errors
+  }
 }
 
 export function saveViewerCountryToSiteDataAndCookies(data: ViewerCountryResponse): void {

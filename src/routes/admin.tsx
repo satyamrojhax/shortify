@@ -1,8 +1,9 @@
 import { createFileRoute, Outlet, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { BrandMark } from "@/components/nav";
-import { Settings, Users, LayoutDashboard } from "lucide-react";
+import { Settings, Users, LayoutDashboard, Bell, MessageSquare, Sun, Moon } from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -10,6 +11,7 @@ export const Route = createFileRoute("/admin")({
 
 function AdminLayout() {
   const { ready, username } = useAuth();
+  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -60,6 +62,20 @@ function AdminLayout() {
             users
           </Link>
           <Link
+            to="/admin/notifications"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground/70 hover:bg-foreground/5 hover:text-foreground [&.active]:bg-foreground/10 [&.active]:text-foreground transition-colors"
+          >
+            <Bell size={18} />
+            notifications
+          </Link>
+          <Link
+            to="/admin/feedback"
+            className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground/70 hover:bg-foreground/5 hover:text-foreground [&.active]:bg-foreground/10 [&.active]:text-foreground transition-colors"
+          >
+            <MessageSquare size={18} />
+            feedback & help
+          </Link>
+          <Link
             to="/admin/settings"
             className="flex items-center gap-3 px-4 py-3 rounded-lg text-foreground/70 hover:bg-foreground/5 hover:text-foreground [&.active]:bg-foreground/10 [&.active]:text-foreground transition-colors"
           >
@@ -67,10 +83,21 @@ function AdminLayout() {
             settings
           </Link>
         </nav>
-        <div className="p-4 border-t border-foreground/10">
+        <div className="p-4 border-t border-foreground/10 space-y-2">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="flex w-full items-center justify-between px-3 py-2.5 rounded-lg border border-foreground/15 text-foreground/80 hover:bg-foreground/10 transition-colors text-xs font-semibold"
+            title="Toggle Light / Dark mode"
+          >
+            <div className="flex items-center gap-2">
+              {theme === "dark" ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
+              <span className="capitalize">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+            </div>
+            <span className="text-[10px] uppercase tracking-wider text-foreground/50">Theme</span>
+          </button>
           <button
             onClick={handleLogout}
-            className="flex w-full items-center gap-3 px-4 py-3 rounded-lg text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors font-display text-sm"
+            className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-destructive/70 hover:bg-destructive/10 hover:text-destructive transition-colors font-display text-sm"
           >
             <img
               src="data:image/svg+xml;base64,CiAgICA8c3ZnCiAgICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgICAgZmlsbD0ibm9uZSIKICAgICAgdmlld0JveD0iMCAwIDI0IDI0IgogICAgICBzdHJva2Utd2lkdGg9IjEuNSIKICAgICAgc3Ryb2tlPSJjdXJyZW50Q29sb3IiCiAgICAgIAogICAgPgogICAgICA8cGF0aAogICAgICAgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICAgICAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgICAgIGQ9Ik01LjYzNiA1LjYzNmE5IDkgMCAxIDAgMTIuNzI4IDBNMTIgM3Y5IgogICAgICAvPgogICAgPC9zdmc+CiA="
@@ -90,21 +117,33 @@ function AdminLayout() {
             Admin
           </span>
         </div>
-        <button
-          onClick={handleLogout}
-          className="text-destructive p-2 rounded-full hover:bg-destructive/10"
-        >
-          <img
-            src="data:image/svg+xml;base64,CiAgICA8c3ZnCiAgICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgICAgZmlsbD0ibm9uZSIKICAgICAgdmlld0JveD0iMCAwIDI0IDI0IgogICAgICBzdHJva2Utd2lkdGg9IjEuNSIKICAgICAgc3Ryb2tlPSJjdXJyZW50Q29sb3IiCiAgICAgIAogICAgPgogICAgICA8cGF0aAogICAgICAgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICAgICAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgICAgIGQ9Ik01LjYzNiA1LjYzNmE5IDkgMCAxIDAgMTIuNzI4IDBNMTIgM3Y5IgogICAgICAvPgogICAgPC9zdmc+CiA="
-            alt="logout"
-            className="w-[20px] h-[20px]"
-          />
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 rounded-full text-foreground/80 hover:bg-foreground/10 transition-colors"
+            title="Toggle Light / Dark mode"
+            aria-label="Toggle theme"
+          >
+            {theme === "dark" ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} />}
+          </button>
+          <button
+            onClick={handleLogout}
+            className="text-destructive p-2 rounded-full hover:bg-destructive/10"
+            title="Logout"
+            aria-label="Logout"
+          >
+            <img
+              src="data:image/svg+xml;base64,CiAgICA8c3ZnCiAgICAgIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIKICAgICAgZmlsbD0ibm9uZSIKICAgICAgdmlld0JveD0iMCAwIDI0IDI0IgogICAgICBzdHJva2Utd2lkdGg9IjEuNSIKICAgICAgc3Ryb2tlPSJjdXJyZW50Q29sb3IiCiAgICAgIAogICAgPgogICAgICA8cGF0aAogICAgICAgIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIKICAgICAgICBzdHJva2UtbGluZWpvaW49InJvdW5kIgogICAgICAgIGQ9Ik01LjYzNiA1LjYzNmE5IDkgMCAxIDAgMTIuNzI4IDBNMTIgM3Y5IgogICAgICAvPgogICAgPC9zdmc+CiA="
+              alt="logout"
+              className="w-[20px] h-[20px]"
+            />
+          </button>
+        </div>
       </header>
 
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto pt-14 pb-20 md:pt-0 md:pb-0">
-        <div className="p-8 max-w-6xl mx-auto">
+        <div className="p-3 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
           <Outlet />
         </div>
       </main>
@@ -113,28 +152,42 @@ function AdminLayout() {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t border-foreground/10 flex items-center justify-around px-2 z-50 pb-safe">
         <Link
           to="/admin"
-          className="flex flex-col items-center justify-center w-16 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
         >
           <img
             src="https://d2bps9p1kiy4ka.cloudfront.net/5eb393ee95fab7468a79d189/f184fa99-6162-430e-a085-388f7857c2ca.png"
             alt="home"
-            className="w-[20px] h-[20px]"
+            className="w-[18px] h-[18px]"
           />
-          <span className="text-[10px] font-medium tracking-wide">Home</span>
+          <span className="text-[9px] font-medium tracking-wide">Home</span>
         </Link>
         <Link
           to="/admin/users"
-          className="flex flex-col items-center justify-center w-16 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
         >
-          <Users size={20} />
-          <span className="text-[10px] font-medium tracking-wide">Users</span>
+          <Users size={18} />
+          <span className="text-[9px] font-medium tracking-wide">Users</span>
+        </Link>
+        <Link
+          to="/admin/notifications"
+          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+        >
+          <Bell size={18} />
+          <span className="text-[9px] font-medium tracking-wide">Alerts</span>
+        </Link>
+        <Link
+          to="/admin/feedback"
+          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+        >
+          <MessageSquare size={18} />
+          <span className="text-[9px] font-medium tracking-wide">Help</span>
         </Link>
         <Link
           to="/admin/settings"
-          className="flex flex-col items-center justify-center w-16 h-full text-foreground/50 [&.active]:text-foreground gap-1"
+          className="flex flex-col items-center justify-center w-14 h-full text-foreground/50 [&.active]:text-foreground gap-1"
         >
-          <Settings size={20} />
-          <span className="text-[10px] font-medium tracking-wide">Settings</span>
+          <Settings size={18} />
+          <span className="text-[9px] font-medium tracking-wide">Settings</span>
         </Link>
       </nav>
     </div>

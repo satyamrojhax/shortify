@@ -19,7 +19,7 @@ export const Route = createFileRoute("/login")({
 function LoginPage() {
   const navigate = useNavigate();
   const { admin } = Route.useSearch();
-  const { ready, ageOk, loginUser, signupUser, pinCode } = useAuth();
+  const { ready, ageOk, username, pinOk, loginUser, signupUser, pinCode } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">(admin ? "login" : "signup");
   const [name, setName] = useState("");
   const [userHandle, setUserHandle] = useState("");
@@ -30,8 +30,22 @@ function LoginPage() {
   const [checkingUsername, setCheckingUsername] = useState(false);
 
   useEffect(() => {
-    if (!admin && ready && !ageOk) navigate({ to: "/age" });
-  }, [admin, ready, ageOk, navigate]);
+    if (!admin && ready) {
+      if (!ageOk) {
+        navigate({ to: "/age", replace: true });
+      } else if (username) {
+        if (pinOk) {
+          navigate({ to: "/home", replace: true });
+        } else {
+          const hasPin =
+            pinCode ||
+            (typeof localStorage !== "undefined" &&
+              (localStorage.getItem("ig.pin_code") || localStorage.getItem("ig.dob")));
+          navigate({ to: hasPin ? "/pin" : "/pin-setup", replace: true });
+        }
+      }
+    }
+  }, [admin, ready, ageOk, username, pinOk, pinCode, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +70,11 @@ function LoginPage() {
         navigate({ to: "/admin" });
       } else {
         import("@/lib/storage").then(({ get, KEYS }) => {
-          const pin = get(KEYS.pinCode, null);
+          const pin =
+            get(KEYS.pinCode, null) ||
+            (typeof localStorage !== "undefined"
+              ? localStorage.getItem("ig.pin_code") || localStorage.getItem("ig.dob")
+              : null);
           navigate({ to: pin ? "/pin" : "/pin-setup" });
         });
       }

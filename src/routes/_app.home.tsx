@@ -85,7 +85,7 @@ function HomePage() {
         <p className="mt-2 text-sm opacity-80">
           Shortify · A Product By{" "}
           <a
-            href="https://lfrdcatechnologies.cc.cd"
+            href="https://technologies.lfrdca.org"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:opacity-80 transition"
