@@ -26,6 +26,7 @@ export type Reel = {
   originPlayer?: "normal" | "category";
   originCategory?: string;
   originSystem?: "shorts" | "viraly";
+  modelId?: string;
 };
 
 export interface LiveWebcamItem {
@@ -78,6 +79,7 @@ export function mapWebcamToReel(item: LiveWebcamItem): Reel {
     creator_image: item.avatarUrl,
     isLive: true,
     status: item.status || "live",
+    modelId: String(item.id),
   };
 }
 

@@ -129,7 +129,52 @@ export default {
       }
     }
 
-    // 4. Proxy /__viewer-country
+    // 4. Proxy /api/cam-chat/*
+    if (url.pathname.startsWith("/api/cam-chat")) {
+      const subpath = url.pathname.replace(/^\/api\/cam-chat\/?/, "");
+      const targetUrl = `https://viralxxxporn.cam/api/front/v2/models/${subpath}${url.search}`;
+
+      try {
+        const upstreamResponse = await fetch(targetUrl, {
+          method: request.method,
+          headers: {
+            accept: "application/json",
+            "front-version": "12.1.36",
+            "x-requested-with": "XMLHttpRequest",
+            "user-agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+            referer: "https://viralxxxporn.cam/",
+            origin: "https://viralxxxporn.cam",
+          },
+          body: request.method !== "GET" && request.method !== "HEAD" ? request.body : undefined,
+        });
+
+        const headers = new Headers(upstreamResponse.headers);
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "*");
+        headers.set("Cache-Control", "no-store, no-cache, must-revalidate");
+
+        return new Response(upstreamResponse.body, {
+          status: upstreamResponse.status,
+          statusText: upstreamResponse.statusText,
+          headers,
+        });
+      } catch (err: any) {
+        return new Response(
+          JSON.stringify({ error: "Failed to fetch cam chat", message: err?.message }),
+          {
+            status: 502,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+            },
+          },
+        );
+      }
+    }
+
+    // 5. Proxy /__viewer-country
     if (url.pathname === "/__viewer-country") {
       try {
         const upstreamResponse = await fetch("https://randomchat.now/__viewer-country", {

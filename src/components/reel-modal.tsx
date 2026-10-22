@@ -21,6 +21,7 @@ import {
 import { Reel, fetchReelComments } from "@/lib/reels";
 import { isLiked, toggleLike, isSaved, toggleSave } from "@/lib/storage";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { LiveChat } from "@/components/live-chat";
 import Hls from "hls.js";
 
 const renderTextWithLinks = (text: string) => {
@@ -964,7 +965,7 @@ function ReelModalContent({
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-charcoal/10 dark:border-cream/10">
               <div className="flex items-center gap-3 min-w-0">
-                {reel.isLive ? (
+                {isLive ? (
                   <div className="flex items-center gap-3 min-w-0 select-none">
                     <UserAvatar
                       username={reel.username}
@@ -1026,41 +1027,24 @@ function ReelModalContent({
               </div>
             </div>
 
-            {/* Comments & Description Scrollable */}
-            <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
-              {reel.isLive && (
-                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 mb-4 text-xs space-y-1.5 animate-fade-in">
-                  <div className="font-semibold text-red-600 dark:text-red-400 flex items-center gap-1.5 text-sm">
-                    <Radio size={14} className="animate-pulse" />
-                    <span>Live Stream Active</span>
-                  </div>
-                  <p className="text-charcoal/80 dark:text-cream/80 leading-relaxed">
-                    You are watching {reel.username}'s live broadcast in real-time.
-                  </p>
-                </div>
-              )}
-
-              {/* Description as first "comment" */}
-              <div className="flex gap-3 mb-6">
-                {reel.isLive ? (
-                  <>
-                    <UserAvatar
-                      username={reel.username}
-                      src={profileImageUrl}
-                      size="sm"
-                      className="w-8 h-8 flex-shrink-0"
-                    />
-                    <div className="text-sm min-w-0 flex-1">
-                      <span className="font-semibold text-charcoal dark:text-cream mr-2">
-                        {reel.username}
-                      </span>
-                      <span className="text-charcoal/90 dark:text-cream/90 break-words whitespace-pre-wrap">
-                        {reel.title} {reel.description}
-                      </span>
-                    </div>
-                  </>
-                ) : (
-                  <>
+            {/* Live Chat for PC live streams OR Comments for standard videos */}
+            {isLive ? (
+              <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
+                <LiveChat
+                  key={reel.id}
+                  modelId={reel.modelId || reel.id}
+                  reelId={reel.id}
+                  streamUrl={reel.videoUrl || reel.streamUrl}
+                  modelName={reel.username}
+                  viewersCount={reel.viewersCount || reel.views}
+                />
+              </div>
+            ) : (
+              <>
+                {/* Comments & Description Scrollable */}
+                <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+                  {/* Description as first "comment" */}
+                  <div className="flex gap-3 mb-6">
                     <Link
                       to="/creator/$username"
                       params={{ username: reel.username || "unknown" }}
@@ -1086,83 +1070,70 @@ function ReelModalContent({
                         {reel.title} {reel.description}
                       </span>
                     </div>
-                  </>
-                )}
-              </div>
+                  </div>
 
-              {/* Actual Comments */}
-              {loadingComments && (
-                <div className="flex items-center justify-center py-4 text-xs text-charcoal/50 dark:text-cream/50 gap-2">
-                  <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  <span>Loading comments...</span>
-                </div>
-              )}
-              {modalComments?.map((c: any, i: number) => (
-                <CommentItem key={i} c={c} isViraly={!isShorts} />
-              ))}
-              {!loadingComments && !modalComments?.length && (
-                <div className="text-center text-xs text-charcoal/50 dark:text-cream/50 py-6">
-                  No comments yet.
-                </div>
-              )}
-            </div>
-
-            {/* Action Buttons & Info */}
-            <div className="p-4 border-t border-charcoal/10 dark:border-cream/10 bg-dew dark:bg-secondary">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-4">
-                  {!isLive && (
-                    <button
-                      onClick={handleLike}
-                      className="text-charcoal hover:opacity-70 dark:text-cream transition"
-                      aria-label="Like reel"
-                    >
-                      <Heart className={`w-6 h-6 ${liked ? "fill-red-500 text-red-500" : ""}`} />
-                    </button>
+                  {/* Actual Comments */}
+                  {loadingComments && (
+                    <div className="flex items-center justify-center py-4 text-xs text-charcoal/50 dark:text-cream/50 gap-2">
+                      <div className="w-3.5 h-3.5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                      <span>Loading comments...</span>
+                    </div>
                   )}
-                  <button
-                    className="text-charcoal hover:opacity-70 dark:text-cream transition"
-                    aria-label="Comments"
-                  >
-                    <MessageCircle className="w-6 h-6" />
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="text-charcoal hover:opacity-70 dark:text-cream transition"
-                    aria-label="Share"
-                  >
-                    <Share2 className="w-6 h-6" />
-                  </button>
+                  {modalComments?.map((c: any, i: number) => (
+                    <CommentItem key={i} c={c} isViraly={!isShorts} />
+                  ))}
+                  {!loadingComments && !modalComments?.length && (
+                    <div className="text-center text-xs text-charcoal/50 dark:text-cream/50 py-6">
+                      No comments yet.
+                    </div>
+                  )}
                 </div>
-                {!isLive && (
-                  <button
-                    onClick={handleSave}
-                    className="text-charcoal hover:opacity-70 dark:text-cream transition"
-                    aria-label="Save reel"
-                  >
-                    <Bookmark className={`w-6 h-6 ${saved ? "fill-charcoal dark:fill-cream" : ""}`} />
-                  </button>
-                )}
-              </div>
 
-              <div className="font-semibold text-charcoal dark:text-cream text-sm mb-1">
-                {isLive ? (
-                  <span className="flex items-center gap-1.5 text-red-600 dark:text-red-400">
-                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-                    <span>
-                      {(reel.viewersCount || reel.views || 0).toLocaleString()} watching right now
-                    </span>
-                  </span>
-                ) : likesCount > 0 ? (
-                  `${likesCount.toLocaleString()} likes`
-                ) : (
-                  `${(reel.views || 0).toLocaleString()} views`
-                )}
-              </div>
-              <div className="text-charcoal/50 dark:text-cream/50 text-[10px] uppercase tracking-wide">
-                {isLive ? "Broadcasting live" : reel.timeAgo || "Some moment ago"}
-              </div>
-            </div>
+                {/* Action Buttons & Info */}
+                <div className="p-4 border-t border-charcoal/10 dark:border-cream/10 bg-dew dark:bg-secondary">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={handleLike}
+                        className="text-charcoal hover:opacity-70 dark:text-cream transition"
+                        aria-label="Like reel"
+                      >
+                        <Heart className={`w-6 h-6 ${liked ? "fill-red-500 text-red-500" : ""}`} />
+                      </button>
+                      <button
+                        className="text-charcoal hover:opacity-70 dark:text-cream transition"
+                        aria-label="Comments"
+                      >
+                        <MessageCircle className="w-6 h-6" />
+                      </button>
+                      <button
+                        onClick={handleShare}
+                        className="text-charcoal hover:opacity-70 dark:text-cream transition"
+                        aria-label="Share"
+                      >
+                        <Share2 className="w-6 h-6" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={handleSave}
+                      className="text-charcoal hover:opacity-70 dark:text-cream transition"
+                      aria-label="Save reel"
+                    >
+                      <Bookmark className={`w-6 h-6 ${saved ? "fill-charcoal dark:fill-cream" : ""}`} />
+                    </button>
+                  </div>
+
+                  <div className="font-semibold text-charcoal dark:text-cream text-sm mb-1">
+                    {likesCount > 0
+                      ? `${likesCount.toLocaleString()} likes`
+                      : `${(reel.views || 0).toLocaleString()} views`}
+                  </div>
+                  <div className="text-charcoal/50 dark:text-cream/50 text-[10px] uppercase tracking-wide">
+                    {reel.timeAgo || "Some moment ago"}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

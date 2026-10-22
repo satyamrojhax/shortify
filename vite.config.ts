@@ -71,6 +71,34 @@ const proxyConfig: Record<string, ProxyOptions> = {
       });
     },
   },
+  "/api/cam-chat": {
+    target: "https://viralxxxporn.cam",
+    changeOrigin: true,
+    secure: false,
+    rewrite: (path: string) => path.replace(/^\/api\/cam-chat/, "/api/front/v2/models"),
+    headers: {
+      referer: "https://viralxxxporn.cam/",
+      origin: "https://viralxxxporn.cam",
+      host: "viralxxxporn.cam",
+      "user-agent":
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/156.0.0.0 Safari/537.36",
+      "x-requested-with": "XMLHttpRequest",
+      accept: "application/json",
+      "front-version": "12.1.36",
+    },
+    configure: (proxy) => {
+      proxy.on("proxyReq", (proxyReq: http.ClientRequest) => {
+        proxyReq.setHeader("host", "viralxxxporn.cam");
+        proxyReq.setHeader("referer", "https://viralxxxporn.cam/");
+        proxyReq.setHeader("origin", "https://viralxxxporn.cam");
+      });
+      proxy.on("proxyRes", (proxyRes: http.IncomingMessage) => {
+        proxyRes.headers["access-control-allow-origin"] = "*";
+        proxyRes.headers["access-control-allow-methods"] = "GET, HEAD, OPTIONS";
+        proxyRes.headers["access-control-allow-headers"] = "*";
+      });
+    },
+  },
   "/shortify": {
     target: "https://mcrhjyszrxbtiizhgacn.supabase.co",
     changeOrigin: true,
