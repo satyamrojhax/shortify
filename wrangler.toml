@@ -1,4 +1,5 @@
 name = "shortify"
+main = "worker/index.ts"
 compatibility_date = "2026-10-15"
 
 [build]

@@ -89,7 +89,6 @@ export async function fetchLiveWebcams(page = 1): Promise<{
 }> {
   let json: LiveWebcamsResponse | null = null;
 
-  // 1. Try local proxied endpoint /api/webcams/?page= to bypass browser CORS
   try {
     const res = await fetch(`/api/webcams/?page=${page}`, {
       headers: {
@@ -98,39 +97,20 @@ export async function fetchLiveWebcams(page = 1): Promise<{
       },
     });
     if (res.ok) {
-      json = await res.json();
-    }
-  } catch {
-    // ignore proxy error and fallback
-  }
-
-  // 2. Try direct viralxxxporn.com API
-  if (!json || !json.data) {
-    try {
-      const directRes = await fetch(`https://viralxxxporn.com/api/webcams/?page=${page}`, {
-        headers: {
-          accept: "application/json",
-          "x-requested-with": "XMLHttpRequest",
-        },
-      });
-      if (directRes.ok) {
-        json = await directRes.json();
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        json = await res.json();
+      } else {
+        const text = await res.text();
+        try {
+          json = JSON.parse(text);
+        } catch {
+          console.error("Non-JSON response received from /api/webcams/:", text.slice(0, 150));
+        }
       }
-    } catch {
-      // ignore
     }
-  }
-
-  // 3. Fallback to love.shortify.cc.cd/webcams if needed
-  if (!json || !json.data) {
-    try {
-      const fallbackRes = await fetch(`https://love.shortify.cc.cd/webcams?page=${page}`);
-      if (fallbackRes.ok) {
-        json = await fallbackRes.json();
-      }
-    } catch {
-      // ignore
-    }
+  } catch (err) {
+    console.error("Failed to fetch live webcams via proxy:", err);
   }
 
   const items = (json?.data || []).map(mapWebcamToReel);
@@ -222,7 +202,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
       const res = await fetch(url, { headers: SHORTS_HEADERS });
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
-    } catch {}
+    } catch { }
     if (i < attempts - 1) {
       await new Promise((r) => setTimeout(r, 250 + secureMathRandom() * 150));
     }
@@ -231,42 +211,45 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
 }
 
 export async function fetchShortsApi(subpath: string): Promise<any> {
-  // 1. Try local/Vercel proxy: /api/shorts/...
-  const cleanSubpath = subpath.replace(/^\/api\/shorts/, "").replace(/^https:\/\/viralxxxporn\.com\/api\/shorts/, "");
-  const proxyUrl = `/api/shorts${cleanSubpath.startsWith("/") ? "" : "/"}${cleanSubpath}`;
+  const cleanSubpath = subpath
+    .replace(/^\/api\/shorts\/?/, "")
+    .replace(/^https:\/\/viralxxxporn\.com\/api\/shorts\/?/, "");
+
+  let normalized = cleanSubpath;
+  if (!normalized.startsWith("/") && !normalized.startsWith("?")) {
+    normalized = "/" + normalized;
+  }
+  if (normalized.startsWith("?")) {
+    normalized = "/?" + normalized.slice(1);
+  }
+  const [pathname, search] = normalized.split("?");
+  const safePath = pathname.endsWith("/") ? pathname : `${pathname}/`;
+  const queryString = search ? `?${search}` : "";
+  const proxyUrl = `/api/shorts${safePath}${queryString}`;
 
   try {
     const res = await fetch(proxyUrl, { headers: SHORTS_HEADERS });
     if (res.ok) {
-      const data = await res.json();
-      if (data && (data.data || data.comments || data.status === "200")) {
-        return data;
+      const contentType = res.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await res.json();
+        if (data && (data.data || data.comments || data.status === "200")) {
+          return data;
+        }
+      } else {
+        const text = await res.text();
+        try {
+          const data = JSON.parse(text);
+          if (data && (data.data || data.comments || data.status === "200")) {
+            return data;
+          }
+        } catch {
+          console.error("Non-JSON response received from /api/shorts/:", text.slice(0, 150));
+        }
       }
     }
-  } catch {
-    // fallback below
-  }
-
-  // 2. Direct upstream call fallback
-  const directUrl = `https://viralxxxporn.com/api/shorts${cleanSubpath.startsWith("/") ? "" : "/"}${cleanSubpath}`;
-  try {
-    const directRes = await fetch(directUrl, { headers: SHORTS_HEADERS });
-    if (directRes.ok) {
-      return await directRes.json();
-    }
-  } catch {
-    // fallback below
-  }
-
-  // 3. CORS proxy fallback
-  try {
-    const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
-    const corsRes = await fetch(corsProxyUrl);
-    if (corsRes.ok) {
-      return await corsRes.json();
-    }
-  } catch {
-    // ignore
+  } catch (err) {
+    console.error("Failed to fetch shorts via proxy:", err);
   }
 
   return null;
@@ -329,7 +312,7 @@ export async function fetchReelComments(videoId: string, page = 1): Promise<any[
   }));
 
   if (comments.length > 0) {
-    videoCache.set(cacheKey, comments).catch(() => {});
+    videoCache.set(cacheKey, comments).catch(() => { });
   }
   return comments;
 }
@@ -348,7 +331,7 @@ export async function fetchTrendingShorts(page: number): Promise<Reel[]> {
   );
 
   if (reels.length > 0) {
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
   }
   return reels;
 }
@@ -367,7 +350,7 @@ export async function fetchAllShorts(page: number): Promise<Reel[]> {
   );
 
   if (reels.length > 0) {
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
   }
   return reels;
 }
@@ -402,7 +385,7 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
         v.creator_image ||
         (v.username ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg` : undefined),
     }));
-    videoCache.set(cacheKey, reels).catch(() => {});
+    videoCache.set(cacheKey, reels).catch(() => { });
     return reels;
   } catch {
     return [];
@@ -671,7 +654,7 @@ export async function fetchReelsPage(
 
   // Cache the assembled page (except for random mode and categories)
   if (!isRandom && !filter.startsWith("category:")) {
-    videoCache.set(feedCacheKey, result).catch(() => {});
+    videoCache.set(feedCacheKey, result).catch(() => { });
   }
 
   return result;
@@ -682,7 +665,7 @@ export async function fetchReelsPage(
  * Call this to warm the next page before the user scrolls to it.
  */
 export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): void {
-  fetchReelsPage(page, filter).catch(() => {});
+  fetchReelsPage(page, filter).catch(() => { });
 }
 
 export function warmAllFilters(): void {
@@ -740,7 +723,7 @@ export async function fetchCreatorReelsPage(
           const totalPages = parseInt(json.page_total || "1", 10);
           const nextPage = modelPage < totalPages ? modelPage + 1 : undefined;
           const res = { items: reels, nextPage, modelInfo: json.model_info };
-          videoCache.set(cacheKey, res).catch(() => {});
+          videoCache.set(cacheKey, res).catch(() => { });
           return res;
         }
       }
@@ -784,7 +767,7 @@ export async function fetchCreatorReelsPage(
             items: reels,
             nextPage: rawJson.hasNextPage ? (rawJson.nextPage ?? safePage + 1) : undefined,
           };
-          videoCache.set(cacheKey, result).catch(() => {});
+          videoCache.set(cacheKey, result).catch(() => { });
           return result;
         }
       }
@@ -804,7 +787,7 @@ export async function fetchCreatorReelsPage(
         return fetchCreatorReelsPage(cleanUser, type, safePage, "viraly");
       }
     }
-  } catch {}
+  } catch { }
 
   return fetchCreatorReelsPage(cleanUser, type, safePage, "shorts");
 }

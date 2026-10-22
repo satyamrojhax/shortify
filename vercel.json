@@ -12,6 +12,10 @@
       "destination": "https://viralxxxporn.com/api/webcams/$1"
     },
     {
+      "source": "/api/webcams",
+      "destination": "https://viralxxxporn.com/api/webcams/"
+    },
+    {
       "source": "/api/shorts/(.*)",
       "destination": "https://viralxxxporn.com/api/shorts/$1"
     },
@@ -29,6 +33,35 @@
     }
   ],
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Cloudflare-CDN-Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, HEAD, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "*"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [

@@ -1,3 +1,5 @@
-# Single-page-application fallback is managed natively by Cloudflare Workers Assets in wrangler.toml:
-# [assets]
-# not_found_handling = "single-page-application"
+# API reverse proxy rules for Cloudflare Pages
+/api/shorts/* https://viralxxxporn.com/api/shorts/:splat 200
+/api/shorts https://viralxxxporn.com/api/shorts/ 200
+/api/webcams/* https://viralxxxporn.com/api/webcams/:splat 200
+/api/webcams https://viralxxxporn.com/api/webcams/ 200
