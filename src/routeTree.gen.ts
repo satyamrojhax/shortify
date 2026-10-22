@@ -14,12 +14,12 @@ import { Route as AppRouteImport } from './routes/_app'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as AgeRouteImport } from './routes/age'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as MadarchodDotadminRouteImport } from './routes/madarchod[.]admin'
 import { Route as MaintenanceRouteImport } from './routes/maintenance'
 import { Route as PinRouteImport } from './routes/pin'
 import { Route as PinSetupRouteImport } from './routes/pin-setup'
 import { Route as AppAboutRouteImport } from './routes/_app.about'
 import { Route as AppCategoryRouteImport } from './routes/_app.category'
-import { Route as AppDownloadedRouteImport } from './routes/_app.downloaded'
 import { Route as AppExploreRouteImport } from './routes/_app.explore'
 import { Route as AppFavoritesRouteImport } from './routes/_app.favorites'
 import { Route as AppFeedbackRouteImport } from './routes/_app.feedback'
@@ -75,6 +75,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MadarchodDotadminRoute = MadarchodDotadminRouteImport.update({
+  id: '/madarchod.admin',
+  path: '/madarchod.admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MaintenanceRoute = MaintenanceRouteImport.update({
   id: '/maintenance',
   path: '/maintenance',
@@ -98,11 +103,6 @@ const AppAboutRoute = AppAboutRouteImport.update({
 const AppCategoryRoute = AppCategoryRouteImport.update({
   id: '/category',
   path: '/category',
-  getParentRoute: () => AppRoute,
-} as any)
-const AppDownloadedRoute = AppDownloadedRouteImport.update({
-  id: '/downloaded',
-  path: '/downloaded',
   getParentRoute: () => AppRoute,
 } as any)
 const AppExploreRoute = AppExploreRouteImport.update({
@@ -262,12 +262,12 @@ export interface FileRoutesByFullPath {
   '/admin': typeof AdminRouteWithChildren
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/madarchod.admin': typeof MadarchodDotadminRoute
   '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
-  '/downloaded': typeof AppDownloadedRoute
   '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
   '/feedback': typeof AppFeedbackRoute
@@ -303,12 +303,12 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/madarchod.admin': typeof MadarchodDotadminRoute
   '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/about': typeof AppAboutRoute
   '/category': typeof AppCategoryRoute
-  '/downloaded': typeof AppDownloadedRoute
   '/explore': typeof AppExploreRoute
   '/favorites': typeof AppFavoritesRoute
   '/feedback': typeof AppFeedbackRoute
@@ -347,12 +347,12 @@ export interface FileRoutesById {
   '/admin': typeof AdminRouteWithChildren
   '/age': typeof AgeRoute
   '/login': typeof LoginRoute
+  '/madarchod.admin': typeof MadarchodDotadminRoute
   '/maintenance': typeof MaintenanceRoute
   '/pin': typeof PinRoute
   '/pin-setup': typeof PinSetupRoute
   '/_app/about': typeof AppAboutRoute
   '/_app/category': typeof AppCategoryRoute
-  '/_app/downloaded': typeof AppDownloadedRoute
   '/_app/explore': typeof AppExploreRoute
   '/_app/favorites': typeof AppFavoritesRoute
   '/_app/feedback': typeof AppFeedbackRoute
@@ -391,12 +391,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/age'
     | '/login'
+    | '/madarchod.admin'
     | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/about'
     | '/category'
-    | '/downloaded'
     | '/explore'
     | '/favorites'
     | '/feedback'
@@ -432,12 +432,12 @@ export interface FileRouteTypes {
     | '/'
     | '/age'
     | '/login'
+    | '/madarchod.admin'
     | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/about'
     | '/category'
-    | '/downloaded'
     | '/explore'
     | '/favorites'
     | '/feedback'
@@ -475,12 +475,12 @@ export interface FileRouteTypes {
     | '/admin'
     | '/age'
     | '/login'
+    | '/madarchod.admin'
     | '/maintenance'
     | '/pin'
     | '/pin-setup'
     | '/_app/about'
     | '/_app/category'
-    | '/_app/downloaded'
     | '/_app/explore'
     | '/_app/favorites'
     | '/_app/feedback'
@@ -519,6 +519,7 @@ export interface RootRouteChildren {
   AdminRoute: typeof AdminRouteWithChildren
   AgeRoute: typeof AgeRoute
   LoginRoute: typeof LoginRoute
+  MadarchodDotadminRoute: typeof MadarchodDotadminRoute
   MaintenanceRoute: typeof MaintenanceRoute
   PinRoute: typeof PinRoute
   PinSetupRoute: typeof PinSetupRoute
@@ -561,6 +562,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/madarchod.admin': {
+      id: '/madarchod.admin'
+      path: '/madarchod.admin'
+      fullPath: '/madarchod.admin'
+      preLoaderRoute: typeof MadarchodDotadminRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/maintenance': {
       id: '/maintenance'
       path: '/maintenance'
@@ -594,13 +602,6 @@ declare module '@tanstack/react-router' {
       path: '/category'
       fullPath: '/category'
       preLoaderRoute: typeof AppCategoryRouteImport
-      parentRoute: typeof AppRoute
-    }
-    '/_app/downloaded': {
-      id: '/_app/downloaded'
-      path: '/downloaded'
-      fullPath: '/downloaded'
-      preLoaderRoute: typeof AppDownloadedRouteImport
       parentRoute: typeof AppRoute
     }
     '/_app/explore': {
@@ -819,7 +820,6 @@ declare module '@tanstack/react-router' {
 interface AppRouteChildren {
   AppAboutRoute: typeof AppAboutRoute
   AppCategoryRoute: typeof AppCategoryRoute
-  AppDownloadedRoute: typeof AppDownloadedRoute
   AppExploreRoute: typeof AppExploreRoute
   AppFavoritesRoute: typeof AppFavoritesRoute
   AppFeedbackRoute: typeof AppFeedbackRoute
@@ -848,7 +848,6 @@ interface AppRouteChildren {
 const AppRouteChildren: AppRouteChildren = {
   AppAboutRoute: AppAboutRoute,
   AppCategoryRoute: AppCategoryRoute,
-  AppDownloadedRoute: AppDownloadedRoute,
   AppExploreRoute: AppExploreRoute,
   AppFavoritesRoute: AppFavoritesRoute,
   AppFeedbackRoute: AppFeedbackRoute,
@@ -904,6 +903,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminRoute: AdminRouteWithChildren,
   AgeRoute: AgeRoute,
   LoginRoute: LoginRoute,
+  MadarchodDotadminRoute: MadarchodDotadminRoute,
   MaintenanceRoute: MaintenanceRoute,
   PinRoute: PinRoute,
   PinSetupRoute: PinSetupRoute,

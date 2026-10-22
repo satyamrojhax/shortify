@@ -4,7 +4,7 @@ import { videoCache } from "./video-cache";
 
 export type Reel = {
   id: string;
-  source: "v1" | "v2" | "v4" | "local" | "insta_";
+  source: "trending" | "shorts" | "creator" | "local" | "insta_" | "liked" | "live" | "category" | string;
   videoUrl: string;
   thumbnail?: string;
   title?: string;
@@ -15,27 +15,137 @@ export type Reel = {
   dislikes?: number;
   timeAgo?: string;
   username?: string;
+  creator_name?: string;
   creator_image?: string;
   comments?: any[];
+  isLive?: boolean;
+  viewersCount?: number;
+  streamUrl?: string;
+  status?: string;
+  category?: string;
+  originPlayer?: "normal" | "category";
+  originCategory?: string;
+  originSystem?: "shorts" | "viraly";
 };
 
-type XvideoItem = {
-  id: string;
-  name: string;
-  description?: string;
-  thumbnail?: string;
-  videoUrl: string;
-  duration?: string;
-  views?: number;
-  timeAgo?: string;
-  uploadDate?: string;
-};
+export interface LiveWebcamItem {
+  id: number | string;
+  username: string;
+  avatarUrl?: string;
+  popularSnapshotUrl?: string;
+  snapshotUrl?: string;
+  clickUrl?: string;
+  previewUrlThumbSmall?: string;
+  viewersCount: number;
+  favoritedCount?: number;
+  stream?: string;
+  streamUrl?: string;
+  status?: string;
+}
 
-const XVIDEO_BASES = [
-  { key: "v1" as const, url: "https://api.shortify.cc.cd/v1/xvideos", maxPage: 67 },
-  { key: "v2" as const, url: "https://api.shortify.cc.cd/v2/xvideos", maxPage: 67 },
-  { key: "v4" as const, url: "https://api.shortify.cc.cd/v4/xvideos", maxPage: 62 },
-];
+export interface LiveWebcamsResponse {
+  status: string;
+  count: number;
+  page_total?: number;
+  totalPages?: number;
+  total_videos?: number;
+  totalVideos?: number;
+  page_now?: number;
+  page?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+  previousPage?: number | null;
+  nextPage?: number | null;
+  previousPageUrl?: string | null;
+  nextPageUrl?: string | null;
+  data: LiveWebcamItem[];
+}
+
+export function mapWebcamToReel(item: LiveWebcamItem): Reel {
+  const stream = item.stream || item.streamUrl || "";
+  const thumb = item.snapshotUrl || item.popularSnapshotUrl || item.previewUrlThumbSmall || "";
+  return {
+    id: `live-${item.id}`,
+    source: "live",
+    videoUrl: stream,
+    streamUrl: stream,
+    thumbnail: thumb,
+    title: item.username,
+    description: `Watch ${item.username} live streaming on Shortify`,
+    views: item.viewersCount || 0,
+    viewersCount: item.viewersCount || 0,
+    username: item.username,
+    creator_image: item.avatarUrl,
+    isLive: true,
+    status: item.status || "live",
+  };
+}
+
+export async function fetchLiveWebcams(page = 1): Promise<{
+  items: Reel[];
+  hasNextPage: boolean;
+  nextPage: number | null;
+  totalPages: number;
+}> {
+  let json: LiveWebcamsResponse | null = null;
+
+  // 1. Try local proxied endpoint /api/webcams/?page= to bypass browser CORS
+  try {
+    const res = await fetch(`/api/webcams/?page=${page}`, {
+      headers: {
+        accept: "application/json",
+        "x-requested-with": "XMLHttpRequest",
+      },
+    });
+    if (res.ok) {
+      json = await res.json();
+    }
+  } catch {
+    // ignore proxy error and fallback
+  }
+
+  // 2. Try direct viralxxxporn.com API
+  if (!json || !json.data) {
+    try {
+      const directRes = await fetch(`https://viralxxxporn.com/api/webcams/?page=${page}`, {
+        headers: {
+          accept: "application/json",
+          "x-requested-with": "XMLHttpRequest",
+        },
+      });
+      if (directRes.ok) {
+        json = await directRes.json();
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  // 3. Fallback to love.shortify.cc.cd/webcams if needed
+  if (!json || !json.data) {
+    try {
+      const fallbackRes = await fetch(`https://love.shortify.cc.cd/webcams?page=${page}`);
+      if (fallbackRes.ok) {
+        json = await fallbackRes.json();
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  const items = (json?.data || []).map(mapWebcamToReel);
+  const totalPages = Number(json?.page_total ?? json?.totalPages ?? 1);
+  const pageNow = Number(json?.page_now ?? json?.page ?? page);
+  const hasNextPage = json?.hasNextPage ?? pageNow < totalPages;
+  const nextPage = hasNextPage ? pageNow + 1 : null;
+
+  return {
+    items,
+    hasNextPage,
+    nextPage,
+    totalPages,
+  };
+}
 
 function shuffle<T>(arr: T[]): T[] {
   const a = arr.slice();
@@ -97,102 +207,174 @@ async function ensureDatabasesLoaded(): Promise<void> {
   await startDatabaseLoad();
 }
 
-let catalogPromise: Promise<Reel[]> | null = null;
+// ─── Network Fetching & ViralXXXPorn Shorts Proxy ────────────────────────────
 
-/**
- * Full local reel catalog (unshuffled, stable order). Ids are identical to the
- * ones used by the "local" feed, so downloads map 1:1 to feed reels.
- */
-export function getLocalCatalog(): Promise<Reel[]> {
-  if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return Promise.reject(
-      new Error("You're offline. Connect to the internet once to load the database."),
-    );
-  }
-  if (!catalogPromise) {
-    catalogPromise = fetch("https://speaking.shortify.cc.cd/v1-reels-db.json")
-      .then((res) => {
-        if (!res.ok) throw new Error(`Failed to load reels database (${res.status})`);
-        return res.json() as Promise<Array<{ url: string; views?: number; likes?: number }>>;
-      })
-      .then((raw) =>
-        raw.map((v, i) => ({
-          id: `local-${i}-${hashCode(v.url)}`,
-          source: "local" as const,
-          videoUrl: v.url,
-          views: v.views,
-          likes: v.likes,
-          title: "Watch Reels 18+",
-        })),
-      )
-      .catch((err) => {
-        catalogPromise = null; // allow retry
-        throw err;
-      });
-  }
-  return catalogPromise;
-}
-
-// ─── Network Fetch ────────────────────────────────────────────────────────────
+const SHORTS_HEADERS: Record<string, string> = {
+  accept: "application/json",
+  "x-requested-with": "XMLHttpRequest",
+  "user-agent":
+    "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
+};
 
 async function fetchWithRetry(url: string, attempts = 2): Promise<Response | null> {
-  const headers: Record<string, string> = {
-    "User-Agent":
-      "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36",
-    Accept: "*/*",
-  };
-
-  // Race two parallel attempts — whichever resolves first wins.
-  // This cuts p95 latency significantly compared to sequential retries.
   for (let i = 0; i < attempts; i++) {
     try {
-      const res = await fetch(url, { headers });
+      const res = await fetch(url, { headers: SHORTS_HEADERS });
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
-    } catch { }
+    } catch {}
     if (i < attempts - 1) {
-      await new Promise((r) => setTimeout(r, 300 + secureMathRandom() * 200));
+      await new Promise((r) => setTimeout(r, 250 + secureMathRandom() * 150));
     }
   }
   return null;
 }
 
-/** Fetch xvideos page, using videoCache as the backing store. */
-async function fetchXvideos(base: (typeof XVIDEO_BASES)[number], page: number): Promise<Reel[]> {
-  const safePage = Math.max(1, Math.min(page, base.maxPage));
-  const cacheKey = `xv::${base.key}::p${safePage}`;
+export async function fetchShortsApi(subpath: string): Promise<any> {
+  // 1. Try local/Vercel proxy: /api/shorts/...
+  const cleanSubpath = subpath.replace(/^\/api\/shorts/, "").replace(/^https:\/\/viralxxxporn\.com\/api\/shorts/, "");
+  const proxyUrl = `/api/shorts${cleanSubpath.startsWith("/") ? "" : "/"}${cleanSubpath}`;
 
-  // L1/L2 cache hit — instant return
+  try {
+    const res = await fetch(proxyUrl, { headers: SHORTS_HEADERS });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && (data.data || data.comments || data.status === "200")) {
+        return data;
+      }
+    }
+  } catch {
+    // fallback below
+  }
+
+  // 2. Direct upstream call fallback
+  const directUrl = `https://viralxxxporn.com/api/shorts${cleanSubpath.startsWith("/") ? "" : "/"}${cleanSubpath}`;
+  try {
+    const directRes = await fetch(directUrl, { headers: SHORTS_HEADERS });
+    if (directRes.ok) {
+      return await directRes.json();
+    }
+  } catch {
+    // fallback below
+  }
+
+  // 3. CORS proxy fallback
+  try {
+    const corsProxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(directUrl)}`;
+    const corsRes = await fetch(corsProxyUrl);
+    if (corsRes.ok) {
+      return await corsRes.json();
+    }
+  } catch {
+    // ignore
+  }
+
+  return null;
+}
+
+export function mapShortToReel(item: any, source: string = "trending"): Reel {
+  const model = Array.isArray(item.model) && item.model.length > 0 ? item.model[0] : null;
+  // Use model_dir as the exact directory slug for API lookups and routing, and model_name for display
+  const username = model?.model_dir || model?.model_name || "Creator";
+  const creatorDisplayName = model?.model_name || model?.model_dir || "Creator";
+  const avatarUrl =
+    model?.model_foto_url && model.model_foto_url !== "None"
+      ? model.model_foto_url
+      : undefined;
+
+  const categoryName =
+    Array.isArray(item.categories) && item.categories.length > 0
+      ? item.categories[0]?.category_name
+      : undefined;
+
+  return {
+    id: `short-${item.video_id}`,
+    source,
+    videoUrl: item.video_preview,
+    thumbnail: item.images_preview,
+    title: item.video_name || "Short",
+    description: item.video_description || "",
+    duration: item.duration ? `${item.duration}s` : undefined,
+    views: item.video_viewed ? parseInt(item.video_viewed, 10) : item.video_viewed_today || 0,
+    likes: item.count_like ? parseInt(item.count_like, 10) : 0,
+    timeAgo: item.added_date,
+    username,
+    creator_name: creatorDisplayName,
+    creator_image: avatarUrl,
+    category: categoryName,
+    originPlayer: "normal",
+    originSystem: "shorts",
+    comments: [],
+  };
+}
+
+export async function fetchReelComments(videoId: string, page = 1): Promise<any[]> {
+  const cleanId = String(videoId).replace(/^short-/, "").replace(/^[a-z]+-/, "");
+  if (!cleanId || !/^\d+$/.test(cleanId)) return [];
+
+  const cacheKey = `comments::${cleanId}::p${page}`;
+  const cached = await videoCache.get<any[]>(cacheKey);
+  if (cached) return cached;
+
+  const endpoint = `/comments/?video_id=${cleanId}&page=${page}`;
+  const json = await fetchShortsApi(endpoint);
+  const rawComments = json?.comments || json?.data || [];
+  const comments = (Array.isArray(rawComments) ? rawComments : []).map((c: any, idx: number) => ({
+    id: c.comment_id || `c-${idx}`,
+    comment: c.comment || c.comment_text || c.text || c.content || "",
+    username: c.username || c.user_name || c.user || c.name || "Anonymous",
+    avatar: c.user_avatar || c.avatar_url || c.avatar || undefined,
+    added_date: c.added_date || c.date || c.created_at || "recently",
+    likes: c.likes_count || c.likes || 0,
+  }));
+
+  if (comments.length > 0) {
+    videoCache.set(cacheKey, comments).catch(() => {});
+  }
+  return comments;
+}
+
+export async function fetchTrendingShorts(page: number): Promise<Reel[]> {
+  const safePage = Math.max(1, page);
+  const cacheKey = `shorts::trending::p${safePage}`;
   const cached = await videoCache.get<Reel[]>(cacheKey);
   if (cached) return cached;
 
-  const res = await fetchWithRetry(`${base.url}?page=${safePage}`);
-  if (!res) return [];
-  try {
-    const json = (await res.json()) as { videos?: XvideoItem[] };
-    const reels: Reel[] = (json.videos ?? []).map((v) => ({
-      id: `${base.key}-${v.id}`,
-      source: base.key,
-      videoUrl: v.videoUrl,
-      thumbnail: v.thumbnail,
-      title: v.name,
-      description: v.description,
-      duration: v.duration,
-      views: v.views,
-      timeAgo: v.timeAgo,
-    }));
+  const endpoint = `/?page=${safePage}&sort_by=video_viewed_today&post_date_from=1`;
+  const json = await fetchShortsApi(endpoint);
+  const list = json?.data || [];
+  const reels = (Array.isArray(list) ? list : []).map((item: any) =>
+    mapShortToReel(item, "trending"),
+  );
 
-    // Cache for 60 min — fire-and-forget
-    videoCache.set(cacheKey, reels).catch(() => { });
-    return reels;
-  } catch {
-    return [];
+  if (reels.length > 0) {
+    videoCache.set(cacheKey, reels).catch(() => {});
   }
+  return reels;
+}
+
+export async function fetchAllShorts(page: number): Promise<Reel[]> {
+  const safePage = Math.max(1, page);
+  const cacheKey = `shorts::all::p${safePage}`;
+  const cached = await videoCache.get<Reel[]>(cacheKey);
+  if (cached) return cached;
+
+  const endpoint = `/?page=${safePage}`;
+  const json = await fetchShortsApi(endpoint);
+  const list = json?.data || [];
+  const reels = (Array.isArray(list) ? list : []).map((item: any) =>
+    mapShortToReel(item, "shorts"),
+  );
+
+  if (reels.length > 0) {
+    videoCache.set(cacheKey, reels).catch(() => {});
+  }
+  return reels;
 }
 
 async function fetchLatestReels(page: number): Promise<Reel[]> {
-  const apiPage = page - 1;
-  const cacheKey = `satyamrojha::latest::p${apiPage}`;
+  const apiPage = Math.max(0, page - 1);
+  const cacheKey = `shortify::latest::p${apiPage}`;
 
   const cached = await videoCache.get<Reel[]>(cacheKey);
   if (cached) return cached;
@@ -204,7 +386,9 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
     const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
       id: `latest-${v.id}`,
-      source: "satyamrojha",
+      source: "saved",
+      originPlayer: "category",
+      originSystem: "viraly",
       videoUrl: v.videoUrl,
       thumbnail: v.thumbnail,
       title: v.title,
@@ -214,8 +398,11 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
       likes: v.likes,
       dislikes: v.dislikes,
       username: v.username,
+      creator_image:
+        v.creator_image ||
+        (v.username ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg` : undefined),
     }));
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
     return reels;
   } catch {
     return [];
@@ -231,8 +418,10 @@ async function fetchCategoryReels(category: string): Promise<Reel[]> {
     const rawJson = await res.json();
     const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
     const reels: Reel[] = arr.map((v: any) => ({
-      id: `category-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
-      source: "satyamrojha",
+      id: `category-${v.id}`,
+      source: "category",
+      originPlayer: "category",
+      originSystem: "viraly",
       videoUrl: v.videoUrl,
       thumbnail: v.thumbnail,
       title: v.title,
@@ -242,6 +431,9 @@ async function fetchCategoryReels(category: string): Promise<Reel[]> {
       likes: v.likes,
       dislikes: v.dislikes,
       username: v.username,
+      creator_image:
+        v.creator_image ||
+        (v.username ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg` : undefined),
     }));
     return reels;
   } catch {
@@ -383,51 +575,46 @@ export async function fetchReelsPage(
         if (slice.length < 30) {
           slice = [...slice, ...localDb.slice(0, 30 - slice.length)];
         }
-        localDbOffset = (localDbOffset + 30) % localDb.length;
+        localDbOffset = (localDbOffset + 30) % Math.max(1, localDb.length);
         selectedReels.push(...slice);
       }
       break;
     }
 
     case "trending": {
-      const offset = page - 1;
-      const sourceIndex = offset % 3;
-      const apiPage = Math.floor(offset / 3) + 1;
-      const base = XVIDEO_BASES[sourceIndex];
-      const safePage = ((apiPage - 1) % base.maxPage) + 1;
-      const res = await fetchXvideos(base, safePage);
-      selectedReels.push(...res);
+      const trending = await fetchTrendingShorts(page);
+      selectedReels.push(...trending);
       break;
     }
 
     case "all": {
-      // 1. Fetch trending reels from v1/v2/v4
-      const offset = page - 1;
-      const sourceIndex = offset % 3;
-      const apiPage = Math.floor(offset / 3) + 1;
-      const base = XVIDEO_BASES[sourceIndex];
-      const safePage = ((apiPage - 1) % base.maxPage) + 1;
-      const trending = await fetchXvideos(base, safePage);
+      // 1. Fetch Trending Shorts for current page
+      const trending = await fetchTrendingShorts(page);
 
-      // 2. Fetch local reels from localDb
+      // 2. Fetch All Shorts for current page
+      const allShorts = await fetchAllShorts(page);
+
+      // 3. Fetch Local Reels slice for current page (step-by-step per page)
       let localSlice: Reel[] = [];
       if (localDb.length > 0) {
         if (isRandom) {
-          localSlice = shuffle(localDb).slice(0, 15);
+          localSlice = shuffle(localDb).slice(0, 16);
         } else {
-          const lOffset = ((page - 1) * 15) % localDb.length;
-          localSlice = localDb.slice(lOffset, lOffset + 15);
-          if (localSlice.length < 15) {
-            localSlice = [...localSlice, ...localDb.slice(0, 15 - localSlice.length)];
+          const lOffset = ((page - 1) * 16) % localDb.length;
+          localSlice = localDb.slice(lOffset, lOffset + 16);
+          if (localSlice.length < 16) {
+            localSlice = [...localSlice, ...localDb.slice(0, 16 - localSlice.length)];
           }
         }
       }
 
-      // 3. Interleave trending and local reels evenly: trending, local, trending, local...
+      // 4. Interleave trending, all-shorts, and local reels evenly:
+      // [trending[0], allShorts[0], localSlice[0], trending[1], allShorts[1], localSlice[1], ...]
       const mixed: Reel[] = [];
-      const maxLen = Math.max(trending.length, localSlice.length);
+      const maxLen = Math.max(trending.length, allShorts.length, localSlice.length);
       for (let i = 0; i < maxLen; i++) {
         if (i < trending.length) mixed.push(trending[i]);
+        if (i < allShorts.length) mixed.push(allShorts[i]);
         if (i < localSlice.length) mixed.push(localSlice[i]);
       }
 
@@ -435,6 +622,8 @@ export async function fetchReelsPage(
         selectedReels.push(...mixed);
       } else if (trending.length > 0) {
         selectedReels.push(...trending);
+      } else if (allShorts.length > 0) {
+        selectedReels.push(...allShorts);
       } else if (localSlice.length > 0) {
         selectedReels.push(...localSlice);
       }
@@ -470,14 +659,19 @@ export async function fetchReelsPage(
   });
 
   if (deduped.length === 0) {
-    throw new Error("Couldn't load reels. Please check your connection and try again.");
+    // If empty for some reason, fallback to local reels to guarantee content
+    if (localDb.length > 0) {
+      deduped.push(...localDb.slice(0, 15));
+    } else {
+      throw new Error("Couldn't load reels. Please check your connection and try again.");
+    }
   }
 
   const result = { items: deduped, nextPage: page + 1 };
 
   // Cache the assembled page (except for random mode and categories)
   if (!isRandom && !filter.startsWith("category:")) {
-    videoCache.set(feedCacheKey, result).catch(() => { });
+    videoCache.set(feedCacheKey, result).catch(() => {});
   }
 
   return result;
@@ -488,103 +682,129 @@ export async function fetchReelsPage(
  * Call this to warm the next page before the user scrolls to it.
  */
 export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): void {
-  fetchReelsPage(page, filter).catch(() => { });
+  fetchReelsPage(page, filter).catch(() => {});
 }
 
 export function warmAllFilters(): void {
   // Avoid unnecessary API calls upfront
 }
 
-export function isTrendingVersion(u?: string | null): "v1" | "v2" | "v3" | "v4" | null {
-  if (!u) return null;
-  const cleaned = u.toLowerCase().trim();
-  if (cleaned === "v1" || cleaned === "v1_reels") return "v1";
-  if (cleaned === "v2" || cleaned === "v2_reels") return "v2";
-  if (cleaned === "v3" || cleaned === "v3_reels") return "v3";
-  if (cleaned === "v4" || cleaned === "v4_reels") return "v4";
-  return null;
+/**
+ * Resolves directory slug candidates for ViralXXXPorn shorts models
+ * Handles names with spaces (e.g. "Cassie Lee" -> "cassie-lee"),
+ * underscores ("Radiant_Casey" -> "u-radiant-casey"), and prefixes ("starwarros" -> "u-starwarros")
+ */
+export function getShortsModelCandidates(username: string): string[] {
+  const raw = username.trim();
+  const lower = raw.toLowerCase();
+  const hyphenSlug = lower.replace(/[_\s]+/g, "-").replace(/[^a-z0-9-]+/g, "").replace(/^-+|-+$/g, "");
+  const underscoreSlug = lower.replace(/[-\s]+/g, "_").replace(/[^a-z0-9_]+/g, "").replace(/^_+|_+$/g, "");
+
+  const list = [
+    raw,
+    hyphenSlug,
+    `u-${hyphenSlug}`,
+    hyphenSlug.replace(/^u-/, ""),
+    underscoreSlug,
+    `u_${underscoreSlug}`,
+  ];
+  return [...new Set(list.filter(Boolean))];
 }
 
 export async function fetchCreatorReelsPage(
   username: string,
   type: "latest" | "popular",
   page: number,
-): Promise<{ items: Reel[]; nextPage: number | undefined }> {
-  const trendVer = isTrendingVersion(username);
-  if (trendVer) {
-    const baseInfo = XVIDEO_BASES.find((b) => b.key === trendVer);
-    const maxP = baseInfo?.maxPage ?? 62;
-    const safePage = Math.max(1, page);
-    if (safePage > maxP) {
-      return { items: [], nextPage: undefined };
-    }
-    const url = `https://api.shortify.cc.cd/${trendVer}/xvideos?page=${safePage}`;
-    const res = await fetchWithRetry(url);
-    if (!res) {
-      return { items: [], nextPage: undefined };
-    }
+  source?: "shorts" | "viraly",
+): Promise<{ items: Reel[]; nextPage: number | undefined; modelInfo?: any }> {
+  const cleanUser = username.trim();
+  const safePage = Math.max(0, page);
+  const cacheKey = `creator::${source || "any"}::${cleanUser.toLowerCase()}::${type}::p${safePage}`;
+
+  const cached = await videoCache.get<{ items: Reel[]; nextPage: number | undefined; modelInfo?: any }>(cacheKey);
+  if (cached) return cached;
+
+  // SYSTEM B: SHORTS (Normal Reels Player — ViralXXXPorn proxy ONLY)
+  if (source === "shorts") {
     try {
-      const json = (await res.json()) as { videos?: XvideoItem[] };
-      const arr = json.videos || [];
-      const seen = new Set<string>();
-      const reels: Reel[] = [];
-      for (const v of arr) {
-        const reelId = `${trendVer}-${v.id}`;
-        if (seen.has(reelId) || (v.videoUrl && seen.has(v.videoUrl))) continue;
-        seen.add(reelId);
-        if (v.videoUrl) seen.add(v.videoUrl);
-        reels.push({
-          id: reelId,
-          source: trendVer as any,
-          videoUrl: v.videoUrl,
-          thumbnail: v.thumbnail,
-          title: v.name,
-          description: v.description,
-          duration: v.duration,
-          views: v.views,
-          timeAgo: v.timeAgo,
-          username: trendVer,
-        });
+      const modelPage = safePage === 0 ? 1 : safePage;
+      const sortParam = type === "popular" ? "&sort_by=video_viewed" : "";
+      const candidates = getShortsModelCandidates(cleanUser);
+
+      for (const candidate of candidates) {
+        const endpoint = `/?model=${encodeURIComponent(candidate)}&page=${modelPage}${sortParam}`;
+        const json = await fetchShortsApi(endpoint);
+
+        if (json && json.data && Array.isArray(json.data) && json.data.length > 0) {
+          const reels = json.data.map((item: any) => mapShortToReel(item, "creator"));
+          const totalPages = parseInt(json.page_total || "1", 10);
+          const nextPage = modelPage < totalPages ? modelPage + 1 : undefined;
+          const res = { items: reels, nextPage, modelInfo: json.model_info };
+          videoCache.set(cacheKey, res).catch(() => {});
+          return res;
+        }
       }
-      return {
-        items: reels,
-        nextPage: arr.length > 0 && safePage < maxP ? safePage + 1 : undefined,
-      };
     } catch {
-      return { items: [], nextPage: undefined };
+      // ignore
     }
-  }
-
-  const res = await fetchWithRetry(
-    `https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(username)}&type=${type}&page=${page}`,
-  );
-
-  if (!res) {
     return { items: [], nextPage: undefined };
   }
 
-  try {
-    const rawJson = await res.json();
-    const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
-    const reels: Reel[] = arr.map((v: any) => ({
-      id: `creator-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
-      source: "satyamrojha",
-      videoUrl: v.videoUrl,
-      thumbnail: v.thumbnail,
-      title: v.title,
-      description: v.description,
-      duration: v.duration,
-      views: v.views,
-      likes: v.likes,
-      dislikes: v.dislikes,
-      username: v.username,
-    }));
+  // SYSTEM A: VIRALY (Categories, Explore, Latest — love.shortify.cc.cd ONLY)
+  if (source === "viraly") {
+    try {
+      const viralyRes = await fetchWithRetry(
+        `https://love.shortify.cc.cd/api/creator?creator=${encodeURIComponent(cleanUser)}&type=${type}&page=${safePage}`,
+      );
 
-    return {
-      items: reels,
-      nextPage: rawJson.hasNextPage ? (rawJson.nextPage ?? page + 1) : undefined,
-    };
-  } catch {
-    throw new Error("Error parsing creator reels");
+      if (viralyRes && viralyRes.ok) {
+        const rawJson = await viralyRes.json();
+        const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
+        if (arr.length > 0) {
+          const reels: Reel[] = arr.map((v: any) => ({
+            id: `creator-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
+            source: "creator",
+            originPlayer: "category",
+            originSystem: "viraly",
+            videoUrl: v.videoUrl,
+            thumbnail: v.thumbnail,
+            title: v.title,
+            description: v.description,
+            duration: v.duration,
+            views: v.views,
+            likes: v.likes,
+            dislikes: v.dislikes,
+            username: v.username || cleanUser,
+            creator_image:
+              v.creator_image ||
+              `https://love.viraly.wtf/profileImages/${encodeURIComponent(cleanUser)}.jpg`,
+          }));
+
+          const result = {
+            items: reels,
+            nextPage: rawJson.hasNextPage ? (rawJson.nextPage ?? safePage + 1) : undefined,
+          };
+          videoCache.set(cacheKey, result).catch(() => {});
+          return result;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return { items: [], nextPage: undefined };
   }
+
+  // AUTO-DETECT if source is not explicitly passed:
+  // Check viraly first; if count > 0 then route exclusively to viraly, else to shorts.
+  try {
+    const checkRes = await fetch(`https://love.viraly.wtf/getPostsCount/${encodeURIComponent(cleanUser)}`);
+    if (checkRes.ok) {
+      const cData = await checkRes.json();
+      if (typeof cData.count === "number" && cData.count > 0) {
+        return fetchCreatorReelsPage(cleanUser, type, safePage, "viraly");
+      }
+    }
+  } catch {}
+
+  return fetchCreatorReelsPage(cleanUser, type, safePage, "shorts");
 }

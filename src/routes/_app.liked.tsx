@@ -93,16 +93,37 @@ function LikedPage() {
                 />
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-              <Link
-                to="/reels"
-                search={{ start: r.id }}
-                className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
-                aria-label="Play"
-              >
-                <div className="flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-cream bg-cream/20 backdrop-blur">
-                  <Play className="h-6 w-6 fill-cream text-cream" />
-                </div>
-              </Link>
+              {(() => {
+                const isCat = r.originPlayer === "category";
+                return isCat ? (
+                  <Link
+                    to="/category"
+                    search={{
+                      start: r.id,
+                      ...(r.originCategory || r.category
+                        ? { c: r.originCategory || r.category }
+                        : {}),
+                    }}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
+                    aria-label="Play"
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-cream bg-cream/20 backdrop-blur">
+                      <Play className="h-6 w-6 fill-cream text-cream" />
+                    </div>
+                  </Link>
+                ) : (
+                  <Link
+                    to="/reels"
+                    search={{ start: r.id }}
+                    className="absolute inset-0 flex items-center justify-center opacity-0 transition group-hover:opacity-100"
+                    aria-label="Play"
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border-[1.5px] border-cream bg-cream/20 backdrop-blur">
+                      <Play className="h-6 w-6 fill-cream text-cream" />
+                    </div>
+                  </Link>
+                );
+              })()}
               <button
                 onClick={() => remove(r.id)}
                 className="absolute right-2 top-2 flex h-9 w-9 items-center justify-center rounded-full border border-cream bg-charcoal/70 text-cream backdrop-blur"

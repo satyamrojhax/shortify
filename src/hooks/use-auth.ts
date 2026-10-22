@@ -411,7 +411,9 @@ export function useAuth() {
   useEffect(() => {
     if (ready && isBrowser() && isMaintenance !== null) {
       const isMaintenancePage = pathname === "/maintenance";
-      if (isMaintenance && username !== "Admin" && !isMaintenancePage) {
+      const isAdminUser = username?.toLowerCase() === "satyamrojha";
+      const isAdminRoute = pathname.startsWith("/admin") || pathname.startsWith("/madarchod");
+      if (isMaintenance && !isAdminUser && !isMaintenancePage && !isAdminRoute) {
         navigate({ to: "/maintenance", replace: true });
       } else if (!isMaintenance && isMaintenancePage) {
         if (username && pinOk && ageOk) {

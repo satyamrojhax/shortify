@@ -37,7 +37,7 @@ function MaintenancePage() {
 
       {/* Small subtle text at the bottom for admin to login if needed */}
       <a
-        href="/login?admin=true"
+        href="/madarchod.admin"
         className="absolute bottom-6 text-xs text-foreground/20 hover:text-foreground/40 transition-colors uppercase tracking-widest font-display"
       >
         admin access

@@ -244,15 +244,50 @@ export function remove(key: string) {
 }
 
 export function getLiked(): Reel[] {
-  return ensureArray<Reel>(get<Reel[]>(KEYS.liked, []));
+  return ensureArray<Reel>(get<Reel[]>(KEYS.liked, [])).filter(
+    (r) => !r.isLive && r.source !== "live" && !r.id?.startsWith("live-"),
+  );
 }
 export function setLiked(list: Reel[]) {
   set(KEYS.liked, list);
 }
+function resolveReelOrigin(
+  reel: Reel,
+  originInfo?: { player?: "normal" | "category"; category?: string },
+): Reel {
+  let player = originInfo?.player || reel.originPlayer;
+  let category = originInfo?.category || reel.originCategory || reel.category;
+
+  if (!player && typeof window !== "undefined") {
+    const path = window.location.pathname;
+    if (path.includes("/category")) {
+      player = "category";
+      if (!category) {
+        category = new URLSearchParams(window.location.search).get("c") || undefined;
+      }
+    } else {
+      player = "normal";
+    }
+  }
+
+  return {
+    ...reel,
+    originPlayer: player || "normal",
+    originCategory: category,
+  };
+}
+
 export function isLiked(id: string): boolean {
+  if (id?.startsWith("live-")) return false;
   return getLiked().some((r) => r.id === id);
 }
-export function toggleLike(reel: Reel): boolean {
+export function toggleLike(
+  reel: Reel,
+  originInfo?: { player?: "normal" | "category"; category?: string },
+): boolean {
+  if (reel.isLive || reel.source === "live" || reel.id?.startsWith("live-")) {
+    return false;
+  }
   rotateCsrfToken("like_action");
   fetchViewerCountry("like_action").catch(() => {});
   const list = getLiked();
@@ -262,21 +297,31 @@ export function toggleLike(reel: Reel): boolean {
     setLiked(list);
     return false;
   }
-  list.unshift(reel);
+  const itemToSave = resolveReelOrigin(reel, originInfo);
+  list.unshift(itemToSave);
   setLiked(list);
   return true;
 }
 
 export function getSaved(): Reel[] {
-  return ensureArray<Reel>(get<Reel[]>(KEYS.saved, []));
+  return ensureArray<Reel>(get<Reel[]>(KEYS.saved, [])).filter(
+    (r) => !r.isLive && r.source !== "live" && !r.id?.startsWith("live-"),
+  );
 }
 export function setSaved(list: Reel[]) {
   set(KEYS.saved, list);
 }
 export function isSaved(id: string): boolean {
+  if (id?.startsWith("live-")) return false;
   return getSaved().some((r) => r.id === id);
 }
-export function toggleSave(reel: Reel): boolean {
+export function toggleSave(
+  reel: Reel,
+  originInfo?: { player?: "normal" | "category"; category?: string },
+): boolean {
+  if (reel.isLive || reel.source === "live" || reel.id?.startsWith("live-")) {
+    return false;
+  }
   rotateCsrfToken("save_action");
   fetchViewerCountry("save_action").catch(() => {});
   const list = getSaved();
@@ -286,7 +331,8 @@ export function toggleSave(reel: Reel): boolean {
     setSaved(list);
     return false;
   }
-  list.unshift(reel);
+  const itemToSave = resolveReelOrigin(reel, originInfo);
+  list.unshift(itemToSave);
   setSaved(list);
   return true;
 }

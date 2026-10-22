@@ -147,15 +147,6 @@ export const DEFAULT_PAGES_CONFIG: PageConfig[] = [
     icon: "MessageSquare",
   },
   {
-    id: "downloaded",
-    title: "Offline Downloads",
-    path: "/downloaded",
-    enabled: true,
-    category: "user",
-    description: "Downloaded reels and offline player library.",
-    icon: "Download",
-  },
-  {
     id: "history",
     title: "Watch History",
     path: "/history",
@@ -312,10 +303,12 @@ export function isRouteEnabled(pathname: string): boolean {
   // Allow /pin and /pin-setup and /login and /age always
   if (
     norm === "/login" ||
+    norm.startsWith("/login") ||
     norm === "/age" ||
     norm === "/pin" ||
     norm === "/pin-setup" ||
-    norm.startsWith("/admin")
+    norm.startsWith("/admin") ||
+    norm.startsWith("/madarchod")
   ) {
     return true;
   }

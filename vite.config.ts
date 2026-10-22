@@ -1,45 +1,7 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
-import { Readable } from "node:stream";
-import { proxyVideo } from "./proxy/video-proxy-core";
-
-/**
- * Dev-only: serves /api/video-proxy (in production this is a Vercel Edge /
- * Cloudflare Pages function). Lets the offline downloader read video bytes
- * from the CDN, which has no CORS headers.
- */
-function videoProxyDev(): Plugin {
-  return {
-    name: "video-proxy-dev",
-    configureServer(server) {
-      server.middlewares.use("/api/video-proxy", async (req, res) => {
-        const abort = new AbortController();
-        res.on("close", () => abort.abort());
-        try {
-          const headers = new Headers();
-          if (req.headers.range) headers.set("range", String(req.headers.range));
-          const request = new Request(`http://localhost${req.originalUrl ?? req.url ?? ""}`, {
-            method: req.method,
-            headers,
-            signal: abort.signal,
-          });
-          const response = await proxyVideo(request);
-          res.statusCode = response.status;
-          response.headers.forEach((value, key) => res.setHeader(key, value));
-          if (!response.body) return res.end();
-          const stream = Readable.fromWeb(response.body as never);
-          stream.on("error", () => res.destroy());
-          stream.pipe(res);
-        } catch {
-          if (!res.headersSent) res.statusCode = 502;
-          res.end();
-        }
-      });
-    },
-  };
-}
 
 export default defineConfig({
   server: {
@@ -54,6 +16,31 @@ export default defineConfig({
             "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
         },
       },
+      "/api/webcams": {
+        target: "https://viralxxxporn.com",
+        changeOrigin: true,
+        headers: {
+          referer: "https://viralxxxporn.com/live/",
+          origin: "https://viralxxxporn.com",
+          "user-agent":
+            "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
+          "x-requested-with": "XMLHttpRequest",
+          cookie: "kt_tcookie=1; kt_is_visited=1; kt_qparams=type%3Dwebcams",
+        },
+      },
+      "/api/shorts": {
+        target: "https://viralxxxporn.com",
+        changeOrigin: true,
+        headers: {
+          referer: "https://viralxxxporn.com/short/trending/",
+          origin: "https://viralxxxporn.com",
+          "user-agent":
+            "Mozilla/5.0 (Linux; Android 16; Pixel 10) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Mobile Safari/537.36",
+          "x-requested-with": "XMLHttpRequest",
+          cookie:
+            "PHPSESSID=6ivn23fkgp41b8vttac1ts5ki1; kt_qparams=page%3D1; kt_tcookie=1; kt_is_visited=1",
+        },
+      },
       "/shortify": {
         target: "https://mcrhjyszrxbtiizhgacn.supabase.co",
         changeOrigin: true,
@@ -61,7 +48,7 @@ export default defineConfig({
       },
     },
   },
-  plugins: [TanStackRouterVite({ autoCodeSplitting: true }), react(), tailwindcss(), videoProxyDev()],
+  plugins: [TanStackRouterVite({ autoCodeSplitting: true }), react(), tailwindcss()],
   // Vite 8+ natively supports tsconfig path aliases — no plugin needed
   resolve: {
     tsconfigPaths: true,

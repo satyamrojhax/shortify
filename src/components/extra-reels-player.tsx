@@ -40,7 +40,19 @@ export function ExtraReelsPlayer({
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black flex flex-col">
+    <div
+      className="fixed inset-0 z-[100] bg-black flex flex-col select-none"
+      onContextMenu={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }}
+      style={{
+        WebkitTouchCallout: "none",
+        WebkitUserSelect: "none",
+        userSelect: "none",
+      }}
+    >
       <button
         onClick={onClose}
         className="absolute top-4 left-4 z-[110] p-2 text-white drop-shadow-md transition"
@@ -53,25 +65,41 @@ export function ExtraReelsPlayer({
         className="flex-1 overflow-y-scroll snap-y snap-mandatory no-scrollbar relative"
         onScroll={handleScroll}
       >
-        {reels.map((reel, idx) => (
-          <div key={reel.id} className="h-[100dvh] w-full snap-start snap-always relative">
-            <ReelPlayer
-              reel={reel}
-              active={idx === activeIndex}
-              muted={muted}
-              onToggleMute={() => setMuted(!muted)}
-              onEnded={() => {
-                if (idx < reels.length - 1 && containerRef.current) {
-                  const el = containerRef.current.children[idx + 1] as HTMLElement;
-                  if (el) el.scrollIntoView({ behavior: "smooth" });
-                }
-              }}
-              onWatched={() => {}}
-              distance={Math.abs(idx - activeIndex)}
-              feedType={feedType}
-            />
-          </div>
-        ))}
+        {reels.map((reel, idx) => {
+          const near = Math.abs(idx - activeIndex) <= 1;
+          return (
+            <div key={reel.id} className="h-[100dvh] w-full snap-start snap-always relative">
+              {near ? (
+                <ReelPlayer
+                  reel={reel}
+                  active={idx === activeIndex}
+                  muted={muted}
+                  onToggleMute={() => setMuted(!muted)}
+                  onEnded={() => {
+                    if (idx < reels.length - 1 && containerRef.current) {
+                      const el = containerRef.current.children[idx + 1] as HTMLElement;
+                      if (el) el.scrollIntoView({ behavior: "smooth" });
+                    }
+                  }}
+                  onWatched={() => {}}
+                  distance={Math.abs(idx - activeIndex)}
+                  feedType={feedType}
+                />
+              ) : (
+                <div className="h-full w-full bg-black">
+                  {reel.thumbnail && (
+                    <img
+                      src={reel.thumbnail}
+                      alt=""
+                      className="h-full w-full object-cover opacity-40"
+                      loading="lazy"
+                    />
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

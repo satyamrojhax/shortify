@@ -359,12 +359,16 @@ html {
   will-change: scroll-position;
 }
 
-/* GPU-accelerate video elements to prevent jank during playback */
+/* GPU-accelerate video elements to prevent jank during playback & disable mobile browser video contextmenu */
 video {
   will-change: transform;
   transform: translateZ(0);
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  pointer-events: none !important;
 }
 
 /* Prevent tap-highlight flash on mobile */

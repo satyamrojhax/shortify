@@ -1,9 +1,22 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { fetchCreatorReelsPage, isTrendingVersion, type Reel } from "@/lib/reels";
+import {
+  fetchCreatorReelsPage,
+  fetchShortsApi,
+  getShortsModelCandidates,
+  type Reel,
+} from "@/lib/reels";
 import { ReelPlayer } from "@/components/reel-player";
-import { KEYS, get, set, getAutoScroll, getFavoriteSince, toggleFavorite, isOldUser } from "@/lib/storage";
+import {
+  KEYS,
+  get,
+  set,
+  getAutoScroll,
+  getFavoriteSince,
+  toggleFavorite,
+  isOldUser,
+} from "@/lib/storage";
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { BubbleLoader } from "@/components/ui/bubble-loader";
@@ -19,33 +32,56 @@ import {
   MessageCircle,
 } from "lucide-react";
 
+type CreatorSearch = {
+  source?: "shorts" | "viraly";
+  [key: string]: unknown;
+};
+
 export const Route = createFileRoute("/_app/creator/$username")({
+  validateSearch: (s: Record<string, unknown>): CreatorSearch => ({
+    ...s,
+    source:
+      s.source === "shorts" || s.source === "viraly"
+        ? (s.source as "shorts" | "viraly")
+        : undefined,
+  }),
   component: CreatorPage,
 });
 
 function CreatorPage() {
   const { username } = Route.useParams();
+  const search = Route.useSearch();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"latest" | "popular">("latest");
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
 
-  const trendVer = isTrendingVersion(username);
-  const isTrending = Boolean(trendVer);
   const isOld = useMemo(() => isOldUser(), []);
 
-  const { data, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, refetch, isRefetching } =
-    useInfiniteQuery({
-      queryKey: ["creator-reels", trendVer || username, activeTab],
-      queryFn: ({ pageParam }) => fetchCreatorReelsPage(trendVer || username, activeTab, pageParam),
-      initialPageParam: isTrending ? 1 : 0,
-      getNextPageParam: (last) => last.nextPage,
-      staleTime: 5 * 60_000,
-    });
-
   const { data: stats } = useQuery({
-    queryKey: ["creator-stats", username],
-    queryFn: () => fetchCreatorStats(username!),
-    enabled: !isTrending && Boolean(username),
+    queryKey: ["creator-stats", username, search.source],
+    queryFn: () => fetchCreatorStats(username!, search.source),
+    enabled: Boolean(username),
+    staleTime: 5 * 60_000,
+  });
+
+  const resolvedSource = search.source || stats?.source || "viraly";
+  const queryUser = stats?.resolvedDir || username;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    refetch,
+    isRefetching,
+  } = useInfiniteQuery({
+    queryKey: ["creator-reels", username, activeTab, resolvedSource, queryUser],
+    queryFn: ({ pageParam }) =>
+      fetchCreatorReelsPage(queryUser, activeTab, pageParam, resolvedSource),
+    initialPageParam: 0,
+    getNextPageParam: (last) => last.nextPage,
     staleTime: 5 * 60_000,
   });
 
@@ -196,7 +232,7 @@ function CreatorPage() {
           className="no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-scroll"
         >
           {reels.map((r, i) => {
-            const near = Math.abs(i - activeIdx) <= 2;
+            const near = Math.abs(i - activeIdx) <= 1;
             const composite = `reel::${r.source}::${r.id}::${i}`;
             return (
               <section
@@ -271,7 +307,7 @@ function CreatorPage() {
             <ChevronLeft className="h-6 w-6" />
           </button>
           <h1 className="text-lg font-extrabold text-foreground tracking-tight truncate">
-            @{username}
+            @{stats?.displayName || username}
           </h1>
           <div className="w-10"></div> {/* Placeholder to center the title */}
         </div>
@@ -281,20 +317,35 @@ function CreatorPage() {
           {/* Avatar with gradient border */}
           <div className="relative h-24 w-24 md:h-28 md:w-28 rounded-full bg-gradient-to-tr from-cobalt-pop via-periwinkle-sky to-magenta-haze p-1 shadow-xl">
             <div className="h-full w-full rounded-full bg-background flex items-center justify-center border-[4px] border-background overflow-hidden">
-              <CreatorProfileImage username={username!} />
+              <CreatorProfileImage
+                username={username!}
+                avatar={stats?.avatar}
+                isViraly={resolvedSource === "viraly"}
+              />
             </div>
           </div>
 
-          <h2 className="mt-4 text-2xl font-black text-foreground">@{username}</h2>
+          <h2 className="mt-4 text-2xl font-black text-foreground">
+            @{stats?.displayName || username}
+          </h2>
           <p className="text-muted-foreground text-sm font-medium mt-1">Creator</p>
+          {stats?.description && stats.description !== "No description" && (
+            <p className="text-xs text-muted-foreground text-center mt-2 max-w-sm px-4 leading-relaxed">
+              {stats.description}
+            </p>
+          )}
 
           {/* Stats */}
           <div className="flex items-center gap-8 md:gap-12 mt-6 w-full justify-center">
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
-                {isTrending
-                  ? (reels.length > 0 ? formatViews(reels.length) : isLoading ? "..." : "0")
-                  : (stats?.postsCount !== undefined ? formatViews(stats.postsCount) : "...")}
+                {stats?.postsCount !== undefined
+                  ? formatViews(stats.postsCount)
+                  : reels.length > 0
+                    ? formatViews(reels.length)
+                    : isLoading
+                      ? "..."
+                      : "0"}
               </span>
               <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
                 Videos
@@ -302,14 +353,30 @@ function CreatorPage() {
             </div>
             <div className="flex flex-col items-center">
               <span className="text-xl md:text-2xl font-bold text-foreground">
-                {isTrending
-                  ? (isOld ? (favSince ? "344+" : "343+") : (favSince ? "124" : "123"))
-                  : (stats?.followersCount !== undefined ? formatViews(stats.followersCount) : "...")}
+                {stats?.followersCount !== undefined
+                  ? formatViews(stats.followersCount)
+                  : isOld
+                    ? favSince
+                      ? "344+"
+                      : "343+"
+                    : favSince
+                      ? "124"
+                      : "123"}
               </span>
               <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
                 Followers
               </span>
             </div>
+            {stats?.rating ? (
+              <div className="flex flex-col items-center">
+                <span className="text-xl md:text-2xl font-bold text-foreground">
+                  {stats.rating}%
+                </span>
+                <span className="text-[10px] md:text-xs font-semibold text-muted-foreground uppercase tracking-wider mt-1">
+                  Rating
+                </span>
+              </div>
+            ) : null}
           </div>
 
           {/* Action Buttons */}
@@ -492,12 +559,25 @@ function CreatorThumb({ src, alt }: { src?: string; alt: string }) {
   );
 }
 
-function CreatorProfileImage({ username }: { username: string }) {
-  const isTrend = Boolean(isTrendingVersion(username));
+function CreatorProfileImage({
+  username,
+  avatar,
+  isViraly,
+}: {
+  username: string;
+  avatar?: string;
+  isViraly?: boolean;
+}) {
+  const src =
+    avatar ||
+    (isViraly
+      ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(username)}.jpg`
+      : undefined);
+
   return (
     <UserAvatar
       username={username}
-      src={isTrend ? null : `https://love.viraly.wtf/profileImages/${username}.jpg`}
+      src={src}
       size="2xl"
       showBorder={false}
       className="h-full w-full"
@@ -505,26 +585,123 @@ function CreatorProfileImage({ username }: { username: string }) {
   );
 }
 
-async function fetchCreatorStats(username: string) {
-  const [postsRes, userRes] = await Promise.all([
-    fetch(`https://love.viraly.wtf/getPostsCount/${username}`).catch(() => null),
-    fetch(`https://love.viraly.wtf/getuser/${username}`).catch(() => null),
-  ]);
+async function fetchCreatorStats(
+  username: string,
+  source?: "shorts" | "viraly",
+): Promise<{
+  postsCount: number;
+  followersCount: number;
+  description?: string;
+  rating?: string;
+  views?: string;
+  avatar?: string;
+  displayName?: string;
+  resolvedDir?: string;
+  source: "shorts" | "viraly";
+}> {
+  const cleanUser = username.trim();
 
-  let postsCount = 0;
-  let followersCount = 0;
-
-  if (postsRes && postsRes.ok) {
-    const pData = await postsRes.json();
-    postsCount = pData.count || 0;
-  }
-
-  if (userRes && userRes.ok) {
-    const uData = await userRes.json();
-    if (uData.followers && Array.isArray(uData.followers)) {
-      followersCount = uData.followers.length;
+  // SYSTEM B: SHORTS (Normal Reels Player models — ViralXXXPorn proxy ONLY)
+  if (source === "shorts") {
+    try {
+      const candidates = getShortsModelCandidates(cleanUser);
+      for (const candidate of candidates) {
+        const data = await fetchShortsApi(`/?model=${encodeURIComponent(candidate)}&page=1`);
+        if (data && data.model_info && data.model_info.model_id) {
+          const mi = data.model_info;
+          const foto =
+            mi.model_foto_url && mi.model_foto_url !== "None" ? mi.model_foto_url : undefined;
+          return {
+            postsCount: parseInt(mi.model_total_videos || "0", 10),
+            followersCount: parseInt(mi.model_subscribers_count || "0", 10),
+            views: mi.model_viewed || "0",
+            description:
+              mi.description && mi.description !== "No description" ? mi.description : undefined,
+            rating: mi.model_raiting && mi.model_raiting !== "0" ? mi.model_raiting : undefined,
+            avatar: foto,
+            displayName: mi.model_name || candidate,
+            resolvedDir: mi.model_dir || candidate,
+            source: "shorts",
+          };
+        }
+      }
+    } catch {
+      // ignore
     }
+    return {
+      postsCount: 0,
+      followersCount: 0,
+      avatar: undefined,
+      source: "shorts",
+    };
   }
 
-  return { postsCount, followersCount };
+  // SYSTEM A: VIRALY (Categories, Explore, Latest — love.viraly.wtf ONLY)
+  if (source === "viraly") {
+    try {
+      const [postsRes, userRes] = await Promise.all([
+        fetch(`https://love.viraly.wtf/getPostsCount/${encodeURIComponent(cleanUser)}`).catch(
+          () => null,
+        ),
+        fetch(`https://love.viraly.wtf/getuser/${encodeURIComponent(cleanUser)}`).catch(() => null),
+      ]);
+
+      let postsCount: number | undefined = undefined;
+      let followersCount: number | undefined = undefined;
+      let bio: string | undefined = undefined;
+
+      if (postsRes && postsRes.ok) {
+        const pData = await postsRes.json();
+        if (typeof pData.count === "number") {
+          postsCount = pData.count;
+        }
+      }
+
+      if (userRes && userRes.ok) {
+        const uData = await userRes.json();
+        if (uData.followers && Array.isArray(uData.followers)) {
+          followersCount = uData.followers.length;
+        }
+        if (uData.bio) {
+          bio = uData.bio;
+        }
+      }
+
+      return {
+        postsCount: postsCount ?? 0,
+        followersCount: followersCount ?? 0,
+        description: bio,
+        avatar: `https://love.viraly.wtf/profileImages/${encodeURIComponent(cleanUser)}.jpg`,
+        displayName: cleanUser,
+        source: "viraly",
+      };
+    } catch {
+      // ignore
+    }
+    return {
+      postsCount: 0,
+      followersCount: 0,
+      avatar: `https://love.viraly.wtf/profileImages/${encodeURIComponent(cleanUser)}.jpg`,
+      displayName: cleanUser,
+      source: "viraly",
+    };
+  }
+
+  // AUTO-DETECT if source is not explicitly specified:
+  // Check love.viraly.wtf first; if user exists and count > 0, treat as viraly creator.
+  try {
+    const checkRes = await fetch(
+      `https://love.viraly.wtf/getPostsCount/${encodeURIComponent(cleanUser)}`,
+    );
+    if (checkRes.ok) {
+      const cData = await checkRes.json();
+      if (typeof cData.count === "number" && cData.count > 0) {
+        return fetchCreatorStats(cleanUser, "viraly");
+      }
+    }
+  } catch {
+    // ignore
+  }
+
+  return fetchCreatorStats(cleanUser, "shorts");
 }

@@ -8,6 +8,18 @@
       "destination": "https://randomchat.now/__viewer-country"
     },
     {
+      "source": "/api/webcams/(.*)",
+      "destination": "https://viralxxxporn.com/api/webcams/$1"
+    },
+    {
+      "source": "/api/shorts/(.*)",
+      "destination": "https://viralxxxporn.com/api/shorts/$1"
+    },
+    {
+      "source": "/api/shorts",
+      "destination": "https://viralxxxporn.com/api/shorts/"
+    },
+    {
       "source": "/shortify/(.*)",
       "destination": "https://mcrhjyszrxbtiizhgacn.supabase.co/$1"
     },

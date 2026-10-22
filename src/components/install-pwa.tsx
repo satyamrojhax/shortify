@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { X, Download } from "lucide-react";
+import { X } from "lucide-react";
 import { usePwa } from "@/hooks/use-pwa";
 
 export function InstallPwa() {

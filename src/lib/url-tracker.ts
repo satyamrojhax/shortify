@@ -370,7 +370,6 @@ export function getSurfaceSource(pathname: string): string {
   if (pathname === "/profile" || pathname.startsWith("/creator")) return "user_profile";
   if (pathname === "/settings" || pathname.startsWith("/admin")) return "app_settings";
   if (pathname === "/home") return "home_feed";
-  if (pathname === "/downloaded") return "offline_vault";
   if (pathname === "/shop") return "merch_shop";
   if (pathname === "/skills") return "skills_lab";
   if (pathname === "/about") return "about_page";

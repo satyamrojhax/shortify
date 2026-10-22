@@ -24,7 +24,6 @@ import {
   Sun,
   Monitor,
   Trash2,
-  Download,
   BadgeCheck,
   Gift,
   Heart,
@@ -40,6 +39,7 @@ import {
   Bell,
   MessageSquare,
   Lightbulb,
+  Smartphone,
 } from "lucide-react";
 import { useNotifications } from "@/hooks/use-notifications";
 import { useSiteConfig } from "@/hooks/use-site-config";
@@ -212,7 +212,7 @@ function SettingsPage() {
                     add to home screen for a better experience.
                   </div>
                 </div>
-                <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
+                <Smartphone className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
               </button>
             </>
           )}
@@ -291,23 +291,6 @@ function SettingsPage() {
                 </div>
               </div>
               <Eye className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
-            </Link>
-          )}
-
-          {isRouteEnabled("/downloaded") && (
-            <Link
-              to="/downloaded"
-              className="paper-card flex w-full items-center justify-between p-4 sm:p-5 text-left transition hover:-translate-y-1 hover:shadow-md group"
-            >
-              <div>
-                <div className="font-display text-lg lowercase text-cocoa dark:text-cream group-hover:text-marker transition-colors">
-                  downloads
-                </div>
-                <div className="text-xs sm:text-sm text-charcoal/70 dark:text-cream/70">
-                  manage offline reels and download more.
-                </div>
-              </div>
-              <Download className="h-5 w-5 text-cocoa dark:text-cream group-hover:text-marker transition-colors" />
             </Link>
           )}
         </div>

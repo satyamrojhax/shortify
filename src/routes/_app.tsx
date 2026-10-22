@@ -9,7 +9,7 @@ import { StreakModal } from "@/components/streak-modal";
 import { BubbleLoader } from "@/components/ui/bubble-loader";
 import { useOnline } from "@/hooks/use-offline";
 import { toast } from "sonner";
-import { WifiOff, Download, ShieldAlert, RefreshCw, Sparkles } from "lucide-react";
+import { WifiOff, ShieldAlert, RefreshCw, Sparkles } from "lucide-react";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -27,6 +27,7 @@ function AppLayout() {
   const online = useOnline();
   const [wasOffline, setWasOffline] = useState(!online);
   const [retryChecking, setRetryChecking] = useState(false);
+  const [networkChecking, setNetworkChecking] = useState(false);
 
   useEffect(() => {
     if (online && wasOffline) {
@@ -68,6 +69,35 @@ function AppLayout() {
     }, 700);
   };
 
+  const handleCheckNetwork = async () => {
+    setNetworkChecking(true);
+    try {
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        toast.error("You're still offline. Please check your internet connection.");
+        setNetworkChecking(false);
+        return;
+      }
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch(`/manifest.json?_t=${Date.now()}`, {
+        method: "HEAD",
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+      if (res.ok) {
+        toast.success("Connection restored! You are back online.");
+        window.location.reload();
+      } else {
+        toast.error("You're still offline or your network is unreachable.");
+      }
+    } catch {
+      toast.error("You're still offline. Please check your internet connection.");
+    } finally {
+      setNetworkChecking(false);
+    }
+  };
+
   return (
     <div className={`flex min-h-screen w-full bg-background`}>
       {online && <Sidebar username={username} />}
@@ -75,16 +105,16 @@ function AppLayout() {
         {/* Sticky Top Header Container for Mobile & Desktop */}
         <div className="sticky top-0 z-40 w-full shrink-0">
           {/* Global Announcement Banner */}
-          {content.announcementBanner.enabled && !isReels && (
+          {content.announcementBanner.enabled && !isReels && online && (
             <div
               className={`w-full px-4 py-2 text-xs sm:text-sm font-medium flex items-center justify-center gap-2 text-center transition-all shadow-xs ${
                 content.announcementBanner.variant === "gradient"
                   ? "bg-linear-to-r from-amber-500 via-pink-500 to-indigo-600 text-white"
                   : content.announcementBanner.variant === "info"
-                  ? "bg-blue-600 text-white"
-                  : content.announcementBanner.variant === "warning"
-                  ? "bg-amber-500 text-black font-semibold"
-                  : "bg-emerald-600 text-white"
+                    ? "bg-blue-600 text-white"
+                    : content.announcementBanner.variant === "warning"
+                      ? "bg-amber-500 text-black font-semibold"
+                      : "bg-emerald-600 text-white"
               }`}
             >
               <Sparkles size={14} className="shrink-0" />
@@ -104,29 +134,39 @@ function AppLayout() {
         </div>
 
         <main
-          className={`flex-1 relative bg-background ${
-            isReels || !online ? "" : "pb-20 md:pb-0"
-          }`}
+          className={`flex-1 relative bg-background ${isReels || !online ? "" : "pb-20 md:pb-0"}`}
         >
-          {!online && pathname !== "/downloaded" ? (
-            <div className="flex min-h-screen flex-col items-center justify-center p-6 text-center">
-              <div className="mb-6 rounded-full bg-destructive/10 p-4 text-destructive">
-                <WifiOff className="h-12 w-12" />
+          {!online ? (
+            <div className="flex min-h-[75vh] flex-col items-center justify-center p-6 text-center animate-fade-in select-none">
+              <div className="relative mb-6">
+                <div className="absolute -inset-2 rounded-full bg-destructive/10 blur-md animate-pulse" />
+                <div className="relative rounded-full bg-destructive/15 p-5 text-destructive border border-destructive/20 shadow-lg shadow-destructive/10">
+                  <WifiOff className="h-12 w-12" />
+                </div>
               </div>
-              <h1 className="mb-2 font-display text-4xl text-foreground">You're Offline bruh</h1>
-              <p className="mb-8 max-w-md text-foreground/70">
-                damn, your wifi really said 'nope' today. did you forget to pay the bill or are you
-                still stealing from your neighbor? anyway, while you rethink your life choices, go
-                watch the stuff you hoarded in your downloads.
+
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-xs font-semibold uppercase tracking-wider mb-3 border border-destructive/20">
+                <span>No Connection</span>
+              </div>
+
+              <h1 className="mb-2 font-display text-3xl sm:text-4xl font-bold text-foreground lowercase">
+                you're offline
+              </h1>
+
+              <p className="mb-8 max-w-md text-sm sm:text-base text-foreground/75 leading-relaxed">
+                you're offline. you cannot use the app if you're offline. please connect to the
+                internet to continue.
               </p>
-              <Link
-                to="/downloaded"
-                search={{ tab: "library" }}
-                className="btn-pill inline-flex items-center gap-2"
+
+              <button
+                type="button"
+                onClick={handleCheckNetwork}
+                disabled={networkChecking}
+                className="px-6 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 active:scale-95 transition-all shadow-md inline-flex items-center justify-center gap-2 disabled:opacity-60 cursor-pointer"
               >
-                <Download className="h-5 w-5" />
-                View Downloads
-              </Link>
+                <RefreshCw size={16} className={networkChecking ? "animate-spin" : ""} />
+                <span>{networkChecking ? "Checking Network..." : "Refresh & Check Network"}</span>
+              </button>
             </div>
           ) : !isPageAllowed ? (
             /* Blocked / Unavailable Page for Disabled Routes */
@@ -165,7 +205,7 @@ function AppLayout() {
         </main>
         {!isReels && online && <BottomNav />}
       </div>
-      <InstallPwa />
+      {online && <InstallPwa />}
       {online && <StreakModal />}
     </div>
   );

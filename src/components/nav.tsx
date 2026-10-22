@@ -15,7 +15,6 @@ import {
   Instagram,
   WandSparkles,
   Users,
-  Download,
   Clapperboard,
   Flame,
   GraduationCap,

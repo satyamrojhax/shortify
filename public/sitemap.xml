@@ -91,11 +91,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://shortify.cc.cd/downloaded</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://shortify.cc.cd/history</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>

@@ -55,9 +55,8 @@ function CategoryPage() {
     queryFn: ({ pageParam }) => fetchReelsPage(pageParam, filter),
     initialPageParam: 1,
     getNextPageParam: (last) => last.nextPage,
-    staleTime: 0,
+    staleTime: 5 * 60_000,
     gcTime: 60 * 60_000,
-    refetchOnMount: "always",
     retry: 3,
     retryDelay: (i) => Math.min(1000 * 2 ** i, 8000),
   });
@@ -132,6 +131,21 @@ function CategoryPage() {
     if (!hasNextPage || isFetchingNextPage) return;
     if (reels.length > 0 && activeIdx >= reels.length - 1) fetchNextPage();
   }, [activeIdx, reels.length, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  const restoredRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!start || reels.length === 0) return;
+    const key = `start:${start}`;
+    if (restoredRef.current === key) return;
+    const i = reels.findIndex((r) => r.id === start);
+    if (i >= 0) {
+      restoredRef.current = key;
+      requestAnimationFrame(() => scrollToIdx(i, "auto"));
+    } else if (hasNextPage && !isFetchingNextPage) {
+      fetchNextPage();
+    }
+  }, [start, reels, hasNextPage, isFetchingNextPage, fetchNextPage, scrollToIdx]);
 
   useEffect(() => {
     const cache = data;
@@ -287,7 +301,7 @@ function CategoryPage() {
         className="no-scrollbar h-full w-full snap-y snap-mandatory overflow-y-scroll"
       >
         {reels.map((r, i) => {
-          const near = Math.abs(i - activeIdx) <= 3;
+          const near = Math.abs(i - activeIdx) <= 1;
           const composite = `reel::${r.source}::${r.id}::${i}`;
           return (
             <section

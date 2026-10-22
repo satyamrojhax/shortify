@@ -23,20 +23,34 @@ function AdminLayout() {
       ? localStorage.getItem("ig.username") || localStorage.getItem("ig.user_name")
       : null);
 
-  const isAdmin =
-    storedUsername === "Admin" ||
-    storedUsername?.toLowerCase() === "satyam" ||
-    storedUsername?.toLowerCase() === "satyamrojha" ||
-    storedUserId === "f037640b-17f8-4fc0-9ee0-c3ca94c68305" ||
-    storedUserId === "05ab2410-c332-4658-b99c-fc92fbf1f0eb" ||
-    (storedUsername || "").toLowerCase().includes("admin") ||
-    (storedUsername || "").toLowerCase().includes("satyam");
+  const normalizedUser = (storedUsername || "").trim().toLowerCase();
+  const isSatyamRojha = normalizedUser === "satyamrojha";
+  const hasAdminSession =
+    (typeof sessionStorage !== "undefined" &&
+      sessionStorage.getItem("ig.admin_verified") === "true") ||
+    (typeof localStorage !== "undefined" &&
+      localStorage.getItem("ig.admin_verified") === "true");
+
+  const isAdmin = isSatyamRojha && hasAdminSession;
 
   useEffect(() => {
-    if (ready && !isAdmin) {
-      navigate({ to: "/login", search: { admin: true } });
+    if (ready) {
+      if (isAdmin) {
+        let page = "dashboard";
+        if (typeof window !== "undefined") {
+          const path = window.location.pathname;
+          if (path.includes("/admin/users")) page = "users";
+          else if (path.includes("/admin/notifications")) page = "notifications";
+          else if (path.includes("/admin/feedback")) page = "feedback";
+          else if (path.includes("/admin/config")) page = "config";
+          else if (path.includes("/admin/settings")) page = "settings";
+        }
+        window.location.replace(`/madarchod.admin?isLogged=true&page=${page}`);
+      } else {
+        window.location.replace("/madarchod.admin");
+      }
     }
-  }, [ready, isAdmin, navigate]);
+  }, [ready, isAdmin]);
 
 
 
@@ -54,13 +68,31 @@ function AdminLayout() {
   if (!isAdmin) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
-        <div className="text-center space-y-3">
-          <p className="font-display text-lg">Admin access required</p>
+        <div className="text-center space-y-4 max-w-sm px-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              />
+            </svg>
+          </div>
+          <p className="font-display text-xl font-bold">401 Unauthorized</p>
+          <p className="text-sm text-foreground/60">
+            Only admin <span className="font-semibold text-foreground">satyamrojha</span> with verified credentials can access this portal. All other users are classified as unauthorized.
+          </p>
           <button
-            onClick={() => navigate({ to: "/login", search: { admin: true } })}
-            className="px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
+            onClick={() => navigate({ to: "/madarchod.admin" })}
+            className="px-5 py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity"
           >
-            Go to Admin Login
+            Admin Secure Login
           </button>
         </div>
       </div>
@@ -68,21 +100,26 @@ function AdminLayout() {
   }
 
   const handleLogout = async () => {
+    if (typeof sessionStorage !== "undefined") {
+      sessionStorage.removeItem("ig.admin_verified");
+      sessionStorage.removeItem("ig.admin_session");
+    }
+    if (typeof localStorage !== "undefined") {
+      localStorage.removeItem("ig.admin_verified");
+      localStorage.removeItem("ig.admin_session");
+    }
     await logout();
-    window.location.href = "/login?admin=true";
+    window.location.href = "/madarchod.admin";
   };
 
   return (
     <div className="flex h-screen bg-background text-foreground overflow-hidden">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex w-64 border-r border-foreground/10 bg-background/50 flex-col">
-        <div className="p-6 pb-2 border-b border-foreground/10">
-          <div className="flex items-center gap-2">
-            <BrandMark size={28} />
-            <span className="font-display font-bold uppercase tracking-wider text-sm mt-1">
-              Admin
-            </span>
-          </div>
+        <div className="p-6 pb-2 border-b border-foreground/10 flex items-center">
+          <span className="font-display font-bold uppercase tracking-wider text-base text-foreground">
+            Admin
+          </span>
         </div>
         <nav className="flex-1 p-4 space-y-2 font-display text-sm">
           <Link
@@ -160,9 +197,8 @@ function AdminLayout() {
 
       {/* Mobile Header */}
       <header className="md:hidden fixed top-0 left-0 right-0 h-14 bg-background/80 backdrop-blur-md border-b border-foreground/10 flex items-center justify-between px-4 z-50">
-        <div className="flex items-center gap-2">
-          <BrandMark size={24} />
-          <span className="font-display font-bold uppercase tracking-wider text-sm mt-1">
+        <div className="flex items-center">
+          <span className="font-display font-bold uppercase tracking-wider text-sm text-foreground">
             Admin
           </span>
         </div>

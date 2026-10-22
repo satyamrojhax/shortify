@@ -61,7 +61,6 @@ Whether you want to build the next TikTok clone, an educational platform, or a h
 - **Infinite Scroll Engine:** A highly optimized infinite scrolling feed that mimics the mechanics of Instagram Reels and TikTok.
 - **HLS Adaptive Streaming:** Uses `hls.js` and `vidstack` for buffer-free streaming that dynamically adapts to the user's internet speed.
 - **Interactions:** Double-tap to like, bookmark videos to watch later, and favorite creators.
-- **Offline Mode:** The built-in offline downloader caches videos directly into the browser's IndexedDB, allowing users to watch downloaded reels even when they have no internet connection or are on airplane mode.
 - **Video Pre-warmer:** Intelligently pre-loads the next few videos in the background to ensure zero latency when scrolling.
 
 ### 🧠 Learning & Skills (Courses)
@@ -75,7 +74,7 @@ Whether you want to build the next TikTok clone, an educational platform, or a h
 ### 👤 User Profiles & Community
 
 - **Creator Pages:** Every user gets a public profile showcasing their uploaded videos and courses.
-- **Personal Dashboard:** A private area to manage history, favorites, saved videos, and downloaded content.
+- **Personal Dashboard:** A private area to manage history, favorites, and saved videos.
 - **Gamification & Streaks:** The app tracks daily logins and rewards users with "Streaks."
 - **Virtual Shop & Redemptions:** Users can spend their earned streak points or virtual currency in the Shop to redeem real-world or digital rewards.
 - **Global Leaderboard:** Compete with other users globally to have the highest watch time and longest streaks.
@@ -345,9 +344,6 @@ A: Yes! Shortify is MIT licensed. You can use it for personal or commercial proj
 
 **Q: Do I have to use Supabase?**  
 A: By default, the app is deeply integrated with Supabase for Auth and Database. However, the architecture is modular enough that you could swap out the `src/lib/supabase.ts` calls with Firebase or Appwrite if you prefer.
-
-**Q: How do the video downloads work offline?**  
-A: We use IndexedDB (via localforage) combined with Service Workers. When a user clicks "Download", the HLS chunks or MP4 files are cached directly into the browser's persistent storage.
 
 **Q: Why is my live deployment showing a blank screen?**  
 A: Ensure that you have added your Supabase environment variables in Vercel. If `VITE_SUPABASE_URL` is missing, the app will fail to boot. Check your browser console for exact errors.

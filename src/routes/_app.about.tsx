@@ -74,9 +74,9 @@ function AboutPage() {
           </div>
         </div>
         <div className="paper-card p-4 text-center">
-          <div className="font-display text-2xl text-cocoa dark:text-cream">Offline</div>
+          <div className="font-display text-2xl text-cocoa dark:text-cream">Fast</div>
           <div className="text-[11px] font-medium uppercase tracking-[0.15em] text-charcoal/60 dark:text-cream/60 mt-0.5">
-            No Wifi? Ok.
+            Instant Load
           </div>
         </div>
       </div>
@@ -130,8 +130,8 @@ function AboutPage() {
             />
             <FeatureCard
               icon={<Smartphone className="h-4 w-4" />}
-              title="No Internet? No Problem"
-              desc="download your stuff and watch it even when your wifi betrays you."
+              title="Mobile First & PWA"
+              desc="install it on your phone or desktop for an ultra-smooth app experience."
             />
             <FeatureCard
               icon={<Shield className="h-4 w-4" />}

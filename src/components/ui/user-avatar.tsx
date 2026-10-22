@@ -14,6 +14,7 @@ export interface UserAvatarProps {
   alt?: string;
   showBorder?: boolean;
   src?: string | null;
+  onError?: () => void;
 }
 
 const sizeClasses: Record<string, string> = {
@@ -36,6 +37,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   alt,
   showBorder = true,
   src,
+  onError,
 }) => {
   const [srcError, setSrcError] = useState(false);
   const [loaded, setLoaded] = useState(false);
@@ -69,6 +71,7 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
             setSrcError(true);
             setLoaded(false);
           }
+          onError?.();
         }}
       />
     </div>

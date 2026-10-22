@@ -416,8 +416,8 @@ function ReelsPage() {
         )}
 
         {reels.map((r, i) => {
-          // Render the player for reels within distance 3; beyond that show thumbnail placeholder
-          const near = Math.abs(i - activeIdx) <= 3;
+          // Render the player for active reel and adjacent reels (distance 1); beyond that show lightweight thumbnail placeholder
+          const near = Math.abs(i - activeIdx) <= 1;
           const composite = `reel::${r.source}::${r.id}::${i}`;
           return (
             <section

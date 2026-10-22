@@ -2,15 +2,20 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { BrandMark } from "@/components/nav";
-import { rotateCsrfToken } from "@/lib/url-tracker";
+import { rotateCsrfToken, getDeviceId } from "@/lib/url-tracker";
+
+type LoginSearch = {
+  type?: string;
+  secret?: string;
+  [key: string]: unknown;
+};
 
 export const Route = createFileRoute("/login")({
-  validateSearch: (
-    search: Record<string, unknown>,
-  ): { admin?: boolean; [key: string]: unknown } => {
+  validateSearch: (search: Record<string, unknown>): LoginSearch => {
     return {
       ...search,
-      admin: search.admin === "true" || search.admin === true,
+      type: typeof search.type === "string" ? search.type : undefined,
+      secret: typeof search.secret === "string" ? search.secret : undefined,
     };
   },
   component: LoginPage,
@@ -18,9 +23,9 @@ export const Route = createFileRoute("/login")({
 
 function LoginPage() {
   const navigate = useNavigate();
-  const { admin } = Route.useSearch();
+  const search = Route.useSearch();
   const { ready, ageOk, username, pinOk, loginUser, signupUser, pinCode } = useAuth();
-  const [mode, setMode] = useState<"login" | "signup">(admin ? "login" : "signup");
+  const [mode, setMode] = useState<"login" | "signup">("signup");
   const [name, setName] = useState("");
   const [userHandle, setUserHandle] = useState("");
   const [password, setPassword] = useState("");
@@ -29,8 +34,23 @@ function LoginPage() {
   const [usernameAvailable, setUsernameAvailable] = useState<boolean | null>(null);
   const [checkingUsername, setCheckingUsername] = useState(false);
 
+  // Synchronize URL with ?type=user&secret={deviceID}
   useEffect(() => {
-    if (!admin && ready) {
+    const devId = getDeviceId();
+    if (!search.type || !search.secret) {
+      navigate({
+        search: ((prev: any) => ({
+          ...prev,
+          type: prev.type || "user",
+          secret: prev.secret || devId,
+        })) as any,
+        replace: true,
+      });
+    }
+  }, [search.type, search.secret, navigate]);
+
+  useEffect(() => {
+    if (ready) {
       if (!ageOk) {
         navigate({ to: "/age", replace: true });
       } else if (username) {
@@ -45,7 +65,7 @@ function LoginPage() {
         }
       }
     }
-  }, [admin, ready, ageOk, username, pinOk, pinCode, navigate]);
+  }, [ready, ageOk, username, pinOk, pinCode, navigate]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,24 +80,19 @@ function LoginPage() {
     rotateCsrfToken("auth_submit");
     try {
       if (mode === "signup") {
-        if (admin) throw new Error("Cannot sign up as admin.");
         await signupUser(trimmedName, trimmedEmail, password);
       } else {
         await loginUser(trimmedEmail, password);
       }
 
-      if (admin) {
-        navigate({ to: "/admin" });
-      } else {
-        import("@/lib/storage").then(({ get, KEYS }) => {
-          const pin =
-            get(KEYS.pinCode, null) ||
-            (typeof localStorage !== "undefined"
-              ? localStorage.getItem("ig.pin_code") || localStorage.getItem("ig.dob")
-              : null);
-          navigate({ to: pin ? "/pin" : "/pin-setup" });
-        });
-      }
+      import("@/lib/storage").then(({ get, KEYS }) => {
+        const pin =
+          get(KEYS.pinCode, null) ||
+          (typeof localStorage !== "undefined"
+            ? localStorage.getItem("ig.pin_code") || localStorage.getItem("ig.dob")
+            : null);
+        navigate({ to: pin ? "/pin" : "/pin-setup" });
+      });
     } catch (err: unknown) {
       console.error(err);
       setErrorMsg(err instanceof Error ? err.message : "Failed to authenticate");
@@ -116,17 +131,15 @@ function LoginPage() {
       <div className="w-full max-w-md">
         <div className="mb-8 flex items-center justify-between gap-2 text-foreground">
           <BrandMark size={32} />
-          {!admin && (
-            <button
-              onClick={() => {
-                setMode(isSignup ? "login" : "signup");
-                setErrorMsg("");
-              }}
-              className="text-sm font-medium uppercase tracking-widest text-foreground/60 hover:text-foreground"
-            >
-              {isSignup ? "Log In Instead" : "Sign Up Instead"}
-            </button>
-          )}
+          <button
+            onClick={() => {
+              setMode(isSignup ? "login" : "signup");
+              setErrorMsg("");
+            }}
+            className="text-sm font-medium uppercase tracking-widest text-foreground/60 hover:text-foreground"
+          >
+            {isSignup ? "Log In Instead" : "Sign Up Instead"}
+          </button>
         </div>
         <p className="font-display text-destructive text-xl lowercase italic">
           {isSignup ? "hello there," : "welcome back,"}

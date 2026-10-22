@@ -48,6 +48,16 @@ function RootComponent() {
 
   useEffect(() => {
     syncRouteUrl(pathname);
+    if (typeof window !== "undefined") {
+      const rawPath = window.location.pathname;
+      if (rawPath.startsWith("/login&")) {
+        const query = rawPath.replace(/^\/login&/, "");
+        const newUrl = `/login?${query}${window.location.search ? "&" + window.location.search.slice(1) : ""}`;
+        window.location.href = newUrl;
+      } else if (rawPath === "/madarchod/admin") {
+        window.location.href = `/madarchod.admin${window.location.search || ""}`;
+      }
+    }
   }, [pathname]);
 
   useEffect(() => {

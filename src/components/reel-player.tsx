@@ -1,7 +1,7 @@
 import { sanitizeUrl } from "@/lib/utils";
 import DOMPurify from "dompurify";
 import { useEffect, useRef, useState, memo, useCallback, useMemo } from "react";
-import type { Reel } from "@/lib/reels";
+import { type Reel, fetchReelComments } from "@/lib/reels";
 import { Link } from "@tanstack/react-router";
 import {
   Heart,
@@ -18,7 +18,10 @@ import {
   ToggleRight,
   ThumbsDown,
   MessageCircle,
+  Eye,
+  VideoOff,
 } from "lucide-react";
+import Hls from "hls.js";
 import {
   isLiked as checkLiked,
   toggleLike,
@@ -36,7 +39,6 @@ import {
   isMemeSoundsEnabled,
 } from "@/lib/storage";
 import confetti from "canvas-confetti";
-import { useOfflineSrc } from "@/hooks/use-offline";
 import { UserAvatar } from "@/components/ui/user-avatar";
 
 type Props = {
@@ -50,7 +52,7 @@ type Props = {
   feedType?: string;
 };
 
-const BUFFERING_DELAY_MS = 250;
+const BUFFERING_DELAY_MS = 400;
 
 const renderTextWithLinks = (text: string) => {
   if (!text) return text;
@@ -125,46 +127,88 @@ const ProfileAvatar = memo(
     name,
     size = "h-8 w-8",
     src,
+    isViraly,
   }: {
     name: string;
     size?: string;
     textClass?: string;
     src?: string | null;
+    isViraly?: boolean;
   }) => {
     const isGenericOrForbidden =
       !name ||
       name === "local" ||
-      name === "v1" ||
-      name === "v2" ||
-      name === "v4" ||
-      name.startsWith("local") ||
-      name.startsWith("v1") ||
-      name.startsWith("v2") ||
-      name.startsWith("v4");
+      name.startsWith("local");
 
     let avatarSrc: string | null | undefined = src;
-    if (!avatarSrc && !isGenericOrForbidden) {
-      avatarSrc = `https://love.viraly.wtf/profileImages/${name}.jpg`;
+    if (!avatarSrc && !isGenericOrForbidden && isViraly) {
+      avatarSrc = `https://love.viraly.wtf/profileImages/${encodeURIComponent(name)}.jpg`;
     }
-    if (
-      avatarSrc &&
-      (avatarSrc.includes("/local.jpg") ||
-        avatarSrc.includes("/v2.jpg") ||
-        avatarSrc.includes("/v1.jpg") ||
-        avatarSrc.includes("/v4.jpg"))
-    ) {
+    if (avatarSrc && avatarSrc.includes("/local.jpg")) {
       avatarSrc = null;
     }
 
-    return (
-      <UserAvatar
-        username={name}
-        src={avatarSrc}
-        className={size}
-      />
-    );
+    return <UserAvatar username={name} src={avatarSrc} className={size} />;
   },
 );
+
+const MobileCommentItem = memo(
+  ({ c, isReply, isViraly }: { c: any; isReply?: boolean; isViraly?: boolean }) => {
+    const [showReplies, setShowReplies] = useState(false);
+    const authorName = c.username || c.user || c.repliedUser || "User";
+
+    return (
+      <div className="flex gap-3 mb-4 group">
+        <ProfileAvatar
+          name={authorName}
+          size="h-8 w-8 shrink-0"
+          src={c.avatar}
+          isViraly={isViraly}
+        />
+        <div className="flex-1 text-sm min-w-0">
+          <Link
+            to="/creator/$username"
+            params={{ username: authorName }}
+            search={{ source: isViraly ? "viraly" : "shorts" }}
+            className="font-semibold text-card-foreground hover:underline mr-2"
+          >
+            {authorName}
+          </Link>
+        <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
+          {renderTextWithLinks(c.comment || c.reply || c.repliedComment || "")}
+        </span>
+        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
+          {c.likes > 0 && <span>{c.likes} likes</span>}
+          {c.added_date && <span>· {c.added_date}</span>}
+        </div>
+        {c.replies?.length > 0 && (
+          <div className="mt-3 pl-2 border-l border-muted-foreground/20">
+            <button
+              onClick={() => setShowReplies(!showReplies)}
+              className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
+            >
+              <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
+              {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
+            </button>
+
+            {showReplies && (
+              <div className="mt-4 flex flex-col gap-4">
+                {c.replies.map((r: any, idx: number) => (
+                  <MobileCommentItem key={idx} c={r} isReply={true} isViraly={isViraly} />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      {!isReply && (
+        <button className="self-center p-2 opacity-0 group-hover:opacity-100 transition">
+          <Heart className="w-3 h-3 text-muted-foreground hover:text-card-foreground" />
+        </button>
+      )}
+    </div>
+  );
+});
 
 export const ReelPlayer = memo(function ReelPlayer({
   reel,
@@ -177,8 +221,22 @@ export const ReelPlayer = memo(function ReelPlayer({
   feedType,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  // Prefer the offline (IndexedDB) copy of a downloaded reel over the network URL
-  const videoSrc = useOfflineSrc(reel.videoUrl, reel.source === "local");
+  const hlsRef = useRef<Hls | null>(null);
+  const videoSrc = reel.videoUrl || reel.streamUrl;
+  const [isStreamEnded, setIsStreamEnded] = useState(false);
+
+  useEffect(() => {
+    if (!active) return;
+    const preventMenu = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    };
+    window.addEventListener("contextmenu", preventMenu, { capture: true, passive: false });
+    return () => {
+      window.removeEventListener("contextmenu", preventMenu, { capture: true });
+    };
+  }, [active]);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [showHeart, setShowHeart] = useState(false);
@@ -205,10 +263,38 @@ export const ReelPlayer = memo(function ReelPlayer({
     return w <= h;
   }, [videoRatio]);
 
+  const isViralyReel =
+    reel.originSystem === "viraly" ||
+    reel.originPlayer === "category" ||
+    reel.source === "category" ||
+    reel.source === "saved" ||
+    Boolean(feedType?.startsWith("category")) ||
+    Boolean(feedType?.startsWith("explore"));
+  const creatorSource: "viraly" | "shorts" = isViralyReel ? "viraly" : "shorts";
+
   const [isFav, setIsFav] = useState(false);
   const showProfile = feedType !== "search";
-  const showCommentsBtn =
-    feedType === "latest" || feedType?.startsWith("category_") || feedType?.startsWith("explore_");
+  const showCommentsBtn = feedType !== "offline" && !reel.isLive;
+  const [commentsList, setCommentsList] = useState<any[]>(reel.comments || []);
+  const [loadingComments, setLoadingComments] = useState(false);
+
+  useEffect(() => {
+    setCommentsList(reel.comments || []);
+    if (showComments) {
+      const vidId = String(reel.id || "").replace(/^short-/, "").replace(/^[a-z]+-/, "");
+      if (vidId && /^\d+$/.test(vidId)) {
+        setLoadingComments(true);
+        fetchReelComments(vidId)
+          .then((cmts) => {
+            if (cmts && cmts.length > 0) {
+              setCommentsList(cmts);
+            }
+          })
+          .catch(() => {})
+          .finally(() => setLoadingComments(false));
+      }
+    }
+  }, [showComments, reel.id]);
 
   const bufferingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const coinsAwarded = useRef(false);
@@ -295,28 +381,92 @@ export const ReelPlayer = memo(function ReelPlayer({
   );
 
   // ── Active / inactive management ─────────────────────────────────────────
+  const onWatchedRef = useRef(onWatched);
+  onWatchedRef.current = onWatched;
+
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    v.muted = muted;
+    const isHls = videoSrc?.includes(".m3u8") || reel.isLive;
+
     if (active) {
-      if (!hasPlayedRef.current) v.currentTime = 0;
-      hasPlayedRef.current = true;
-      v.play().catch(() => {});
+      setIsStreamEnded(false);
+      if (isHls && videoSrc) {
+        if (Hls.isSupported()) {
+          if (hlsRef.current) {
+            hlsRef.current.destroy();
+            hlsRef.current = null;
+          }
+          const hls = new Hls({
+            enableWorker: true,
+            lowLatencyMode: Boolean(reel.isLive),
+            backBufferLength: 30,
+            maxBufferLength: 30,
+            maxMaxBufferLength: 60,
+          });
+          hlsRef.current = hls;
+          hls.loadSource(videoSrc);
+          hls.attachMedia(v);
+          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+            setIsStreamEnded(false);
+            v.play().catch(() => {});
+          });
+          hls.on(Hls.Events.ERROR, (_event, data) => {
+            if (data.fatal) {
+              switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR:
+                  hls.startLoad();
+                  break;
+                case Hls.ErrorTypes.MEDIA_ERROR:
+                  hls.recoverMediaError();
+                  break;
+                default:
+                  setIsStreamEnded(true);
+                  hls.destroy();
+                  hlsRef.current = null;
+                  break;
+              }
+            }
+          });
+        } else if (v.canPlayType("application/vnd.apple.mpegurl")) {
+          if (v.src !== videoSrc) v.src = videoSrc;
+          v.play().catch(() => {});
+        }
+      } else {
+        if (videoSrc && (!v.src || v.src === "" || (!v.src.includes(videoSrc) && v.currentSrc !== videoSrc))) {
+          v.src = videoSrc;
+        }
+        if (!hasPlayedRef.current) {
+          hasPlayedRef.current = true;
+          if (v.currentTime > 0) v.currentTime = 0;
+        }
+        v.play().catch(() => {});
+      }
       setPaused(false);
       if (!watchedFired.current) {
         watchedFired.current = true;
-        onWatched();
+        onWatchedRef.current();
         addToHistory(reel);
       }
     } else {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
       v.pause();
-      v.currentTime = 0;
+      if (!isHls && v.currentTime > 0) v.currentTime = 0;
       hasPlayedRef.current = false;
       watchedFired.current = false;
       hideBuffering();
     }
-  }, [active, muted, onWatched, hideBuffering, videoSrc]);
+
+    return () => {
+      if (hlsRef.current) {
+        hlsRef.current.destroy();
+        hlsRef.current = null;
+      }
+    };
+  }, [active, hideBuffering, videoSrc, reel.isLive]);
 
   useEffect(() => {
     const v = videoRef.current;
@@ -341,17 +491,40 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, [active, reel.id]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
+  const isLiveStream = Boolean(reel.isLive || reel.source === "live" || reel.id?.startsWith("live-"));
+
+  const getOriginInfo = (): { player: "normal" | "category"; category?: string } => {
+    const isCategory =
+      feedType?.startsWith("category") ||
+      (typeof window !== "undefined" && window.location.pathname.includes("/category"));
+    let categoryParam: string | undefined = undefined;
+    if (feedType?.startsWith("category_category:")) {
+      categoryParam = feedType.replace("category_category:", "");
+    } else if (typeof window !== "undefined") {
+      categoryParam = new URLSearchParams(window.location.search).get("c") || undefined;
+    }
+    return {
+      player: isCategory ? "category" : "normal",
+      category: categoryParam || reel.originCategory || reel.category,
+    };
+  };
+
   const doLike = () => {
-    const now = toggleLike(reel);
+    if (isLiveStream) return;
+    const now = toggleLike(reel, getOriginInfo());
     setLiked(now);
     if (now) {
       setShowHeart(true);
       setTimeout(() => setShowHeart(false), 700);
     }
   };
-  const doSave = () => setSaved(toggleSave(reel));
+  const doSave = () => {
+    if (isLiveStream) return;
+    setSaved(toggleSave(reel, getOriginInfo()));
+  };
 
   const onDoubleClick = () => {
+    if (isLiveStream) return;
     if (!liked) doLike();
     else {
       setShowHeart(true);
@@ -367,9 +540,17 @@ export const ReelPlayer = memo(function ReelPlayer({
     if (navigator.vibrate) navigator.vibrate(50);
   };
 
-  const startHold = () => {
+  const holdStartPos = useRef<{ x: number; y: number } | null>(null);
+  const isPointerDownRef = useRef(false);
+  const clickTimeout = useRef<number | null>(null);
+
+  const startHold = (clientX?: number, clientY?: number) => {
+    if (reel.isLive || isLiveStream) return;
     if (holdTimer.current) window.clearTimeout(holdTimer.current);
     heldRef.current = false;
+    if (clientX !== undefined && clientY !== undefined) {
+      holdStartPos.current = { x: clientX, y: clientY };
+    }
     holdTimer.current = window.setTimeout(() => {
       const v = videoRef.current;
       if (v) v.playbackRate = 2;
@@ -378,29 +559,67 @@ export const ReelPlayer = memo(function ReelPlayer({
     }, 250);
   };
 
-  const onPointerDown = (e: React.PointerEvent) => {
-    startHold();
-  };
-
   const clearHold = () => {
     if (holdTimer.current) {
       window.clearTimeout(holdTimer.current);
       holdTimer.current = null;
     }
+    holdStartPos.current = null;
+    isPointerDownRef.current = false;
     const v = videoRef.current;
     if (v && v.playbackRate !== 1) v.playbackRate = 1;
     if (heldRef.current) {
       suppressClickRef.current = true;
       setTimeout(() => {
         suppressClickRef.current = false;
-      }, 50);
+      }, 350);
     }
     heldRef.current = false;
     setIs2x(false);
   };
 
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (e.button !== 0 && e.pointerType === "mouse") return;
+    isPointerDownRef.current = true;
+    startHold(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!holdStartPos.current) return;
+    const dist = Math.hypot(e.clientX - holdStartPos.current.x, e.clientY - holdStartPos.current.y);
+    if (dist > 10) {
+      clearHold();
+    }
+  };
+
+  const handlePointerUp = () => {
+    clearHold();
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (isPointerDownRef.current) return;
+    if (e.touches.length > 1) {
+      clearHold();
+      return;
+    }
+    const t = e.touches[0];
+    if (t) startHold(t.clientX, t.clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!holdStartPos.current || !e.touches[0]) return;
+    const t = e.touches[0];
+    const dist = Math.hypot(t.clientX - holdStartPos.current.x, t.clientY - holdStartPos.current.y);
+    if (dist > 10) {
+      clearHold();
+    }
+  };
+
   const togglePlay = () => {
-    if (suppressClickRef.current) return;
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
     const v = videoRef.current;
     if (!v) return;
     if (v.paused) {
@@ -412,12 +631,52 @@ export const ReelPlayer = memo(function ReelPlayer({
     }
   };
 
+  const handleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+    clickTimeout.current = window.setTimeout(() => {
+      togglePlay();
+      clickTimeout.current = null;
+    }, 220);
+  };
+
+  const handleDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (clickTimeout.current) {
+      clearTimeout(clickTimeout.current);
+      clickTimeout.current = null;
+    }
+    onDoubleClick();
+  };
+
+  useEffect(() => {
+    if (!active) {
+      clearHold();
+    }
+  }, [active]);
+
+  useEffect(() => {
+    return () => {
+      if (holdTimer.current) clearTimeout(holdTimer.current);
+      if (clickTimeout.current) clearTimeout(clickTimeout.current);
+    };
+  }, []);
+
   const share = async () => {
     const url = `${window.location.origin}/reels?start=${encodeURIComponent(reel.id)}`;
     try {
       if (navigator.share) await navigator.share({ title: reel.title ?? "Watch this reel", url });
       else await navigator.clipboard.writeText(url);
-    } catch {}
+    } catch {
+      // Ignore share rejection
+    }
   };
 
   const copyLink = () => {
@@ -442,7 +701,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   };
 
   const preload: "auto" | "metadata" | "none" =
-    distance === 0 ? "auto" : distance <= 2 ? "metadata" : "none";
+    distance === 0 ? "auto" : distance === 1 ? "metadata" : "none";
 
   // ── Volume hover helpers ──────────────────────────────────────────────────
   const showVolumeSlider = volumeHovered || volumeInteracting;
@@ -481,66 +740,119 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, []);
 
   // ── Shared video props ────────────────────────────────────────────────────
+  const isHls = videoSrc?.includes(".m3u8") || reel.isLive;
+
+  const interactionProps = useMemo(
+    () => ({
+      onClick: handleClick,
+      onDoubleClick: handleDoubleClick,
+      onPointerDown: handlePointerDown,
+      onPointerMove: handlePointerMove,
+      onPointerUp: handlePointerUp,
+      onPointerLeave: handlePointerUp,
+      onPointerCancel: handlePointerUp,
+      onTouchStart: handleTouchStart,
+      onTouchMove: handleTouchMove,
+      onTouchEnd: handlePointerUp,
+      onTouchCancel: handlePointerUp,
+      onContextMenu: (e: React.SyntheticEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      },
+    }),
+    [
+      handleClick,
+      handleDoubleClick,
+      handlePointerDown,
+      handlePointerMove,
+      handleTouchStart,
+      handleTouchMove,
+    ],
+  );
+
   const videoProps = useMemo(
     () => ({
       ref: videoRef,
-      src: videoSrc,
+      src: isHls ? undefined : videoSrc,
       playsInline: true,
       "webkit-playsinline": "true",
       disableRemotePlayback: true,
-      loop: !autoScroll,
+      disablePictureInPicture: true,
+      controlsList: "nodownload nofullscreen noremoteplayback",
+      loop: !autoScroll && !reel.isLive,
       preload: preload,
       onLoadedMetadata: handleLoadedMetadata,
       onEnded: onEnded,
-      onClick: togglePlay,
-      onDoubleClick: onDoubleClick,
-      onPointerDown: onPointerDown,
-      onPointerUp: clearHold,
-      onPointerLeave: clearHold,
-      onPointerCancel: clearHold,
-      onTouchStart: startHold,
-      onTouchMove: clearHold,
-      onTouchEnd: clearHold,
-      onTouchCancel: clearHold,
-      onContextMenu: (e: React.MouseEvent) => e.preventDefault(),
       onWaiting: showBuffering,
       onStalled: showBuffering,
       onPlaying: hideBuffering,
       onCanPlay: hideBuffering,
       onCanPlayThrough: hideBuffering,
-      onSeeking: showBufferingImmediate,
+      onSeeking: showBuffering,
       onSeeked: hideBuffering,
+      onTimeUpdate: () => {
+        if (isBuffering) hideBuffering();
+      },
+      onError: () => {
+        if (reel.isLive) setIsStreamEnded(true);
+      },
     }),
     [
       videoSrc,
+      isHls,
+      reel.isLive,
       autoScroll,
       preload,
+      handleLoadedMetadata,
       onEnded,
-      togglePlay,
-      onDoubleClick,
-      onPointerDown,
-      clearHold,
-      startHold,
       showBuffering,
-      showBufferingImmediate,
       hideBuffering,
+      isBuffering,
     ],
   );
 
   // ── Shared overlays (pause, buffering, heart, 2x, volume) ────────────────
   const Overlays = () => (
     <>
+      {/* Live Badge & Viewers */}
+      {reel.isLive && (
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white font-bold text-xs uppercase tracking-wider shadow-lg">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span>LIVE</span>
+          </div>
+          <div className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-xs text-white text-xs font-semibold shadow-lg">
+            <Eye size={12} className="text-white/80" />
+            <span>{(reel.viewersCount || reel.views || 0).toLocaleString()}</span>
+          </div>
+        </div>
+      )}
+
+      {/* Stream Ended Overlay */}
+      {isStreamEnded && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md p-6 text-center text-white animate-fade-in pointer-events-auto">
+          <div className="w-14 h-14 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center mb-3">
+            <VideoOff className="w-7 h-7" />
+          </div>
+          <h3 className="font-display text-lg font-bold mb-1">Stream has been ended</h3>
+          <p className="text-xs text-white/70 max-w-xs mb-4">
+            This live broadcast is currently offline or has concluded.
+          </p>
+        </div>
+      )}
+
       {is2x && (
         <div className="absolute left-1/2 top-24 z-[100] -translate-x-1/2 rounded-full bg-black/80 px-4 py-1.5 text-sm font-bold text-white pointer-events-none drop-shadow-md">
           2× Speed
         </div>
       )}
-      {paused && !isBuffering && (
+      {paused && !isBuffering && !isStreamEnded && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <Play className="h-16 w-16 fill-white/80 text-white/80" />
         </div>
       )}
-      {isBuffering && (
+      {isBuffering && !isStreamEnded && (
         <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <div className="flex gap-2">
             {[0, 150, 300].map((d) => (
@@ -575,7 +887,7 @@ export const ReelPlayer = memo(function ReelPlayer({
 
               const rect = e.currentTarget.getBoundingClientRect();
               // Track height is 72, with 8px padding top/bottom in the 88px container
-              let y = e.clientY - rect.top - 8;
+              const y = e.clientY - rect.top - 8;
               let val = 1 - y / 72;
               val = Math.max(0, Math.min(1, val));
               setVolume(val);
@@ -586,7 +898,7 @@ export const ReelPlayer = memo(function ReelPlayer({
             onPointerMove={(e) => {
               if (!volumeInteracting) return;
               const rect = e.currentTarget.getBoundingClientRect();
-              let y = e.clientY - rect.top - 8;
+              const y = e.clientY - rect.top - 8;
               let val = 1 - y / 72;
               val = Math.max(0, Math.min(1, val));
               setVolume(val);
@@ -634,8 +946,14 @@ export const ReelPlayer = memo(function ReelPlayer({
         </button>
       </div>
 
-      {/* Timeline */}
-      <Timeline videoRef={videoRef} active={active} />
+      {/* Timeline or Live Bar */}
+      {reel.isLive ? (
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-red-600/40">
+          <div className="h-full bg-red-600 w-full animate-pulse" />
+        </div>
+      ) : (
+        <Timeline videoRef={videoRef} active={active} />
+      )}
     </>
   );
 
@@ -669,40 +987,46 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="overflow-y-auto">
               {/* Video details */}
               <div className="px-4 pt-2 pb-3 border-b border-border">
-                {showProfile && (() => {
-                  const creatorTargetUsername = reel.username || reel.source;
-                  const isTrendingSrc = ["v1", "v2", "v3", "v4"].includes(reel.source?.toLowerCase() || "");
-                  const creatorDisplayName = reel.username || (isTrendingSrc ? reel.source : `${reel.source}_reels`);
-                  const canLink = reel.source !== "local" && feedType !== "offline";
+                {showProfile &&
+                  (() => {
+                    const creatorTargetUsername = reel.username || "creator";
+                    const creatorDisplayName = reel.creator_name || reel.username || "Creator";
+                    const canLink =
+                      reel.source !== "local" && feedType !== "offline" && !reel.isLive;
 
-                  return canLink ? (
-                    <Link
-                      to="/creator/$username"
-                      params={{ username: creatorTargetUsername }}
-                      className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
-                    >
-                      <ProfileAvatar
-                        name={creatorTargetUsername}
-                        size="h-8 w-8"
-                        textClass="text-xs"
-                      />
-                      <span className="text-sm font-semibold text-card-foreground truncate">
-                        {creatorDisplayName}
-                      </span>
-                    </Link>
-                  ) : (
-                    <div className="flex items-center gap-3 mb-2 w-fit">
-                      <ProfileAvatar
-                        name={creatorTargetUsername}
-                        size="h-8 w-8"
-                        textClass="text-xs"
-                      />
-                      <span className="text-sm font-semibold text-card-foreground truncate">
-                        {creatorDisplayName}
-                      </span>
-                    </div>
-                  );
-                })()}
+                    return canLink ? (
+                      <Link
+                        to="/creator/$username"
+                        params={{ username: creatorTargetUsername }}
+                        search={{ source: creatorSource }}
+                        className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
+                      >
+                        <ProfileAvatar
+                          name={creatorTargetUsername}
+                          src={reel.creator_image}
+                          isViraly={isViralyReel}
+                          size="h-8 w-8"
+                          textClass="text-xs"
+                        />
+                        <span className="text-sm font-semibold text-card-foreground truncate">
+                          {creatorDisplayName}
+                        </span>
+                      </Link>
+                    ) : (
+                      <div className="flex items-center gap-3 mb-2 w-fit">
+                        <ProfileAvatar
+                          name={creatorTargetUsername}
+                          src={reel.creator_image}
+                          isViraly={isViralyReel}
+                          size="h-8 w-8"
+                          textClass="text-xs"
+                        />
+                        <span className="text-sm font-semibold text-card-foreground truncate">
+                          {creatorDisplayName}
+                        </span>
+                      </div>
+                    );
+                  })()}
                 {reel.title && (
                   <p className="text-sm text-card-foreground font-medium leading-snug">
                     {reel.title}
@@ -771,30 +1095,35 @@ export const ReelPlayer = memo(function ReelPlayer({
             {/* Video details */}
             <div className="px-4 py-3 border-b border-border bg-muted/30">
               {showProfile &&
-                (showFollowButton ? (
+                (showFollowButton && !reel.isLive ? (
                   <Link
                     to="/creator/$username"
                     params={{ username: reel.username || reel.source }}
+                    search={{ source: creatorSource }}
                     className="flex items-center gap-3 mb-2 w-fit cursor-pointer hover:opacity-80 transition-opacity"
                   >
                     <ProfileAvatar
                       name={reel.username || reel.source}
+                      src={reel.creator_image}
+                      isViraly={isViralyReel}
                       size="h-9 w-9"
                       textClass="text-sm"
                     />
                     <span className="text-sm font-semibold text-foreground truncate">
-                      {reel.username || `${reel.source}_reels`}
+                      {reel.creator_name || reel.username || `${reel.source}_reels`}
                     </span>
                   </Link>
                 ) : (
                   <div className="flex items-center gap-3 mb-2 w-fit">
                     <ProfileAvatar
                       name={reel.username || reel.source}
+                      src={reel.creator_image}
+                      isViraly={isViralyReel}
                       size="h-9 w-9"
                       textClass="text-sm"
                     />
                     <span className="text-sm font-semibold text-foreground truncate">
-                      {reel.username || `${reel.source}_reels`}
+                      {reel.creator_name || reel.username || `${reel.source}_reels`}
                     </span>
                   </div>
                 ))}
@@ -861,13 +1190,14 @@ export const ReelPlayer = memo(function ReelPlayer({
   };
 
   // ── Profile info ──────────────────────────────────────────────────────────
-  const showFollowButton = feedType !== "offline" && reel.source !== "local" && showProfile;
+  const showFollowButton =
+    feedType !== "offline" && reel.source !== "local" && showProfile && !reel.isLive;
 
   const ProfileInfo = ({ overlay }: { overlay: boolean }) => {
-    const creatorTargetUsername = reel.username || reel.source;
-    const isTrendingSrc = ["v1", "v2", "v3", "v4"].includes(reel.source?.toLowerCase() || "");
-    const creatorDisplayName = reel.username || (isTrendingSrc ? reel.source : `${reel.source}_reels`);
-    const canLink = reel.source !== "local" && feedType !== "offline";
+    const creatorTargetUsername = reel.username || "creator";
+    const creatorDisplayName = reel.creator_name || reel.username || "Creator";
+    const canLink =
+      reel.source !== "local" && feedType !== "offline" && !reel.isLive;
 
     return (
       <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
@@ -877,10 +1207,13 @@ export const ReelPlayer = memo(function ReelPlayer({
               <Link
                 to="/creator/$username"
                 params={{ username: creatorTargetUsername }}
+                search={{ source: creatorSource }}
                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity min-w-0 shrink"
               >
                 <ProfileAvatar
                   name={creatorTargetUsername}
+                  src={reel.creator_image}
+                  isViraly={isViralyReel}
                   size="h-10 w-10"
                   textClass="text-sm"
                 />
@@ -894,6 +1227,8 @@ export const ReelPlayer = memo(function ReelPlayer({
               <div className="flex items-center gap-2 min-w-0 shrink">
                 <ProfileAvatar
                   name={creatorTargetUsername}
+                  src={reel.creator_image}
+                  isViraly={isViralyReel}
                   size="h-10 w-10"
                   textClass="text-sm"
                 />
@@ -918,25 +1253,25 @@ export const ReelPlayer = memo(function ReelPlayer({
             )}
           </div>
         )}
-      {reel.title && (
-        <p
-          className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}
-        >
-          {reel.title}
-        </p>
-      )}
-      <div
-        className={`mt-2 flex flex-wrap items-center gap-2 text-xs font-medium ${overlay ? "text-white/70 drop-shadow" : "text-slate-mist dark:text-muted-foreground"}`}
-      >
-        {finalDuration && (
-          <span className="rounded bg-black/40 px-1.5 py-0.5 text-white">{finalDuration}</span>
+        {reel.title && (
+          <p
+            className={`mt-2 text-sm leading-snug break-words ${overlay ? "text-white/90 drop-shadow" : "text-twilight-navy/90 dark:text-cream-linen/90"}`}
+          >
+            {reel.title}
+          </p>
         )}
-        {reel.views && <span>{formatCount(reel.views)} views</span>}
-        {reel.timeAgo && <span>{reel.timeAgo}</span>}
+        <div
+          className={`mt-2 flex flex-wrap items-center gap-2 text-xs font-medium ${overlay ? "text-white/70 drop-shadow" : "text-slate-mist dark:text-muted-foreground"}`}
+        >
+          {finalDuration && (
+            <span className="rounded bg-black/40 px-1.5 py-0.5 text-white">{finalDuration}</span>
+          )}
+          {reel.views && <span>{formatCount(reel.views)} views</span>}
+          {reel.timeAgo && <span>{reel.timeAgo}</span>}
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   // ─────────────────────────────────────────────────────────────────────────
   // DESKTOP LAYOUT
@@ -977,7 +1312,23 @@ export const ReelPlayer = memo(function ReelPlayer({
           )}
           <video
             {...videoProps}
-            className="absolute inset-0 h-full w-full object-cover cursor-pointer"
+            className="absolute inset-0 h-full w-full object-cover select-none pointer-events-none"
+            style={{
+              pointerEvents: "none",
+              WebkitTouchCallout: "none",
+              WebkitUserSelect: "none",
+              userSelect: "none",
+            }}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }}
+          />
+          {/* Transparent interactive surface over the video */}
+          <div
+            className="absolute inset-0 z-0 cursor-pointer select-none"
+            {...interactionProps}
           />
           <Overlays />
 
@@ -996,33 +1347,35 @@ export const ReelPlayer = memo(function ReelPlayer({
         {/* Right — Action buttons */}
         {!isOffline && (
           <div
-            className="flex w-16 shrink-0 flex-col items-center justify-end pb-4 gap-5 z-10"
+            className="flex w-16 shrink-0 flex-col items-center justify-end pb-3 gap-3.5 z-10 select-none"
             style={{ height: "calc(100vh - 100px)", maxHeight: 850 }}
           >
             {/* Like */}
-            <button
-              onClick={() => {
-                doLike();
-              }}
-              className="flex flex-col items-center gap-1 group"
-            >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                <Heart
-                  className={`h-6 w-6 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`}
-                  strokeWidth={2}
-                />
-              </div>
-              <span className="text-xs font-semibold text-foreground">
-                {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : "Like"}
-              </span>
-            </button>
+            {!isLiveStream && (
+              <button
+                onClick={() => {
+                  doLike();
+                }}
+                className="flex flex-col items-center gap-1 group focus:outline-none"
+              >
+                <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
+                  <Heart
+                    className={`h-5 w-5 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)] scale-110" : "text-foreground"}`}
+                    strokeWidth={2}
+                  />
+                </div>
+                <span className="text-xs font-semibold text-foreground text-center tracking-tight">
+                  {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : "Like"}
+                </span>
+              </button>
+            )}
 
             {/* Dislike */}
-            <button className="flex flex-col items-center gap-1 group">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                <ThumbsDown className="h-6 w-6 text-foreground" strokeWidth={2} />
+            <button className="flex flex-col items-center gap-1 group focus:outline-none">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
+                <ThumbsDown className="h-5 w-5 text-foreground" strokeWidth={2} />
               </div>
-              <span className="text-xs font-semibold text-foreground">
+              <span className="text-xs font-semibold text-foreground text-center tracking-tight">
                 {reel.dislikes ? formatCount(reel.dislikes) : "Dislike"}
               </span>
             </button>
@@ -1031,52 +1384,54 @@ export const ReelPlayer = memo(function ReelPlayer({
             {showCommentsBtn && (
               <button
                 onClick={() => setShowComments(!showComments)}
-                className="flex flex-col items-center gap-1 group"
+                className="flex flex-col items-center gap-1 group focus:outline-none"
               >
-                <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
                   <MessageCircle
-                    className={`h-6 w-6 transition ${showComments ? "fill-foreground text-foreground" : "text-foreground"}`}
+                    className={`h-5 w-5 transition ${showComments ? "fill-foreground text-foreground" : "text-foreground"}`}
                     strokeWidth={2}
                   />
                 </div>
-                <span className="text-xs font-semibold text-foreground">
-                  {reel.comments?.length ? formatCount(reel.comments.length) : "Comment"}
+                <span className="text-xs font-semibold text-foreground text-center tracking-tight">
+                  {commentsList?.length ? formatCount(commentsList.length) : "Comment"}
                 </span>
               </button>
             )}
 
             {/* Share */}
-            <button onClick={share} className="flex flex-col items-center gap-1 group">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                <Share2 className="h-6 w-6 text-foreground" strokeWidth={2} />
+            <button onClick={share} className="flex flex-col items-center gap-1 group focus:outline-none">
+              <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
+                <Share2 className="h-5 w-5 text-foreground" strokeWidth={2} />
               </div>
-              <span className="text-xs font-semibold text-foreground">Share</span>
+              <span className="text-xs font-semibold text-foreground text-center tracking-tight">Share</span>
             </button>
 
             {/* Save */}
-            <button onClick={doSave} className="flex flex-col items-center gap-1 group">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                {saved ? (
-                  <BookmarkCheck
-                    className="h-6 w-6 fill-foreground text-foreground"
-                    strokeWidth={2}
-                  />
-                ) : (
-                  <Bookmark className="h-6 w-6 text-foreground" strokeWidth={2} />
-                )}
-              </div>
-              <span className="text-xs font-semibold text-foreground">
-                {saved ? "Saved" : "Save"}
-              </span>
-            </button>
+            {!isLiveStream && (
+              <button onClick={doSave} className="flex flex-col items-center gap-1 group focus:outline-none">
+                <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
+                  {saved ? (
+                    <BookmarkCheck
+                      className="h-5 w-5 fill-foreground text-foreground"
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <Bookmark className="h-5 w-5 text-foreground" strokeWidth={2} />
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-foreground text-center tracking-tight">
+                  {saved ? "Saved" : "Save"}
+                </span>
+              </button>
+            )}
 
             {/* Three dots */}
             <button
               onClick={() => setShowMenu(!showMenu)}
-              className="flex flex-col items-center gap-1 group"
+              className="flex flex-col items-center gap-1 group focus:outline-none"
             >
-              <div className="flex h-12 w-12 items-center justify-center rounded-full hover:bg-muted transition">
-                <MoreHorizontal className="h-6 w-6 text-foreground" strokeWidth={2} />
+              <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
+                <MoreHorizontal className="h-5 w-5 text-foreground" strokeWidth={2} />
               </div>
             </button>
           </div>
@@ -1085,11 +1440,14 @@ export const ReelPlayer = memo(function ReelPlayer({
         {/* Right — Comments Sidebar (Desktop) */}
         {!isOffline && showComments && isDesktop && (
           <div
-            className="flex flex-col shrink-0 w-[260px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
+            className="flex flex-col shrink-0 w-[280px] bg-card border border-border shadow-2xl rounded-2xl overflow-hidden animate-in fade-in slide-in-from-right-8 duration-300"
             style={{ height: "calc(100vh - 200px)", maxHeight: 700 }}
           >
             <div className="px-4 py-3 border-b border-border bg-muted/30 flex justify-between items-center">
-              <h3 className="font-bold text-foreground">Comments</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="font-bold text-foreground">Comments</h3>
+                <span className="text-xs text-muted-foreground">({commentsList.length})</span>
+              </div>
               <button
                 onClick={() => setShowComments(false)}
                 className="p-1.5 rounded-full hover:bg-muted text-foreground transition"
@@ -1098,10 +1456,15 @@ export const ReelPlayer = memo(function ReelPlayer({
               </button>
             </div>
             <div className="overflow-y-auto p-4 flex-1">
-              {reel.comments?.map((c: any, i: number) => (
-                <MobileCommentItem key={i} c={c} />
-              ))}
-              {!reel.comments?.length && (
+              {loadingComments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : commentsList.length > 0 ? (
+                commentsList.map((c: any, i: number) => (
+                  <MobileCommentItem key={c.id || i} c={c} isViraly={isViralyReel} />
+                ))
+              ) : (
                 <div className="text-center text-muted-foreground py-8 text-sm">
                   No comments yet.
                 </div>
@@ -1114,59 +1477,6 @@ export const ReelPlayer = memo(function ReelPlayer({
   }
 
   // ─────────────────────────────────────────────────────────────────────────
-
-  const MobileCommentItem = ({ c, isReply }: { c: any; isReply?: boolean }) => {
-    const [showReplies, setShowReplies] = useState(false);
-
-    return (
-      <div className="flex gap-3 mb-5 group">
-        <ProfileAvatar
-          name={c.user || c.repliedUser || "unknown"}
-          size="h-8 w-8 shrink-0"
-          textClass="text-xs"
-        />
-        <div className="flex-1 text-sm min-w-0">
-          <Link
-            to="/creator/$username"
-            params={{ username: c.user || c.repliedUser || "unknown" }}
-            className="font-semibold text-card-foreground hover:underline mr-2"
-          >
-            {c.user || c.repliedUser}
-          </Link>
-          <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
-            {renderTextWithLinks(c.comment || c.reply || c.repliedComment)}
-          </span>
-          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
-            {c.likes > 0 && <span>{c.likes} likes</span>}
-          </div>
-          {c.replies?.length > 0 && (
-            <div className="mt-3 pl-2 border-l border-muted-foreground/20">
-              <button
-                onClick={() => setShowReplies(!showReplies)}
-                className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
-              >
-                <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
-                {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
-              </button>
-
-              {showReplies && (
-                <div className="mt-4 flex flex-col gap-4">
-                  {c.replies.map((r: any, idx: number) => (
-                    <MobileCommentItem key={idx} c={r} isReply={true} />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-        {!isReply && (
-          <button className="self-center p-2 opacity-0 group-hover:opacity-100 transition">
-            <Heart className="w-3 h-3 text-muted-foreground hover:text-card-foreground" />
-          </button>
-        )}
-      </div>
-    );
-  };
 
   const CommentsModal = () => {
     if (!showComments) return null;
@@ -1185,7 +1495,7 @@ export const ReelPlayer = memo(function ReelPlayer({
           className="fixed inset-x-0 bottom-0 z-[201] md:hidden"
           style={{ animation: "slideUp 0.22s cubic-bezier(0.32,0.72,0,1)" }}
         >
-          <div className="w-full h-[60vh] flex flex-col rounded-t-2xl bg-card border-t border-border shadow-2xl">
+          <div className="w-full h-[65vh] flex flex-col rounded-t-2xl bg-card border-t border-border shadow-2xl">
             {/* Drag handle */}
             <div
               className="flex shrink-0 justify-center pt-2.5 pb-1"
@@ -1197,16 +1507,21 @@ export const ReelPlayer = memo(function ReelPlayer({
             <div className="px-4 py-2 border-b border-border flex justify-between items-center">
               <h3 className="font-bold text-card-foreground">Comments</h3>
               <span className="text-xs text-muted-foreground">
-                {reel.comments?.length || 0} comments
+                {commentsList.length} comments
               </span>
             </div>
 
             {/* Scrollable content */}
             <div className="overflow-y-auto p-4 flex-1">
-              {reel.comments?.map((c: any, i: number) => (
-                <MobileCommentItem key={i} c={c} />
-              ))}
-              {!reel.comments?.length && (
+              {loadingComments ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                </div>
+              ) : commentsList.length > 0 ? (
+                commentsList.map((c: any, i: number) => (
+                  <MobileCommentItem key={c.id || i} c={c} isViraly={isViralyReel} />
+                ))
+              ) : (
                 <div className="text-center text-muted-foreground py-8 text-sm">
                   No comments yet.
                 </div>
@@ -1234,7 +1549,23 @@ export const ReelPlayer = memo(function ReelPlayer({
       )}
       <video
         {...videoProps}
-        className="absolute inset-0 h-full w-full object-cover cursor-pointer"
+        className="absolute inset-0 h-full w-full object-cover select-none pointer-events-none"
+        style={{
+          pointerEvents: "none",
+          WebkitTouchCallout: "none",
+          WebkitUserSelect: "none",
+          userSelect: "none",
+        }}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }}
+      />
+      {/* Transparent interactive surface over the video */}
+      <div
+        className="absolute inset-0 z-0 cursor-pointer select-none"
+        {...interactionProps}
       />
       <Overlays />
 
@@ -1242,15 +1573,17 @@ export const ReelPlayer = memo(function ReelPlayer({
       {!isOffline && (
         <div className="absolute bottom-24 right-3 z-20 flex flex-col items-center gap-5">
           {/* Like */}
-          <button onClick={doLike} className="flex flex-col items-center gap-1">
-            <Heart
-              className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`}
-              strokeWidth={2}
-            />
-            <span className="text-xs font-medium text-white drop-shadow">
-              {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : ""}
-            </span>
-          </button>
+          {!isLiveStream && (
+            <button onClick={doLike} className="flex flex-col items-center gap-1">
+              <Heart
+                className={`h-8 w-8 transition ${liked ? "fill-[var(--color-marker)] text-[var(--color-marker)]" : "text-white"}`}
+                strokeWidth={2}
+              />
+              <span className="text-xs font-medium text-white drop-shadow">
+                {reel.likes ? formatCount(reel.likes + (liked ? 1 : 0)) : liked ? "1" : ""}
+              </span>
+            </button>
+          )}
 
           {/* Dislike */}
           <button className="flex flex-col items-center gap-1">
@@ -1268,7 +1601,7 @@ export const ReelPlayer = memo(function ReelPlayer({
             >
               <MessageCircle className="h-8 w-8 text-white" strokeWidth={2} />
               <span className="text-xs font-medium text-white drop-shadow">
-                {reel.comments?.length ? formatCount(reel.comments.length) : ""}
+                {commentsList?.length ? formatCount(commentsList.length) : ""}
               </span>
             </button>
           )}
@@ -1280,16 +1613,18 @@ export const ReelPlayer = memo(function ReelPlayer({
           </button>
 
           {/* Save */}
-          <button onClick={doSave} className="flex flex-col items-center gap-1">
-            {saved ? (
-              <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
-            ) : (
-              <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />
-            )}
-            <span className="text-xs font-medium text-white drop-shadow">
-              {saved ? "Saved" : "Save"}
-            </span>
-          </button>
+          {!isLiveStream && (
+            <button onClick={doSave} className="flex flex-col items-center gap-1">
+              {saved ? (
+                <BookmarkCheck className="h-8 w-8 fill-white text-white" strokeWidth={2} />
+              ) : (
+                <Bookmark className="h-8 w-8 text-white" strokeWidth={2} />
+              )}
+              <span className="text-xs font-medium text-white drop-shadow">
+                {saved ? "Saved" : "Save"}
+              </span>
+            </button>
+          )}
 
           {/* Three dots */}
           <button
