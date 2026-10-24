@@ -435,9 +435,49 @@ export function getHistory(): Reel[] {
   return ensureArray<Reel>(get<Reel[]>(KEYS.history, []));
 }
 
+export function isReelViewed(
+  reel?: Partial<Reel> | null,
+  historyList?: Reel[],
+): boolean {
+  if (!reel || reel.isLive) return false;
+  const list = historyList || getHistory();
+  if (!list || list.length === 0) return false;
+
+  const targetId = reel.id?.trim();
+  const targetUrl = reel.videoUrl?.trim();
+  const cleanTargetUrl = targetUrl ? targetUrl.split("?")[0] : null;
+  const targetCleanId = targetId
+    ? targetId.replace(/^(creator|short|local)-/, "").split("-")[0]
+    : null;
+
+  return list.some((h) => {
+    if (targetId && h.id === targetId) return true;
+    if (cleanTargetUrl && h.videoUrl) {
+      if (h.videoUrl === targetUrl) return true;
+      if (h.videoUrl.split("?")[0] === cleanTargetUrl) return true;
+    }
+    if (targetCleanId && targetCleanId.length > 2 && h.id) {
+      const hCleanId = h.id.replace(/^(creator|short|local)-/, "").split("-")[0];
+      if (hCleanId === targetCleanId) return true;
+    }
+    if (reel.thumbnail && h.thumbnail) {
+      const t1 = reel.thumbnail.split("?")[0];
+      const t2 = h.thumbnail.split("?")[0];
+      if (t1 && t2 && t1.length > 15 && t1 === t2) return true;
+    }
+    return false;
+  });
+}
+
 export function addToHistory(reel: Reel): void {
+  if (!reel || reel.isLive) return;
   const list = getHistory();
-  const idx = list.findIndex((r) => r.id === reel.id);
+  const cleanUrl = reel.videoUrl?.split("?")[0];
+  const idx = list.findIndex(
+    (r) =>
+      (reel.id && r.id === reel.id) ||
+      (cleanUrl && r.videoUrl && r.videoUrl.split("?")[0] === cleanUrl),
+  );
   if (idx >= 0) list.splice(idx, 1);
   list.unshift(reel);
   if (list.length > 1000) list.pop();

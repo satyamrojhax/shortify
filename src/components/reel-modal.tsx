@@ -19,9 +19,11 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { Reel, fetchReelComments } from "@/lib/reels";
-import { isLiked, toggleLike, isSaved, toggleSave } from "@/lib/storage";
+import { isLiked, toggleLike, isSaved, toggleSave, addToHistory } from "@/lib/storage";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { LiveChat } from "@/components/live-chat";
+import { useViewedReels } from "@/hooks/use-viewed-reels";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 import Hls from "hls.js";
 
 const renderTextWithLinks = (text: string) => {
@@ -197,6 +199,8 @@ function ReelModalContent({
   const lastWheelTime = useRef(0);
 
   const isLive = Boolean(reel?.isLive || reel?.source === "live" || reel?.id?.startsWith("live-"));
+  const { isViewed } = useViewedReels();
+  const viewed = isViewed(reel);
 
   useEffect(() => {
     if (!reel) return;
@@ -210,6 +214,85 @@ function ReelModalContent({
     setSaved(isSaved(reel.id));
     setLikesCount(reel.likes || 0);
   }, [reel?.id, reel?.likes, isLive]);
+
+  // ── 5-second valid view threshold in modal ─────────────────────────────────
+  const watchedFiredRef = useRef(false);
+
+  useEffect(() => {
+    watchedFiredRef.current = false;
+  }, [reel?.id]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !reel) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let accumulatedMs = 0;
+    let lastPlayTime = 0;
+
+    const markAsWatched = () => {
+      if (watchedFiredRef.current) return;
+      watchedFiredRef.current = true;
+      addToHistory(reel);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("shortify:reel-watched", {
+            detail: { reel, duration: 5 },
+          })
+        );
+      }
+    };
+
+    const checkTime = () => {
+      if (
+        video.currentTime >= 5 ||
+        (video.duration && !isNaN(video.duration) && video.currentTime >= video.duration - 0.2)
+      ) {
+        markAsWatched();
+      }
+    };
+
+    const onPlay = () => {
+      lastPlayTime = Date.now();
+      if (timer) clearTimeout(timer);
+      const remaining = Math.max(0, 5000 - accumulatedMs);
+      timer = setTimeout(() => {
+        markAsWatched();
+      }, remaining);
+    };
+
+    const onPause = () => {
+      if (lastPlayTime > 0) {
+        accumulatedMs += Date.now() - lastPlayTime;
+        lastPlayTime = 0;
+      }
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const onEnded = () => {
+      markAsWatched();
+    };
+
+    video.addEventListener("timeupdate", checkTime);
+    video.addEventListener("play", onPlay);
+    video.addEventListener("pause", onPause);
+    video.addEventListener("ended", onEnded);
+
+    if (!video.paused) {
+      onPlay();
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      video.removeEventListener("timeupdate", checkTime);
+      video.removeEventListener("play", onPlay);
+      video.removeEventListener("pause", onPause);
+      video.removeEventListener("ended", onEnded);
+    };
+  }, [reel?.id]);
 
   useEffect(() => {
     clearHold();
@@ -744,7 +827,7 @@ function ReelModalContent({
             />
 
             {/* LIVE Badge & Viewers Count (Top Left) */}
-            {reel.isLive && (
+            {reel.isLive ? (
               <div className="absolute top-4 left-4 z-30 flex items-center gap-2 pointer-events-none animate-fade-in">
                 <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-red-600 text-white font-bold text-xs uppercase tracking-wider shadow-lg">
                   <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
@@ -755,7 +838,11 @@ function ReelModalContent({
                   <span>{(reel.viewersCount || reel.views || 0).toLocaleString()} viewers</span>
                 </div>
               </div>
-            )}
+            ) : viewed ? (
+              <div className="absolute top-4 left-4 z-30 pointer-events-none">
+                <ViewedBadge variant="pill" size="md" />
+              </div>
+            ) : null}
 
             {/* Connecting Live Loader */}
             {isLoadingStream && !isStreamEnded && (
@@ -1005,10 +1092,13 @@ function ReelModalContent({
                         className="w-10 h-10 shrink-0"
                       />
                       <div className="min-w-0">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="font-semibold text-charcoal dark:text-cream text-sm hover:underline truncate">
                             {reel.username}
                           </span>
+                          {viewed && (
+                            <ViewedBadge variant="inline" className="text-[10px]" />
+                          )}
                         </div>
                       </div>
                     </Link>

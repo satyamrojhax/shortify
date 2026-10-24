@@ -5,6 +5,8 @@ import { Reel, LiveWebcamItem, fetchLiveWebcams } from "@/lib/reels";
 import { ReelModal } from "@/components/reel-modal";
 import { ExtraReelsPlayer } from "@/components/extra-reels-player";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { useViewedReels } from "@/hooks/use-viewed-reels";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 
 type ExploreSearch = {
   tab?: string;
@@ -57,6 +59,7 @@ function ExplorePage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const activeTab = normalizeTab(search.tab);
+  const { isViewed } = useViewedReels();
 
   const handleTabChange = (newTab: ExploreTab) => {
     navigate({
@@ -355,49 +358,67 @@ function ExplorePage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
-          {currentReels.map((reel, idx) => (
-            <div
-              key={`explore-${reel.id}-${idx}`}
-              className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
-              onClick={() => setSelectedReel(reel)}
-            >
-              <img
-                src={reel.thumbnail}
-                alt={reel.title || "Reel"}
-                className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
-                loading="lazy"
-              />
+          {currentReels.map((reel, idx) => {
+            const viewed = isViewed(reel);
+            return (
+              <div
+                key={`explore-${reel.id}-${idx}`}
+                className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
+                onClick={() => setSelectedReel(reel)}
+              >
+                <img
+                  src={reel.thumbnail}
+                  alt={reel.title || "Reel"}
+                  className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
+                  loading="lazy"
+                />
 
-              {/* Default View Count (Bottom Left) */}
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
-                <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
-                <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
-              </div>
-
-              {/* Hover Overlay: Likes & Comments (Centered), Title (Bottom) */}
-              <div className="absolute inset-0 flex flex-col p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
-                <div className="flex-1 flex items-center justify-center gap-4">
-                  <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
-                    <Heart className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                    <span>{reel.likes ? reel.likes.toLocaleString() : "0"}</span>
-                  </div>
-                  <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
-                    <MessageCircle className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                    <span>
-                      {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
-                    </span>
-                  </div>
-                </div>
-                {reel.title && (
-                  <div className="w-full text-left mt-auto pb-1">
-                    <p className="text-white text-[11px] md:text-xs font-medium line-clamp-3 drop-shadow-md break-words whitespace-pre-wrap">
-                      {reel.title}
-                    </p>
+                {/* VIEWED Tag */}
+                {viewed && (
+                  <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                    <ViewedBadge />
                   </div>
                 )}
+
+                {/* Default View Count (Bottom Left) */}
+                <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
+                  <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
+                  <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
+                </div>
+
+                {/* Hover Overlay: Likes & Comments (Centered), Title (Bottom) */}
+                <div className="absolute inset-0 flex flex-col p-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40">
+                  {viewed && (
+                    <div className="self-start mb-1">
+                      <ViewedBadge
+                        variant="inline"
+                        className="text-emerald-300 text-[10px] bg-black/60 px-2 py-0.5 rounded-full"
+                      />
+                    </div>
+                  )}
+                  <div className="flex-1 flex items-center justify-center gap-4">
+                    <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
+                      <Heart className="w-4 h-4 md:w-5 md:h-5 fill-white" />
+                      <span>{reel.likes ? reel.likes.toLocaleString() : "0"}</span>
+                    </div>
+                    <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
+                      <MessageCircle className="w-4 h-4 md:w-5 md:h-5 fill-white" />
+                      <span>
+                        {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
+                      </span>
+                    </div>
+                  </div>
+                  {reel.title && (
+                    <div className="w-full text-left mt-auto pb-1">
+                      <p className="text-white text-[11px] md:text-xs font-medium line-clamp-3 drop-shadow-md break-words whitespace-pre-wrap">
+                        {reel.title}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

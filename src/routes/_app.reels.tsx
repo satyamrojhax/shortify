@@ -269,7 +269,6 @@ function ReelsPage() {
   }, []);
 
   const handleReelEnd = useCallback(() => {
-    bumpWatched();
     if (reels.length > 0 && activeIdx >= reels.length - 1 && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
@@ -282,7 +281,7 @@ function ReelsPage() {
         }
       }, 500);
     }
-  }, [activeIdx, reels.length, scrollToIdx, bumpWatched, hasNextPage, isFetchingNextPage, fetchNextPage]);
+  }, [activeIdx, reels.length, scrollToIdx, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   const jumpToResume = () => {
     if (!resumeTarget) return;

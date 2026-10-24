@@ -185,7 +185,6 @@ function CategoryPage() {
   }, []);
 
   const handleReelEnd = useCallback(() => {
-    bumpWatched();
     if (getAutoScroll()) {
       setTimeout(() => {
         if (activeIdx < reels.length - 1) {
@@ -195,7 +194,7 @@ function CategoryPage() {
         }
       }, 500);
     }
-  }, [activeIdx, reels.length, scrollToIdx, bumpWatched]);
+  }, [activeIdx, reels.length, scrollToIdx]);
 
   if (isError && reels.length === 0) {
     return (

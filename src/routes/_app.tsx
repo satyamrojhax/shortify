@@ -10,6 +10,7 @@ import { BubbleLoader } from "@/components/ui/bubble-loader";
 import { useOnline } from "@/hooks/use-offline";
 import { toast } from "sonner";
 import { WifiOff, ShieldAlert, RefreshCw, Sparkles } from "lucide-react";
+import { AiMuse } from "@/components/ai-muse";
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -207,6 +208,7 @@ function AppLayout() {
       </div>
       {online && <InstallPwa />}
       {online && <StreakModal />}
+      {online && <AiMuse />}
     </div>
   );
 }

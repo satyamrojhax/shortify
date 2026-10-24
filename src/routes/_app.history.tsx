@@ -8,6 +8,7 @@ import type { Reel } from "@/lib/reels";
 import { Eye, Play, Trash2, X } from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
 import { formatCount } from "@/lib/utils";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 
 export const Route = createFileRoute("/_app/history")({
   component: HistoryPage,
@@ -147,12 +148,16 @@ function HistoryPage() {
                 </div>
               </Link>
 
-              {r.views && (
-                <div className="absolute left-2 top-2 flex items-center gap-1 rounded-full border border-cream bg-charcoal/70 px-2 py-0.5 text-[10px] text-cream backdrop-blur">
-                  <Play className="h-3 w-3 fill-cream" />
-                  {formatCount(r.views)}
-                </div>
-              )}
+              {/* VIEWED Tag */}
+              <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 pointer-events-none">
+                <ViewedBadge />
+                {r.views && (
+                  <div className="flex items-center gap-1 rounded bg-black/70 px-1.5 py-0.5 text-[9px] text-cream backdrop-blur-md border border-white/20">
+                    <Play className="h-2.5 w-2.5 fill-cream" />
+                    {formatCount(r.views)}
+                  </div>
+                )}
+              </div>
 
               {r.title && (
                 <p className="absolute inset-x-2 bottom-2 line-clamp-2 text-xs font-medium text-cream">

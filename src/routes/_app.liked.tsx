@@ -7,6 +7,8 @@ import { getLiked, setLiked as saveLiked } from "@/lib/storage";
 import type { Reel } from "@/lib/reels";
 import { Heart, Trash2, Play } from "lucide-react";
 import { useHydrated } from "@/hooks/use-hydrated";
+import { useViewedReels } from "@/hooks/use-viewed-reels";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 
 export const Route = createFileRoute("/_app/liked")({
   component: LikedPage,
@@ -15,6 +17,7 @@ export const Route = createFileRoute("/_app/liked")({
 function LikedPage() {
   const hydrated = useHydrated();
   const [items, setItems] = useState<Reel[]>([]);
+  const { isViewed } = useViewedReels();
 
   useEffect(() => {
     if (!hydrated) return;
@@ -66,33 +69,42 @@ function LikedPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-          {validItems.map((r, i) => (
-            <div
-              key={r.id}
-              className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"
-              style={{ transform: `rotate(${((i % 3) - 1) * 0.6}deg)` }}
-            >
-              {r.thumbnail ? (
-                <img
-                  src={r.thumbnail}
-                  alt={r.title ?? ""}
-                  className="h-full w-full object-cover"
-                  loading="lazy"
-                />
-              ) : (
-                <video
-                  src={DOMPurify.sanitize(
-                    r.videoUrl?.startsWith("http") || r.videoUrl?.startsWith("/")
-                      ? r.videoUrl
-                      : "about:blank",
-                  )}
-                  className="h-full w-full object-cover"
-                  muted
-                  playsInline
-                  preload="metadata"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+          {validItems.map((r, i) => {
+            const viewed = isViewed(r);
+            return (
+              <div
+                key={r.id}
+                className="group relative aspect-[9/16] overflow-hidden rounded-xl border-[1.5px] border-charcoal bg-cocoa dark:border-cream"
+                style={{ transform: `rotate(${((i % 3) - 1) * 0.6}deg)` }}
+              >
+                {r.thumbnail ? (
+                  <img
+                    src={r.thumbnail}
+                    alt={r.title ?? ""}
+                    className="h-full w-full object-cover"
+                    loading="lazy"
+                  />
+                ) : (
+                  <video
+                    src={DOMPurify.sanitize(
+                      r.videoUrl?.startsWith("http") || r.videoUrl?.startsWith("/")
+                        ? r.videoUrl
+                        : "about:blank",
+                    )}
+                    className="h-full w-full object-cover"
+                    muted
+                    playsInline
+                    preload="metadata"
+                  />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+
+                {/* VIEWED Tag */}
+                {viewed && (
+                  <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                    <ViewedBadge />
+                  </div>
+                )}
               {(() => {
                 const isCat = r.originPlayer === "category";
                 return isCat ? (
@@ -136,8 +148,9 @@ function LikedPage() {
                   {r.title}
                 </p>
               )}
-            </div>
-          ))}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

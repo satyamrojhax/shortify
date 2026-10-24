@@ -5,6 +5,8 @@ import { Reel } from "@/lib/reels";
 import { ReelModal } from "@/components/reel-modal";
 import { ExtraReelsPlayer } from "@/components/extra-reels-player";
 import { BubbleLoader } from "@/components/ui/bubble-loader";
+import { useViewedReels } from "@/hooks/use-viewed-reels";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 
 type SearchParams = {
   q?: string;
@@ -25,6 +27,7 @@ function SearchPage() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const initialUrlQ = search.q ?? "";
+  const { isViewed } = useViewedReels();
 
   const [query, setQuery] = useState(initialUrlQ);
   const [results, setResults] = useState<Reel[]>([]);
@@ -288,46 +291,64 @@ function SearchPage() {
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-1 md:gap-4">
-          {results.map((reel, index) => (
-            <div
-              ref={index === results.length - 1 ? lastElementRef : null}
-              key={`search-${reel.id}-${index}`}
-              className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
-              onClick={() => setSelectedReel(reel)}
-            >
-              <img
-                src={reel.thumbnail}
-                alt={reel.title || "Reel"}
-                className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
-              />
+          {results.map((reel, index) => {
+            const viewed = isViewed(reel);
+            return (
+              <div
+                ref={index === results.length - 1 ? lastElementRef : null}
+                key={`search-${reel.id}-${index}`}
+                className="relative aspect-[9/16] bg-black group cursor-pointer overflow-hidden rounded-sm md:rounded-md"
+                onClick={() => setSelectedReel(reel)}
+              >
+                <img
+                  src={reel.thumbnail}
+                  alt={reel.title || "Reel"}
+                  className="w-full h-full object-cover transition duration-300 group-hover:brightness-50"
+                />
 
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
-                <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
-                <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
-              </div>
+                {/* VIEWED Tag */}
+                {viewed && (
+                  <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                    <ViewedBadge />
+                  </div>
+                )}
 
-              {/* Hover Overlay: Likes, Views, Title */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 p-2 text-center">
-                <div className="flex items-center gap-4">
-                  {reel.likes !== undefined && (
-                    <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
-                      <Heart className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                      <span>{reel.likes.toLocaleString()}</span>
+                <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-xs md:text-sm font-semibold opacity-100 group-hover:opacity-0 transition drop-shadow-md">
+                  <Play className="w-3 h-3 md:w-4 md:h-4 fill-white" />
+                  <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
+                </div>
+
+                {/* Hover Overlay: Likes, Views, Title */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity bg-black/40 p-2 text-center">
+                  {viewed && (
+                    <div className="mb-0.5">
+                      <ViewedBadge
+                        variant="inline"
+                        className="text-emerald-300 text-[10px] bg-black/60 px-2 py-0.5 rounded-full"
+                      />
                     </div>
                   )}
-                  <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
-                    <Play className="w-4 h-4 md:w-5 md:h-5 fill-white" />
-                    <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
+                  <div className="flex items-center gap-4">
+                    {reel.likes !== undefined && (
+                      <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
+                        <Heart className="w-4 h-4 md:w-5 md:h-5 fill-white" />
+                        <span>{reel.likes.toLocaleString()}</span>
+                      </div>
+                    )}
+                    <div className="flex items-center gap-1 md:gap-2 text-white font-bold text-xs md:text-base">
+                      <Play className="w-4 h-4 md:w-5 md:h-5 fill-white" />
+                      <span>{reel.views ? reel.views.toLocaleString() : "0"}</span>
+                    </div>
                   </div>
+                  {reel.title && (
+                    <p className="text-white text-[10px] md:text-xs font-medium line-clamp-2 mt-1 drop-shadow-md px-1">
+                      {reel.title}
+                    </p>
+                  )}
                 </div>
-                {reel.title && (
-                  <p className="text-white text-[10px] md:text-xs font-medium line-clamp-2 mt-1 drop-shadow-md px-1">
-                    {reel.title}
-                  </p>
-                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Loading placeholders for pagination */}
           {loading &&

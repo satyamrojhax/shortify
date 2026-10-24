@@ -416,3 +416,80 @@ input[type="range"]::-moz-range-thumb {
 h1, h2, h3, h4, h5, h6, p, span, a, label, li {
   word-break: break-word;
 }
+
+/* ── 3D AI Muse Animations ── */
+@keyframes muse-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes muse-spin-reverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+
+@keyframes muse-float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes muse-subtle-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-spin-slow {
+  animation: muse-spin 9s linear infinite;
+}
+
+.animate-spin-fast {
+  animation: muse-spin 1.8s linear infinite;
+}
+
+.animate-spin-reverse {
+  animation: muse-spin-reverse 11s linear infinite;
+}
+
+.animate-spin-reverse-fast {
+  animation: muse-spin-reverse 2s linear infinite;
+}
+
+.animate-float {
+  animation: muse-float 3.5s ease-in-out infinite;
+}
+
+.animate-bounce-subtle {
+  animation: muse-subtle-bounce 2s ease-in-out infinite;
+}
+
+@keyframes float-heart {
+  0% {
+    transform: translateY(0) scale(0.8);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-50px) scale(1.3);
+    opacity: 0;
+  }
+}
+
+.animate-float-heart {
+  animation: float-heart 1.2s ease-out forwards;
+}
+

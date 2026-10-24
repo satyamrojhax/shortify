@@ -747,7 +747,7 @@ export async function fetchCreatorReelsPage(
         const arr = Array.isArray(rawJson) ? rawJson : rawJson.data || [];
         if (arr.length > 0) {
           const reels: Reel[] = arr.map((v: any) => ({
-            id: `creator-${v.id}-${secureMathRandom().toString(36).slice(2)}`,
+            id: `creator-${v.id || hashCode(v.videoUrl || v.thumbnail || "")}`,
             source: "creator",
             originPlayer: "category",
             originSystem: "viraly",

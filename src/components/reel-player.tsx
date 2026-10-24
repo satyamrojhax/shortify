@@ -36,10 +36,12 @@ import {
   getVolume,
   setVolumeState,
   addToHistory,
+  isReelViewed,
   isMemeSoundsEnabled,
 } from "@/lib/storage";
 import confetti from "canvas-confetti";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 
 type Props = {
   reel: Reel;
@@ -239,7 +241,12 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, [active]);
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isWatched, setIsWatched] = useState(() => isReelViewed(reel));
   const [showHeart, setShowHeart] = useState(false);
+
+  useEffect(() => {
+    setIsWatched(isReelViewed(reel));
+  }, [reel?.id, reel?.videoUrl]);
   const [is2x, setIs2x] = useState(false);
   const [paused, setPaused] = useState(false);
   const [volume, setVolume] = useState(getVolume);
@@ -319,6 +326,7 @@ export const ReelPlayer = memo(function ReelPlayer({
     setAutoScrollState(getAutoScroll());
     coinsAwarded.current = false;
     hasPlayedRef.current = false;
+    watchedFired.current = false;
     setImgError(false);
   }, [reel.id]);
 
@@ -443,11 +451,6 @@ export const ReelPlayer = memo(function ReelPlayer({
         v.play().catch(() => {});
       }
       setPaused(false);
-      if (!watchedFired.current) {
-        watchedFired.current = true;
-        onWatchedRef.current();
-        addToHistory(reel);
-      }
     } else {
       if (hlsRef.current) {
         hlsRef.current.destroy();
@@ -475,6 +478,82 @@ export const ReelPlayer = memo(function ReelPlayer({
       v.volume = volume;
     }
   }, [muted, volume]);
+
+  // ── 5-second valid view threshold ─────────────────────────────────────────
+  // Views are only counted if the reel plays for at least 5 seconds (or reaches end)
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || !active) return;
+
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let accumulatedMs = 0;
+    let lastPlayTime = 0;
+
+    const markAsWatched = () => {
+      if (watchedFired.current) return;
+      watchedFired.current = true;
+      onWatchedRef.current();
+      addToHistory(reel);
+      setIsWatched(true);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("shortify:reel-watched", {
+            detail: { reel, duration: 5 },
+          })
+        );
+      }
+    };
+
+    const checkTime = () => {
+      if (
+        v.currentTime >= 5 ||
+        (v.duration && !isNaN(v.duration) && v.currentTime >= v.duration - 0.2)
+      ) {
+        markAsWatched();
+      }
+    };
+
+    const onPlay = () => {
+      lastPlayTime = Date.now();
+      if (timer) clearTimeout(timer);
+      const remaining = Math.max(0, 5000 - accumulatedMs);
+      timer = setTimeout(() => {
+        markAsWatched();
+      }, remaining);
+    };
+
+    const onPause = () => {
+      if (lastPlayTime > 0) {
+        accumulatedMs += Date.now() - lastPlayTime;
+        lastPlayTime = 0;
+      }
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+
+    const onEnded = () => {
+      markAsWatched();
+    };
+
+    v.addEventListener("timeupdate", checkTime);
+    v.addEventListener("play", onPlay);
+    v.addEventListener("pause", onPause);
+    v.addEventListener("ended", onEnded);
+
+    if (!v.paused) {
+      onPlay();
+    }
+
+    return () => {
+      if (timer) clearTimeout(timer);
+      v.removeEventListener("timeupdate", checkTime);
+      v.removeEventListener("play", onPlay);
+      v.removeEventListener("pause", onPause);
+      v.removeEventListener("ended", onEnded);
+    };
+  }, [active, reel.id]);
 
   // ── Coins on completion ──────────────────────────────────────────────────
   useEffect(() => {
@@ -816,7 +895,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   const Overlays = () => (
     <>
       {/* Live Badge & Viewers */}
-      {reel.isLive && (
+      {reel.isLive ? (
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2 pointer-events-none">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-600 text-white font-bold text-xs uppercase tracking-wider shadow-lg">
             <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
@@ -827,7 +906,11 @@ export const ReelPlayer = memo(function ReelPlayer({
             <span>{(reel.viewersCount || reel.views || 0).toLocaleString()}</span>
           </div>
         </div>
-      )}
+      ) : isWatched ? (
+        <div className="absolute top-4 left-4 z-20 pointer-events-none">
+          <ViewedBadge variant="pill" size="md" />
+        </div>
+      ) : null}
 
       {/* Stream Ended Overlay */}
       {isStreamEnded && (
@@ -1038,6 +1121,9 @@ export const ReelPlayer = memo(function ReelPlayer({
                   </p>
                 )}
                 <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  {isWatched && !reel.isLive && (
+                    <ViewedBadge variant="inline" className="text-[11px]" />
+                  )}
                   {showProfile && finalDuration && (
                     <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">
                       {finalDuration}
@@ -1136,6 +1222,9 @@ export const ReelPlayer = memo(function ReelPlayer({
                 </p>
               )}
               <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                {isWatched && !reel.isLive && (
+                  <ViewedBadge variant="inline" className="text-[11px]" />
+                )}
                 {showProfile && finalDuration && (
                   <span className="rounded bg-muted/80 px-1.5 py-0.5 font-semibold text-foreground">
                     {finalDuration}

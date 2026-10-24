@@ -20,6 +20,8 @@ import {
 import { useVideoPrewarmer } from "@/hooks/use-video-prewarmer";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { BubbleLoader } from "@/components/ui/bubble-loader";
+import { useViewedReels } from "@/hooks/use-viewed-reels";
+import { ViewedBadge } from "@/components/ui/viewed-badge";
 import {
   AlertTriangle,
   RefreshCw,
@@ -54,6 +56,7 @@ function CreatorPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<"latest" | "popular">("latest");
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
+  const { isViewed } = useViewedReels();
 
   const isOld = useMemo(() => isOldUser(), []);
 
@@ -166,7 +169,6 @@ function CreatorPage() {
   }, []);
 
   const handleReelEnd = useCallback(() => {
-    bumpWatched();
     if (getAutoScroll()) {
       setTimeout(() => {
         if (activeIdx < reels.length - 1) {
@@ -174,7 +176,7 @@ function CreatorPage() {
         }
       }, 500);
     }
-  }, [activeIdx, reels.length, scrollToIdx, bumpWatched]);
+  }, [activeIdx, reels.length, scrollToIdx]);
 
   // If in grid view and scrolling to the bottom, fetch more
   const bottomObserverRef = useRef<HTMLDivElement>(null);
@@ -449,60 +451,78 @@ function CreatorPage() {
           </div>
         ) : (
           <div className="grid grid-cols-3 md:grid-cols-4 gap-0.5 md:gap-3 lg:gap-4">
-            {reels.map((reel, idx) => (
-              <div
-                key={`creator-grid-${reel.id}-${idx}`}
-                className="group relative aspect-[9/16] cursor-pointer overflow-hidden bg-muted md:rounded-md"
-                onClick={() => {
-                  setActiveIdx(idx);
-                  setPlayingIdx(idx);
-                  // Ensure scroll resets when opening the player
-                  setTimeout(() => {
-                    const el = slideRefs.current[idx];
-                    if (el) {
-                      el.scrollIntoView({ behavior: "instant" });
-                    }
-                  }, 50);
-                }}
-              >
-                <CreatorThumb src={reel.thumbnail} alt={reel.title || "Reel thumbnail"} />
-                <div className="absolute inset-0 bg-black/10 transition-opacity md:group-hover:bg-black/40" />
+            {reels.map((reel, idx) => {
+              const viewed = isViewed(reel);
+              return (
+                <div
+                  key={`creator-grid-${reel.id}-${idx}`}
+                  className="group relative aspect-[9/16] cursor-pointer overflow-hidden bg-muted md:rounded-md"
+                  onClick={() => {
+                    setActiveIdx(idx);
+                    setPlayingIdx(idx);
+                    // Ensure scroll resets when opening the player
+                    setTimeout(() => {
+                      const el = slideRefs.current[idx];
+                      if (el) {
+                        el.scrollIntoView({ behavior: "instant" });
+                      }
+                    }, 50);
+                  }}
+                >
+                  <CreatorThumb src={reel.thumbnail} alt={reel.title || "Reel thumbnail"} />
+                  <div className="absolute inset-0 bg-black/10 transition-opacity md:group-hover:bg-black/40" />
 
-                {/* Duration Badge */}
-                {reel.duration && (
-                  <div className="absolute top-2 right-2 flex items-center rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white drop-shadow-md backdrop-blur-sm z-10 pointer-events-none">
-                    {reel.duration}
-                  </div>
-                )}
-
-                {/* Views Counter (Hidden on PC hover) */}
-                <div className="absolute bottom-2 left-2 flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md transition-opacity md:group-hover:opacity-0 pointer-events-none">
-                  <Play className="h-3 w-3 fill-white" />
-                  {reel.views ? formatViews(reel.views) : "0"}
-                </div>
-
-                {/* PC Hover Overlay: Likes & Title */}
-                <div className="absolute inset-0 hidden md:flex flex-col p-3 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none z-10">
-                  <div className="flex-1 flex flex-wrap gap-4 items-center justify-center p-2">
-                    <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
-                      <Heart className="h-4 w-4 md:h-5 md:w-5 fill-white" />
-                      <span>{reel.likes ? formatViews(reel.likes) : "0"}</span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
-                      <MessageCircle className="h-4 w-4 md:h-5 md:w-5 fill-white" />
-                      <span>
-                        {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
-                      </span>
-                    </div>
-                  </div>
-                  {reel.title && (
-                    <div className="w-full text-white text-xs font-medium text-center line-clamp-3 drop-shadow-md pb-1">
-                      {reel.title}
+                  {/* VIEWED Tag */}
+                  {viewed && (
+                    <div className="absolute top-2 left-2 z-10 pointer-events-none">
+                      <ViewedBadge />
                     </div>
                   )}
+
+                  {/* Duration Badge */}
+                  {reel.duration && (
+                    <div className="absolute top-2 right-2 flex items-center rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-bold text-white drop-shadow-md backdrop-blur-sm z-10 pointer-events-none">
+                      {reel.duration}
+                    </div>
+                  )}
+
+                  {/* Views Counter (Hidden on PC hover) */}
+                  <div className="absolute bottom-2 left-2 flex items-center gap-1 text-xs font-semibold text-white drop-shadow-md transition-opacity md:group-hover:opacity-0 pointer-events-none">
+                    <Play className="h-3 w-3 fill-white" />
+                    {reel.views ? formatViews(reel.views) : "0"}
+                  </div>
+
+                  {/* PC Hover Overlay: Likes & Title */}
+                  <div className="absolute inset-0 hidden md:flex flex-col p-3 opacity-0 transition-opacity group-hover:opacity-100 pointer-events-none z-10">
+                    {viewed && (
+                      <div className="self-start mb-1">
+                        <ViewedBadge
+                          variant="inline"
+                          className="text-emerald-300 text-[10px] bg-black/60 px-2 py-0.5 rounded-full"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1 flex flex-wrap gap-4 items-center justify-center p-2">
+                      <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
+                        <Heart className="h-4 w-4 md:h-5 md:w-5 fill-white" />
+                        <span>{reel.likes ? formatViews(reel.likes) : "0"}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-white font-bold text-sm md:text-base drop-shadow-lg">
+                        <MessageCircle className="h-4 w-4 md:h-5 md:w-5 fill-white" />
+                        <span>
+                          {reel.comments?.length ? reel.comments.length.toLocaleString() : "0"}
+                        </span>
+                      </div>
+                    </div>
+                    {reel.title && (
+                      <div className="w-full text-white text-xs font-medium text-center line-clamp-3 drop-shadow-md pb-1">
+                        {reel.title}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
 

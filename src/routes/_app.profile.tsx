@@ -32,6 +32,8 @@ import {
   X,
   User,
 } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { toast } from "sonner";
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
@@ -71,6 +73,28 @@ function ProfilePage() {
 
   const [avatarStyle, setAvatarStyleState] = useState<string>("avataaars");
   const [avatarSeed, setAvatarSeedState] = useState<string>("");
+
+  const [museEnabled, setMuseEnabled] = useState<boolean>(() => {
+    if (typeof localStorage === "undefined") return true;
+    return localStorage.getItem("shortify_muse_enabled") !== "false";
+  });
+
+  const handleToggleMuse = (val: boolean) => {
+    setMuseEnabled(val);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("shortify_muse_enabled", String(val));
+    }
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("shortify:muse-toggle", { detail: { enabled: val } })
+      );
+    }
+    if (val) {
+      toast.success("3D Muse Companion enabled! She's back 💖");
+    } else {
+      toast.info("3D Muse Companion disabled.");
+    }
+  };
 
   const loadStats = () => {
     setLikedCount(getLiked().length);
@@ -178,7 +202,7 @@ function ProfilePage() {
         const data = await fetchUserProfile(uid);
         if (data.name) setDisplayName(data.name);
         if (data.profile_details?.bio) setBio(data.profile_details.bio);
-      } catch (err) {}
+      } catch (err) { }
     }
     setTimeout(() => setIsRefreshingStats(false), 600);
   };
@@ -296,11 +320,10 @@ function ProfilePage() {
                 <button
                   key={st.id}
                   onClick={() => handleStyleChange(st.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${
-                    active
-                      ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
-                      : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
-                  }`}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${active
+                    ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
+                    : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                    }`}
                 >
                   <UserAvatar
                     username={username}
@@ -367,6 +390,24 @@ function ProfilePage() {
             >
               {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
             </button>
+          </div>
+
+          {/* muse Toggle */}
+          <div className="flex items-center justify-between rounded-lg border-[1.5px] border-charcoal/80 bg-dew px-4 py-3 dark:border-cream/50 dark:bg-secondary">
+            <div className="pr-3">
+              <div className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 dark:text-cream/60">
+                <Sparkles className="h-3.5 w-3.5 text-pink-500" />
+                <span>muse</span>
+              </div>
+              <div className="mt-0.5 text-xs text-cocoa/80 dark:text-cream/80">
+                your virtual friend.
+              </div>
+            </div>
+            <Switch
+              checked={museEnabled}
+              onCheckedChange={handleToggleMuse}
+              aria-label="Toggle 3D Muse Companion"
+            />
           </div>
         </div>
       </section>

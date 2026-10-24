@@ -109,6 +109,9 @@ const proxyConfig: Record<string, ProxyOptions> = {
 export default defineConfig({
   server: {
     proxy: proxyConfig,
+    watch: {
+      ignored: ["**/*.glb", "**/public/3d animted/**", "**/public/models/**"],
+    },
   },
   preview: {
     proxy: proxyConfig,
