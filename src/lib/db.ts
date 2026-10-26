@@ -126,7 +126,9 @@ export async function setRemoteData(userId: string, key: string, value: any) {
 
   // Update generic user_data table for compatibility and quick restore
   try {
-    const { error } = await supabase.from("user_data").upsert({ user_id: userId, key, value: parsedValue });
+    const { error } = await supabase
+      .from("user_data")
+      .upsert({ user_id: userId, key, value: parsedValue });
     if (error) {
       if (error.code === "42501" || (error as any).status === 401) return;
       throw error;
@@ -201,19 +203,17 @@ export async function setRemoteData(userId: string, key: string, value: any) {
         await supabase
           .from("user_favorite_creators")
           .upsert(uniqueFavs, { onConflict: "user_id,creator_id" });
-        await supabase
-          .from("user_followed_accounts")
-          .upsert(
-            uniqueFavs.map((f: any) => ({
-              user_id: userId,
-              account_id: f.creator_id,
-              account_data: f.creator_data,
-              followed_at: f.creator_data?.timestamp
-                ? new Date(f.creator_data.timestamp).toISOString()
-                : new Date().toISOString(),
-            })),
-            { onConflict: "user_id,account_id" },
-          );
+        await supabase.from("user_followed_accounts").upsert(
+          uniqueFavs.map((f: any) => ({
+            user_id: userId,
+            account_id: f.creator_id,
+            account_data: f.creator_data,
+            followed_at: f.creator_data?.timestamp
+              ? new Date(f.creator_data.timestamp).toISOString()
+              : new Date().toISOString(),
+          })),
+          { onConflict: "user_id,account_id" },
+        );
       }
     } else if (key === "enrolled_courses" && Array.isArray(parsedValue)) {
       const courseMap = new Map<string, any>();
@@ -244,7 +244,8 @@ export async function setRemoteData(userId: string, key: string, value: any) {
       (value !== null || parsedValue !== null)
     ) {
       const courseId = key.replace("progress_", "");
-      const progressObj = typeof parsedValue === "object" && parsedValue !== null ? parsedValue : value;
+      const progressObj =
+        typeof parsedValue === "object" && parsedValue !== null ? parsedValue : value;
       if (progressObj && typeof progressObj === "object") {
         const lectureIds = Array.from(
           new Set(Object.keys(progressObj).filter((k) => (progressObj as any)[k])),
@@ -333,10 +334,7 @@ export async function updateUserProfileDetails(
 
   userUpdates.profile_details = newDetails;
 
-  const { error } = await supabase
-    .from("users")
-    .update(userUpdates)
-    .eq("id", userId);
+  const { error } = await supabase.from("users").update(userUpdates).eq("id", userId);
 
   if (error) throw error;
   return newDetails;

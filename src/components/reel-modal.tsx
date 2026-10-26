@@ -172,7 +172,6 @@ function ReelModalContent({
   setCurrentIndex,
   onClose,
 }: ReelModalContentProps) {
-
   const [isPlaying, setIsPlaying] = useState(true);
   const [isMuted, setIsMuted] = useState(false);
   const [liked, setLiked] = useState(false);
@@ -201,6 +200,11 @@ function ReelModalContent({
   const isLive = Boolean(reel?.isLive || reel?.source === "live" || reel?.id?.startsWith("live-"));
   const { isViewed } = useViewedReels();
   const viewed = isViewed(reel);
+  const [isWatched, setIsWatched] = useState(() => isViewed(reel));
+
+  useEffect(() => {
+    setIsWatched(isViewed(reel));
+  }, [reel?.id, reel?.videoUrl, isViewed]);
 
   useEffect(() => {
     if (!reel) return;
@@ -215,7 +219,7 @@ function ReelModalContent({
     setLikesCount(reel.likes || 0);
   }, [reel?.id, reel?.likes, isLive]);
 
-  // ── 5-second valid view threshold in modal ─────────────────────────────────
+  // ── 8-second straight continuous watch threshold in modal ─────────────────
   const watchedFiredRef = useRef(false);
 
   useEffect(() => {
@@ -227,70 +231,110 @@ function ReelModalContent({
     if (!video || !reel) return;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
-    let accumulatedMs = 0;
-    let lastPlayTime = 0;
+    let straightWatchStart = 0;
 
-    const markAsWatched = () => {
-      if (watchedFiredRef.current) return;
-      watchedFiredRef.current = true;
-      addToHistory(reel);
-      if (typeof window !== "undefined") {
-        window.dispatchEvent(
-          new CustomEvent("shortify:reel-watched", {
-            detail: { reel, duration: 5 },
-          })
-        );
-      }
-    };
-
-    const checkTime = () => {
-      if (
-        video.currentTime >= 5 ||
-        (video.duration && !isNaN(video.duration) && video.currentTime >= video.duration - 0.2)
-      ) {
-        markAsWatched();
-      }
-    };
-
-    const onPlay = () => {
-      lastPlayTime = Date.now();
-      if (timer) clearTimeout(timer);
-      const remaining = Math.max(0, 5000 - accumulatedMs);
-      timer = setTimeout(() => {
-        markAsWatched();
-      }, remaining);
-    };
-
-    const onPause = () => {
-      if (lastPlayTime > 0) {
-        accumulatedMs += Date.now() - lastPlayTime;
-        lastPlayTime = 0;
-      }
+    const clearStraightWatch = () => {
       if (timer) {
         clearTimeout(timer);
         timer = null;
       }
+      straightWatchStart = 0;
     };
 
-    const onEnded = () => {
-      markAsWatched();
+    const markAsWatched = () => {
+      if (watchedFiredRef.current) return;
+      watchedFiredRef.current = true;
+      clearStraightWatch();
+      addToHistory(reel);
+      setIsWatched(true);
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(
+          new CustomEvent("shortify:reel-watched", {
+            detail: { reel, duration: 8 },
+          }),
+        );
+      }
     };
 
+    const startStraightWatch = () => {
+      if (watchedFiredRef.current) return;
+      if (video.paused || video.ended || document.hidden) {
+        clearStraightWatch();
+        return;
+      }
+
+      if (!straightWatchStart) {
+        straightWatchStart = Date.now();
+      }
+
+      if (timer) clearTimeout(timer);
+      const elapsed = Date.now() - straightWatchStart;
+      const remaining = Math.max(0, 8000 - elapsed);
+
+      if (remaining <= 0) {
+        markAsWatched();
+        return;
+      }
+
+      timer = setTimeout(() => {
+        if (!video.paused && !video.ended && !document.hidden) {
+          markAsWatched();
+        }
+      }, remaining);
+    };
+
+    const checkTime = () => {
+      if (watchedFiredRef.current) return;
+      if (straightWatchStart > 0 && !video.paused && !video.ended && !document.hidden) {
+        if (Date.now() - straightWatchStart >= 8000) {
+          markAsWatched();
+        }
+      }
+    };
+
+    const handlePause = () => {
+      clearStraightWatch();
+    };
+
+    const handleSeeking = () => {
+      clearStraightWatch();
+    };
+
+    const handleEnded = () => {
+      if (!video.loop) {
+        clearStraightWatch();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearStraightWatch();
+      } else if (!video.paused && !video.ended) {
+        startStraightWatch();
+      }
+    };
+
+    video.addEventListener("play", startStraightWatch);
+    video.addEventListener("playing", startStraightWatch);
     video.addEventListener("timeupdate", checkTime);
-    video.addEventListener("play", onPlay);
-    video.addEventListener("pause", onPause);
-    video.addEventListener("ended", onEnded);
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("seeking", handleSeeking);
+    video.addEventListener("ended", handleEnded);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    if (!video.paused) {
-      onPlay();
+    if (!video.paused && !video.ended) {
+      startStraightWatch();
     }
 
     return () => {
-      if (timer) clearTimeout(timer);
+      clearStraightWatch();
+      video.removeEventListener("play", startStraightWatch);
+      video.removeEventListener("playing", startStraightWatch);
       video.removeEventListener("timeupdate", checkTime);
-      video.removeEventListener("play", onPlay);
-      video.removeEventListener("pause", onPause);
-      video.removeEventListener("ended", onEnded);
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("seeking", handleSeeking);
+      video.removeEventListener("ended", handleEnded);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [reel?.id]);
 
@@ -337,7 +381,7 @@ function ReelModalContent({
         hls.on(Hls.Events.MANIFEST_PARSED, () => {
           setIsLoadingStream(false);
           setIsStreamEnded(false);
-          video.play().catch(() => { });
+          video.play().catch(() => {});
         });
 
         hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
@@ -364,7 +408,7 @@ function ReelModalContent({
         const onLoaded = () => {
           setIsLoadingStream(false);
           setIsStreamEnded(false);
-          video.play().catch(() => { });
+          video.play().catch(() => {});
         };
         const onError = () => {
           setIsStreamEnded(true);
@@ -385,7 +429,7 @@ function ReelModalContent({
       if (video.src !== streamUrl) {
         video.src = streamUrl;
       }
-      video.play().catch(() => { });
+      video.play().catch(() => {});
       setIsLoadingStream(false);
     }
 
@@ -420,7 +464,7 @@ function ReelModalContent({
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         setIsLoadingStream(false);
         setIsStreamEnded(false);
-        video.play().catch(() => { });
+        video.play().catch(() => {});
       });
       hls.on(Hls.Events.ERROR, (_event: any, data: any) => {
         if (data.fatal) {
@@ -433,7 +477,7 @@ function ReelModalContent({
     } else if (streamUrl) {
       video.src = streamUrl;
       video.load();
-      video.play().catch(() => { });
+      video.play().catch(() => {});
     }
   };
 
@@ -651,10 +695,7 @@ function ReelModalContent({
     }
   }, [reel.id]);
 
-  const isGeneric =
-    !reel.username ||
-    reel.username === "local" ||
-    reel.source === "local";
+  const isGeneric = !reel.username || reel.username === "local" || reel.source === "local";
 
   const isShorts =
     reel.originSystem === "shorts" ||
@@ -692,7 +733,6 @@ function ReelModalContent({
       setVideoRatio(`${video.videoWidth} / ${video.videoHeight}`);
     }
   };
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/80 backdrop-blur-sm p-0 md:p-8">
@@ -756,9 +796,7 @@ function ReelModalContent({
                   ? "calc(100% - 350px)"
                   : "100%",
               transform: `translateY(${dragOffset}px)`,
-              transition: isDragging
-                ? "none"
-                : "transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1)",
+              transition: isDragging ? "none" : "transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1)",
               WebkitTouchCallout: "none",
               WebkitUserSelect: "none",
               userSelect: "none",
@@ -838,7 +876,7 @@ function ReelModalContent({
                   <span>{(reel.viewersCount || reel.views || 0).toLocaleString()} viewers</span>
                 </div>
               </div>
-            ) : viewed ? (
+            ) : (isWatched || viewed) ? (
               <div className="absolute top-4 left-4 z-30 pointer-events-none">
                 <ViewedBadge variant="pill" size="md" />
               </div>
@@ -1096,7 +1134,7 @@ function ReelModalContent({
                           <span className="font-semibold text-charcoal dark:text-cream text-sm hover:underline truncate">
                             {reel.username}
                           </span>
-                          {viewed && (
+                          {(isWatched || viewed) && (
                             <ViewedBadge variant="inline" className="text-[10px]" />
                           )}
                         </div>
@@ -1209,7 +1247,9 @@ function ReelModalContent({
                       className="text-charcoal hover:opacity-70 dark:text-cream transition"
                       aria-label="Save reel"
                     >
-                      <Bookmark className={`w-6 h-6 ${saved ? "fill-charcoal dark:fill-cream" : ""}`} />
+                      <Bookmark
+                        className={`w-6 h-6 ${saved ? "fill-charcoal dark:fill-cream" : ""}`}
+                      />
                     </button>
                   </div>
 

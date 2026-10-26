@@ -25,7 +25,9 @@ export function ViewedBadge({
         )}
         {...props}
       >
-        {showIcon && <Check className={size === "sm" ? "h-3 w-3 stroke-[2.5]" : "h-3.5 w-3.5 stroke-[2.5]"} />}
+        {showIcon && (
+          <Check className={size === "sm" ? "h-3 w-3 stroke-[2.5]" : "h-3.5 w-3.5 stroke-[2.5]"} />
+        )}
         <span>Viewed</span>
       </span>
     );
@@ -41,7 +43,9 @@ export function ViewedBadge({
         )}
         {...props}
       >
-        {showIcon && <Check className={size === "sm" ? "h-3 w-3 stroke-[2.5]" : "h-3.5 w-3.5 stroke-[2.5]"} />}
+        {showIcon && (
+          <Check className={size === "sm" ? "h-3 w-3 stroke-[2.5]" : "h-3.5 w-3.5 stroke-[2.5]"} />
+        )}
         <span>Viewed</span>
       </div>
     );
@@ -52,9 +56,7 @@ export function ViewedBadge({
     <div
       className={cn(
         "inline-flex items-center gap-1 font-extrabold uppercase tracking-wider rounded bg-black/75 backdrop-blur-md text-emerald-400 border border-emerald-500/35 shadow-md pointer-events-none select-none transition-all duration-200",
-        size === "sm"
-          ? "px-1.5 py-0.5 text-[9px] sm:text-[10px]"
-          : "px-2 py-1 text-[11px]",
+        size === "sm" ? "px-1.5 py-0.5 text-[9px] sm:text-[10px]" : "px-2 py-1 text-[11px]",
         className,
       )}
       {...props}
@@ -62,9 +64,7 @@ export function ViewedBadge({
       {showIcon && (
         <Check
           className={
-            size === "sm"
-              ? "h-2.5 w-2.5 sm:h-3 sm:w-3 stroke-[2.75]"
-              : "h-3.5 w-3.5 stroke-[2.75]"
+            size === "sm" ? "h-2.5 w-2.5 sm:h-3 sm:w-3 stroke-[2.75]" : "h-3.5 w-3.5 stroke-[2.75]"
           }
         />
       )}

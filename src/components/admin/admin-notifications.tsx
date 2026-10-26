@@ -40,7 +40,10 @@ export function AdminNotificationsPage() {
   const [targetUsername, setTargetUsername] = useState("");
   const [linkUrl, setLinkUrl] = useState("");
   const [sending, setSending] = useState(false);
-  const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<{
+    text: string;
+    type: "success" | "error";
+  } | null>(null);
 
   // Selected notification for Readers modal
   const [selectedReadersNotif, setSelectedReadersNotif] = useState<NotificationItem | null>(null);
@@ -210,7 +213,8 @@ export function AdminNotificationsPage() {
           Realtime Notification Centre
         </h1>
         <p className="text-xs text-foreground/60 mt-1">
-          Broadcast instant real-time notifications to all users or target specific individuals. Monitor reads and reactions live.
+          Broadcast instant real-time notifications to all users or target specific individuals.
+          Monitor reads and reactions live.
         </p>
       </div>
 
@@ -421,7 +425,9 @@ export function AdminNotificationsPage() {
             disabled={isRefreshing || loading}
             className="p-1.5 rounded-lg border border-foreground/10 hover:bg-foreground/5 text-foreground/60 hover:text-foreground transition-all"
           >
-            <RefreshCw className={`h-4 w-4 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
+            <RefreshCw
+              className={`h-4 w-4 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`}
+            />
           </button>
         </div>
 
@@ -453,8 +459,7 @@ export function AdminNotificationsPage() {
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-purple-500/10 px-2 py-0.5 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                        <User className="h-3 w-3" />
-                        @{n.target_username || "User"}
+                        <User className="h-3 w-3" />@{n.target_username || "User"}
                       </span>
                     )}
                   </div>
@@ -533,7 +538,9 @@ export function AdminNotificationsPage() {
                         ))}
                       </div>
                     ) : (
-                      <span className="text-foreground/40 text-[11px] italic">no reactions yet</span>
+                      <span className="text-foreground/40 text-[11px] italic">
+                        no reactions yet
+                      </span>
                     )}
                   </div>
                 </div>
@@ -567,7 +574,8 @@ export function AdminNotificationsPage() {
             <div className="max-h-72 overflow-y-auto space-y-2">
               {!selectedReadersNotif.readers || selectedReadersNotif.readers.length === 0 ? (
                 <div className="p-6 text-center text-xs text-foreground/50">
-                  No users have read this notification yet. Real-time updates will show readers here immediately upon view.
+                  No users have read this notification yet. Real-time updates will show readers here
+                  immediately upon view.
                 </div>
               ) : (
                 selectedReadersNotif.readers.map((reader, idx) => (
@@ -682,20 +690,22 @@ export function AdminNotificationsPage() {
                   Type
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                  {(["announcement", "update", "system", "alert"] as NotificationType[]).map((t) => (
-                    <button
-                      key={t}
-                      type="button"
-                      onClick={() => setEditType(t)}
-                      className={`rounded-lg border py-1.5 text-xs font-medium capitalize transition ${
-                        editType === t
-                          ? "border-marker bg-marker/15 text-marker font-bold"
-                          : "border-foreground/15 hover:bg-foreground/5 text-foreground/70"
-                      }`}
-                    >
-                      {t}
-                    </button>
-                  ))}
+                  {(["announcement", "update", "system", "alert"] as NotificationType[]).map(
+                    (t) => (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setEditType(t)}
+                        className={`rounded-lg border py-1.5 text-xs font-medium capitalize transition ${
+                          editType === t
+                            ? "border-marker bg-marker/15 text-marker font-bold"
+                            : "border-foreground/15 hover:bg-foreground/5 text-foreground/70"
+                        }`}
+                      >
+                        {t}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 

@@ -1,5 +1,5 @@
 import type { Reel } from "./reels";
-import { setRemoteData } from "@/lib/db";
+import { setRemoteData, resetAllStatsDb } from "@/lib/db";
 import { rotateCsrfToken } from "@/lib/url-tracker";
 import { fetchViewerCountry, setCookie, getCookie } from "@/lib/viewer-country";
 
@@ -435,10 +435,7 @@ export function getHistory(): Reel[] {
   return ensureArray<Reel>(get<Reel[]>(KEYS.history, []));
 }
 
-export function isReelViewed(
-  reel?: Partial<Reel> | null,
-  historyList?: Reel[],
-): boolean {
+export function isReelViewed(reel?: Partial<Reel> | null, historyList?: Reel[]): boolean {
   if (!reel || reel.isLive) return false;
   const list = historyList || getHistory();
   if (!list || list.length === 0) return false;
@@ -666,7 +663,6 @@ export async function clearAllStats() {
     currentUserId ||
     (typeof localStorage !== "undefined" ? localStorage.getItem("ig.user_id") : null);
   if (uid) {
-    const { resetAllStatsDb } = await import("./db");
     await resetAllStatsDb(uid);
   }
 
@@ -728,4 +724,3 @@ export function clearAllUserData() {
     window.dispatchEvent(new Event("storage-sync"));
   }
 }
-

@@ -137,10 +137,7 @@ const ProfileAvatar = memo(
     src?: string | null;
     isViraly?: boolean;
   }) => {
-    const isGenericOrForbidden =
-      !name ||
-      name === "local" ||
-      name.startsWith("local");
+    const isGenericOrForbidden = !name || name === "local" || name.startsWith("local");
 
     let avatarSrc: string | null | undefined = src;
     if (!avatarSrc && !isGenericOrForbidden && isViraly) {
@@ -176,41 +173,42 @@ const MobileCommentItem = memo(
           >
             {authorName}
           </Link>
-        <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
-          {renderTextWithLinks(c.comment || c.reply || c.repliedComment || "")}
-        </span>
-        <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
-          {c.likes > 0 && <span>{c.likes} likes</span>}
-          {c.added_date && <span>· {c.added_date}</span>}
-        </div>
-        {c.replies?.length > 0 && (
-          <div className="mt-3 pl-2 border-l border-muted-foreground/20">
-            <button
-              onClick={() => setShowReplies(!showReplies)}
-              className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
-            >
-              <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
-              {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
-            </button>
-
-            {showReplies && (
-              <div className="mt-4 flex flex-col gap-4">
-                {c.replies.map((r: any, idx: number) => (
-                  <MobileCommentItem key={idx} c={r} isReply={true} isViraly={isViraly} />
-                ))}
-              </div>
-            )}
+          <span className="text-card-foreground/90 break-words whitespace-pre-wrap block mt-1">
+            {renderTextWithLinks(c.comment || c.reply || c.repliedComment || "")}
+          </span>
+          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground font-medium">
+            {c.likes > 0 && <span>{c.likes} likes</span>}
+            {c.added_date && <span>· {c.added_date}</span>}
           </div>
+          {c.replies?.length > 0 && (
+            <div className="mt-3 pl-2 border-l border-muted-foreground/20">
+              <button
+                onClick={() => setShowReplies(!showReplies)}
+                className="text-xs text-muted-foreground font-semibold flex items-center gap-2 hover:opacity-80"
+              >
+                <span className="w-6 h-[1px] bg-muted-foreground/30"></span>
+                {showReplies ? "Hide replies" : `View replies (${c.replies.length})`}
+              </button>
+
+              {showReplies && (
+                <div className="mt-4 flex flex-col gap-4">
+                  {c.replies.map((r: any, idx: number) => (
+                    <MobileCommentItem key={idx} c={r} isReply={true} isViraly={isViraly} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        {!isReply && (
+          <button className="self-center p-2 opacity-0 group-hover:opacity-100 transition">
+            <Heart className="w-3 h-3 text-muted-foreground hover:text-card-foreground" />
+          </button>
         )}
       </div>
-      {!isReply && (
-        <button className="self-center p-2 opacity-0 group-hover:opacity-100 transition">
-          <Heart className="w-3 h-3 text-muted-foreground hover:text-card-foreground" />
-        </button>
-      )}
-    </div>
-  );
-});
+    );
+  },
+);
 
 export const ReelPlayer = memo(function ReelPlayer({
   reel,
@@ -288,7 +286,9 @@ export const ReelPlayer = memo(function ReelPlayer({
   useEffect(() => {
     setCommentsList(reel.comments || []);
     if (showComments) {
-      const vidId = String(reel.id || "").replace(/^short-/, "").replace(/^[a-z]+-/, "");
+      const vidId = String(reel.id || "")
+        .replace(/^short-/, "")
+        .replace(/^[a-z]+-/, "");
       if (vidId && /^\d+$/.test(vidId)) {
         setLoadingComments(true);
         fetchReelComments(vidId)
@@ -441,7 +441,10 @@ export const ReelPlayer = memo(function ReelPlayer({
           v.play().catch(() => {});
         }
       } else {
-        if (videoSrc && (!v.src || v.src === "" || (!v.src.includes(videoSrc) && v.currentSrc !== videoSrc))) {
+        if (
+          videoSrc &&
+          (!v.src || v.src === "" || (!v.src.includes(videoSrc) && v.currentSrc !== videoSrc))
+        ) {
           v.src = videoSrc;
         }
         if (!hasPlayedRef.current) {
@@ -479,79 +482,120 @@ export const ReelPlayer = memo(function ReelPlayer({
     }
   }, [muted, volume]);
 
-  // ── 5-second valid view threshold ─────────────────────────────────────────
-  // Views are only counted if the reel plays for at least 5 seconds (or reaches end)
+  // ── 8-second straight continuous watch threshold ────────────────────────────
+  // Must watch continuously for 8 full seconds straight without pause or scrub
   useEffect(() => {
     const v = videoRef.current;
     if (!v || !active) return;
 
     let timer: ReturnType<typeof setTimeout> | null = null;
-    let accumulatedMs = 0;
-    let lastPlayTime = 0;
+    let straightWatchStart = 0;
+
+    const clearStraightWatch = () => {
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+      straightWatchStart = 0;
+    };
 
     const markAsWatched = () => {
       if (watchedFired.current) return;
       watchedFired.current = true;
+      clearStraightWatch();
       onWatchedRef.current();
       addToHistory(reel);
       setIsWatched(true);
       if (typeof window !== "undefined") {
         window.dispatchEvent(
           new CustomEvent("shortify:reel-watched", {
-            detail: { reel, duration: 5 },
-          })
+            detail: { reel, duration: 8 },
+          }),
         );
       }
     };
 
-    const checkTime = () => {
-      if (
-        v.currentTime >= 5 ||
-        (v.duration && !isNaN(v.duration) && v.currentTime >= v.duration - 0.2)
-      ) {
-        markAsWatched();
+    const startStraightWatch = () => {
+      if (watchedFired.current) return;
+      if (v.paused || v.ended || document.hidden) {
+        clearStraightWatch();
+        return;
       }
-    };
 
-    const onPlay = () => {
-      lastPlayTime = Date.now();
+      if (!straightWatchStart) {
+        straightWatchStart = Date.now();
+      }
+
       if (timer) clearTimeout(timer);
-      const remaining = Math.max(0, 5000 - accumulatedMs);
-      timer = setTimeout(() => {
+      const elapsed = Date.now() - straightWatchStart;
+      const remaining = Math.max(0, 8000 - elapsed);
+
+      if (remaining <= 0) {
         markAsWatched();
+        return;
+      }
+
+      timer = setTimeout(() => {
+        if (!v.paused && !v.ended && !document.hidden && active) {
+          markAsWatched();
+        }
       }, remaining);
     };
 
-    const onPause = () => {
-      if (lastPlayTime > 0) {
-        accumulatedMs += Date.now() - lastPlayTime;
-        lastPlayTime = 0;
-      }
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
+    const checkTime = () => {
+      if (watchedFired.current) return;
+      if (straightWatchStart > 0 && !v.paused && !v.ended && !document.hidden) {
+        if (Date.now() - straightWatchStart >= 8000) {
+          markAsWatched();
+        }
       }
     };
 
-    const onEnded = () => {
-      markAsWatched();
+    const handlePause = () => {
+      clearStraightWatch();
     };
 
+    const handleSeeking = () => {
+      // User scrubbed or jumped — reset straight watch
+      clearStraightWatch();
+    };
+
+    const handleEnded = () => {
+      // If video ended and doesn't loop, reset
+      if (!v.loop) {
+        clearStraightWatch();
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        clearStraightWatch();
+      } else if (!v.paused && !v.ended) {
+        startStraightWatch();
+      }
+    };
+
+    v.addEventListener("play", startStraightWatch);
+    v.addEventListener("playing", startStraightWatch);
     v.addEventListener("timeupdate", checkTime);
-    v.addEventListener("play", onPlay);
-    v.addEventListener("pause", onPause);
-    v.addEventListener("ended", onEnded);
+    v.addEventListener("pause", handlePause);
+    v.addEventListener("seeking", handleSeeking);
+    v.addEventListener("ended", handleEnded);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
-    if (!v.paused) {
-      onPlay();
+    if (!v.paused && !v.ended) {
+      startStraightWatch();
     }
 
     return () => {
-      if (timer) clearTimeout(timer);
+      clearStraightWatch();
+      v.removeEventListener("play", startStraightWatch);
+      v.removeEventListener("playing", startStraightWatch);
       v.removeEventListener("timeupdate", checkTime);
-      v.removeEventListener("play", onPlay);
-      v.removeEventListener("pause", onPause);
-      v.removeEventListener("ended", onEnded);
+      v.removeEventListener("pause", handlePause);
+      v.removeEventListener("seeking", handleSeeking);
+      v.removeEventListener("ended", handleEnded);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [active, reel.id]);
 
@@ -570,7 +614,9 @@ export const ReelPlayer = memo(function ReelPlayer({
   }, [active, reel.id]);
 
   // ── Actions ──────────────────────────────────────────────────────────────
-  const isLiveStream = Boolean(reel.isLive || reel.source === "live" || reel.id?.startsWith("live-"));
+  const isLiveStream = Boolean(
+    reel.isLive || reel.source === "live" || reel.id?.startsWith("live-"),
+  );
 
   const getOriginInfo = (): { player: "normal" | "category"; category?: string } => {
     const isCategory =
@@ -779,8 +825,7 @@ export const ReelPlayer = memo(function ReelPlayer({
     // Keep menu open so user sees the toggle change
   };
 
-  const preload: "auto" | "metadata" | "none" =
-    distance === 0 ? "auto" : distance === 1 ? "metadata" : "none";
+  const preload: "auto" | "metadata" | "none" = distance <= 1 ? "auto" : "none";
 
   // ── Volume hover helpers ──────────────────────────────────────────────────
   const showVolumeSlider = volumeHovered || volumeInteracting;
@@ -1285,8 +1330,7 @@ export const ReelPlayer = memo(function ReelPlayer({
   const ProfileInfo = ({ overlay }: { overlay: boolean }) => {
     const creatorTargetUsername = reel.username || "creator";
     const creatorDisplayName = reel.creator_name || reel.username || "Creator";
-    const canLink =
-      reel.source !== "local" && feedType !== "offline" && !reel.isLive;
+    const canLink = reel.source !== "local" && feedType !== "offline" && !reel.isLive;
 
     return (
       <div className={overlay ? "pointer-events-auto w-full" : "pointer-events-auto w-full"}>
@@ -1415,10 +1459,7 @@ export const ReelPlayer = memo(function ReelPlayer({
             }}
           />
           {/* Transparent interactive surface over the video */}
-          <div
-            className="absolute inset-0 z-0 cursor-pointer select-none"
-            {...interactionProps}
-          />
+          <div className="absolute inset-0 z-0 cursor-pointer select-none" {...interactionProps} />
           <Overlays />
 
           {/* Overlaid Profile info (bottom left inside the video - Only for landscape) */}
@@ -1488,16 +1529,24 @@ export const ReelPlayer = memo(function ReelPlayer({
             )}
 
             {/* Share */}
-            <button onClick={share} className="flex flex-col items-center gap-1 group focus:outline-none">
+            <button
+              onClick={share}
+              className="flex flex-col items-center gap-1 group focus:outline-none"
+            >
               <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
                 <Share2 className="h-5 w-5 text-foreground" strokeWidth={2} />
               </div>
-              <span className="text-xs font-semibold text-foreground text-center tracking-tight">Share</span>
+              <span className="text-xs font-semibold text-foreground text-center tracking-tight">
+                Share
+              </span>
             </button>
 
             {/* Save */}
             {!isLiveStream && (
-              <button onClick={doSave} className="flex flex-col items-center gap-1 group focus:outline-none">
+              <button
+                onClick={doSave}
+                className="flex flex-col items-center gap-1 group focus:outline-none"
+              >
                 <div className="flex h-11 w-11 items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all">
                   {saved ? (
                     <BookmarkCheck
@@ -1595,9 +1644,7 @@ export const ReelPlayer = memo(function ReelPlayer({
 
             <div className="px-4 py-2 border-b border-border flex justify-between items-center">
               <h3 className="font-bold text-card-foreground">Comments</h3>
-              <span className="text-xs text-muted-foreground">
-                {commentsList.length} comments
-              </span>
+              <span className="text-xs text-muted-foreground">{commentsList.length} comments</span>
             </div>
 
             {/* Scrollable content */}
@@ -1652,10 +1699,7 @@ export const ReelPlayer = memo(function ReelPlayer({
         }}
       />
       {/* Transparent interactive surface over the video */}
-      <div
-        className="absolute inset-0 z-0 cursor-pointer select-none"
-        {...interactionProps}
-      />
+      <div className="absolute inset-0 z-0 cursor-pointer select-none" {...interactionProps} />
       <Overlays />
 
       {/* Right action rail */}

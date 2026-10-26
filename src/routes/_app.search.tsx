@@ -192,15 +192,22 @@ function SearchPage() {
     };
   }, [query, triggerSearch]);
 
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    if (query.trim() !== lastSearchedQueryRef.current) {
+      triggerSearch(query);
+    }
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      if (debounceTimerRef.current) {
-        clearTimeout(debounceTimerRef.current);
-      }
-      if (query.trim() !== lastSearchedQueryRef.current) {
-        triggerSearch(query);
-      }
+      handleSearchSubmit();
     }
   };
 
@@ -243,33 +250,44 @@ function SearchPage() {
       <div className="flex items-center gap-2 md:gap-4 mb-8">
         <button
           onClick={() => navigate({ to: "/explore" })}
-          className="p-1 md:p-2 shrink-0 rounded-full hover:bg-charcoal/5 dark:hover:bg-cream/5 transition"
+          className="p-1 md:p-2 shrink-0 rounded-full hover:bg-charcoal/5 dark:hover:bg-cream/5 transition cursor-pointer"
           aria-label="Back to explore"
         >
           <ChevronLeft className="w-6 h-6 text-cocoa dark:text-cream" />
         </button>
-        <div className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 bg-dew dark:bg-secondary rounded-xl px-3 py-2 md:px-4 md:py-3">
-          <Search className="w-4 h-4 md:w-5 md:h-5 shrink-0 text-charcoal/50 dark:text-cream/50" />
+        <form
+          onSubmit={handleSearchSubmit}
+          className="flex-1 min-w-0 flex items-center gap-2 md:gap-3 bg-dew dark:bg-secondary rounded-xl px-3 py-2 md:px-4 md:py-3 focus-within:ring-2 focus-within:ring-cocoa/20 dark:focus-within:ring-cream/20 transition"
+        >
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search..."
-            className="w-full min-w-0 bg-transparent border-none outline-none text-sm md:text-base text-charcoal dark:text-cream placeholder-charcoal/50 dark:text-cream/50"
+            className="w-full min-w-0 bg-transparent border-none outline-none text-sm md:text-base text-charcoal dark:text-cream placeholder-charcoal/50 dark:placeholder-cream/50"
             autoFocus
           />
           {query && (
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-full hover:bg-charcoal/10 dark:hover:bg-cream/10 text-charcoal/50 dark:text-cream/50 transition shrink-0"
+              className="p-1 rounded-full hover:bg-charcoal/10 dark:hover:bg-cream/10 text-charcoal/50 dark:text-cream/50 transition shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-cocoa dark:focus-visible:ring-cream cursor-pointer"
               title="Clear search"
+              aria-label="Clear search"
             >
               <X className="w-4 h-4 md:w-5 md:h-5" />
             </button>
           )}
-        </div>
+          <button
+            type="submit"
+            className="p-1 rounded-full text-charcoal/60 dark:text-cream/60 hover:text-charcoal dark:hover:text-cream transition shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-cocoa dark:focus-visible:ring-cream flex items-center justify-center active:scale-90"
+            title="Search"
+            aria-label="Search"
+          >
+            <Search className="w-4 h-4 md:w-5 md:h-5" />
+          </button>
+        </form>
       </div>
 
       {/* Grid */}

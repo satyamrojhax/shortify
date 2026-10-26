@@ -409,11 +409,23 @@ input[type="range"]::-moz-range-thumb {
 }
 
 /* Universal text wrapping & responsiveness protection */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   overflow-wrap: break-word;
 }
 
-h1, h2, h3, h4, h5, h6, p, span, a, label, li {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+span,
+a,
+label,
+li {
   word-break: break-word;
 }
 
@@ -437,7 +449,8 @@ h1, h2, h3, h4, h5, h6, p, span, a, label, li {
 }
 
 @keyframes muse-float {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0px);
   }
   50% {
@@ -446,7 +459,8 @@ h1, h2, h3, h4, h5, h6, p, span, a, label, li {
 }
 
 @keyframes muse-subtle-bounce {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -492,4 +506,3 @@ h1, h2, h3, h4, h5, h6, p, span, a, label, li {
 .animate-float-heart {
   animation: float-heart 1.2s ease-out forwards;
 }
-

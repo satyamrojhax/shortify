@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useRouterState } from "@tanstack/react-router";
-import { KEYS, get, set, remove, initStorageData, isBrowser, setLocal, clearAllUserData } from "@/lib/storage";
+import {
+  KEYS,
+  get,
+  set,
+  remove,
+  initStorageData,
+  isBrowser,
+  setLocal,
+  clearAllUserData,
+} from "@/lib/storage";
 import {
   loginUserDb,
   signupUserDb,
@@ -39,7 +48,9 @@ function subscribeGlobalMaintenance() {
     });
 
   try {
-    const existing = (supabase.getChannels() as any[]).find((ch: any) => ch.topic && String(ch.topic).includes("maintenance-sync-global"));
+    const existing = (supabase.getChannels() as any[]).find(
+      (ch: any) => ch.topic && String(ch.topic).includes("maintenance-sync-global"),
+    );
     if (existing) {
       supabase.removeChannel(existing);
     }
@@ -151,8 +162,10 @@ export function getStoredPinCode(): string | null {
 }
 
 export function checkIsAgeOk(): boolean {
-  if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true") return true;
-  if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true") return true;
+  if (typeof sessionStorage !== "undefined" && sessionStorage.getItem("ig.age_ok") === "true")
+    return true;
+  if (typeof localStorage !== "undefined" && localStorage.getItem("ig.age_ok") === "true")
+    return true;
   if (getCookie("ig.age_ok") === "true") return true;
   // If user is already identified by user_id or username, they have inherently passed age verification
   if (getStoredUserId() || getStoredUsername()) return true;
@@ -171,12 +184,28 @@ export function useAuth() {
   const [ageOk, setAgeOk] = useState<boolean>(checkIsAgeOk);
   const [username, setUsername] = useState<string | null>(getStoredUsername);
   const [pinOk, setPinOkState] = useState<boolean>(checkIsPinOk);
-  const [pinCode, setPinCodeState] = useState<string | null>(() => get<string | null>(KEYS.pinCode, null) || getStoredPinCode());
-  const [realName, setRealName] = useState<string | null>(() => get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name"));
-  const [dob, setDob] = useState<string | null>(() => get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob"));
+  const [pinCode, setPinCodeState] = useState<string | null>(
+    () => get<string | null>(KEYS.pinCode, null) || getStoredPinCode(),
+  );
+  const [realName, setRealName] = useState<string | null>(
+    () =>
+      get<string | null>(KEYS.realName, null) ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) ||
+      getCookie("ig.real_name"),
+  );
+  const [dob, setDob] = useState<string | null>(
+    () =>
+      get<string | null>(KEYS.dob, null) ||
+      (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) ||
+      getCookie("ig.dob"),
+  );
   const [hash, setHash] = useState<string | null>(() => get<string | null>(KEYS.hash, null));
-  const [deviceId, setDeviceId] = useState<string | null>(() => get<string | null>(KEYS.deviceId, null));
-  const [fingerprint, setFingerprint] = useState<string | null>(() => get<string | null>(KEYS.fingerprint, null));
+  const [deviceId, setDeviceId] = useState<string | null>(() =>
+    get<string | null>(KEYS.deviceId, null),
+  );
+  const [fingerprint, setFingerprint] = useState<string | null>(() =>
+    get<string | null>(KEYS.fingerprint, null),
+  );
   const [isMaintenance, setIsMaintenance] = useState<boolean | null>(() => globalMaintenance);
 
   useEffect(() => {
@@ -230,9 +259,17 @@ export function useAuth() {
       try {
         if (!isLoggingOut) {
           const idbData = await getAuthFromIdb();
-          if (idbData && Object.keys(idbData).length > 0 && (idbData["ig.user_id"] || idbData["ig.username"])) {
+          if (
+            idbData &&
+            Object.keys(idbData).length > 0 &&
+            (idbData["ig.user_id"] || idbData["ig.username"])
+          ) {
             const SUPABASE_KEY = "sb-mcrhjyszrxbtiizhgacn-auth-token";
-            if (idbData["sb_auth_token"] && typeof localStorage !== "undefined" && !localStorage.getItem(SUPABASE_KEY)) {
+            if (
+              idbData["sb_auth_token"] &&
+              typeof localStorage !== "undefined" &&
+              !localStorage.getItem(SUPABASE_KEY)
+            ) {
               try {
                 const parsed = JSON.parse(idbData["sb_auth_token"]);
                 if (parsed && (parsed.refresh_token || parsed.currentSession?.refresh_token)) {
@@ -268,9 +305,10 @@ export function useAuth() {
       // 1. Fetch User Data if logged in
       const uid = getStoredUserId();
       const fallbackUserName = getStoredUsername();
-      const cachedUsername = (uid || fallbackUserName)
-        ? (get<string | null>(KEYS.username, null) || fallbackUserName)
-        : null;
+      const cachedUsername =
+        uid || fallbackUserName
+          ? get<string | null>(KEYS.username, null) || fallbackUserName
+          : null;
 
       const isAgeOk = checkIsAgeOk() || Boolean(uid) || Boolean(cachedUsername);
       if (isAgeOk) {
@@ -280,19 +318,32 @@ export function useAuth() {
       }
 
       const isPinOk = checkIsPinOk();
-      const storedPin = (uid || fallbackUserName)
-        ? (get<string | null>(KEYS.pinCode, null) || getStoredPinCode())
-        : null;
+      const storedPin =
+        uid || fallbackUserName
+          ? get<string | null>(KEYS.pinCode, null) || getStoredPinCode()
+          : null;
 
       setAgeOk(isAgeOk);
       setUsername(cachedUsername);
       setPinOkState(isPinOk);
       setPinCodeState(storedPin);
-      setRealName((uid || fallbackUserName) ? (get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name")) : null);
-      setDob((uid || fallbackUserName) ? (get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob")) : null);
-      setHash((uid || fallbackUserName) ? get<string | null>(KEYS.hash, null) : null);
-      setDeviceId((uid || fallbackUserName) ? get<string | null>(KEYS.deviceId, null) : null);
-      setFingerprint((uid || fallbackUserName) ? get<string | null>(KEYS.fingerprint, null) : null);
+      setRealName(
+        uid || fallbackUserName
+          ? get<string | null>(KEYS.realName, null) ||
+              (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) ||
+              getCookie("ig.real_name")
+          : null,
+      );
+      setDob(
+        uid || fallbackUserName
+          ? get<string | null>(KEYS.dob, null) ||
+              (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) ||
+              getCookie("ig.dob")
+          : null,
+      );
+      setHash(uid || fallbackUserName ? get<string | null>(KEYS.hash, null) : null);
+      setDeviceId(uid || fallbackUserName ? get<string | null>(KEYS.deviceId, null) : null);
+      setFingerprint(uid || fallbackUserName ? get<string | null>(KEYS.fingerprint, null) : null);
 
       // If we have cached data, we are ready instantly! No UI hang.
       if (cachedUsername || !uid) {
@@ -311,8 +362,16 @@ export function useAuth() {
 
           // Find the best username - NEVER overwrite with null if we have an existing username
           let finalUsername = data[KEYS.username] || cachedUsername || fallbackUserName;
-          let finalDob = data[KEYS.dob] || get<string | null>(KEYS.dob, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) || getCookie("ig.dob");
-          let finalRealName = data[KEYS.realName] || get<string | null>(KEYS.realName, null) || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) || getCookie("ig.real_name");
+          let finalDob =
+            data[KEYS.dob] ||
+            get<string | null>(KEYS.dob, null) ||
+            (typeof localStorage !== "undefined" ? localStorage.getItem("ig.dob") : null) ||
+            getCookie("ig.dob");
+          const finalRealName =
+            data[KEYS.realName] ||
+            get<string | null>(KEYS.realName, null) ||
+            (typeof localStorage !== "undefined" ? localStorage.getItem("ig.real_name") : null) ||
+            getCookie("ig.real_name");
 
           if (!finalUsername || !finalDob) {
             try {
@@ -468,13 +527,15 @@ export function useAuth() {
       setCookie("ig.age_ok", "true", 365);
       removeCookie("ig.pin_ok");
       removeCookie(SESSION_PIN_KEY);
-      const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      const { data: sessionData } = await supabase.auth
+        .getSession()
+        .catch(() => ({ data: { session: null } }));
       saveAuthToIdb({
         "ig.user_id": user.id,
         "ig.user_name": user.name,
         "ig.username": user.name,
         "ig.age_ok": "true",
-        ...(sessionData?.session ? { "sb_auth_token": JSON.stringify(sessionData.session) } : {}),
+        ...(sessionData?.session ? { sb_auth_token: JSON.stringify(sessionData.session) } : {}),
       });
 
       const info = getDeviceInfo();
@@ -533,13 +594,15 @@ export function useAuth() {
       setCookie("ig.age_ok", "true", 365);
       removeCookie("ig.pin_ok");
       removeCookie(SESSION_PIN_KEY);
-      const { data: sessionData } = await supabase.auth.getSession().catch(() => ({ data: { session: null } }));
+      const { data: sessionData } = await supabase.auth
+        .getSession()
+        .catch(() => ({ data: { session: null } }));
       saveAuthToIdb({
         "ig.user_id": user.id,
         "ig.user_name": user.name,
         "ig.username": user.name,
         "ig.age_ok": "true",
-        ...(sessionData?.session ? { "sb_auth_token": JSON.stringify(sessionData.session) } : {}),
+        ...(sessionData?.session ? { sb_auth_token: JSON.stringify(sessionData.session) } : {}),
       });
 
       const info = getDeviceInfo();

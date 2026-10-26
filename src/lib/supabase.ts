@@ -54,8 +54,10 @@ const getSupabaseClient = () => {
                 body?.code === "refresh_token_not_found" ||
                 body?.error_code === "refresh_token_not_found" ||
                 body?.error === "invalid_grant" ||
-                (typeof body?.message === "string" && body.message.toLowerCase().includes("refresh token")) ||
-                (typeof body?.error_description === "string" && body.error_description.toLowerCase().includes("refresh token"))
+                (typeof body?.message === "string" &&
+                  body.message.toLowerCase().includes("refresh token")) ||
+                (typeof body?.error_description === "string" &&
+                  body.error_description.toLowerCase().includes("refresh token"))
               ) {
                 if (typeof window !== "undefined" && typeof localStorage !== "undefined") {
                   localStorage.removeItem(SUPABASE_STORAGE_KEY);

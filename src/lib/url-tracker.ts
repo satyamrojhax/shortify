@@ -194,8 +194,7 @@ export function getCsrfToken(): string {
 export function rotateCsrfToken(actionName?: string): string {
   if (typeof window === "undefined") return "csrf_token";
   try {
-    const newToken =
-      "csrf_" + getSecureRandomString(8) + Date.now().toString(36);
+    const newToken = "csrf_" + getSecureRandomString(8) + Date.now().toString(36);
     sessionStorage.setItem("shortify_csrf", newToken);
     try {
       localStorage.setItem("shortify_csrf", newToken);

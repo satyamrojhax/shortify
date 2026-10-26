@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { BrandMark } from "@/components/nav";
 import { rotateCsrfToken, getDeviceId } from "@/lib/url-tracker";
+import { checkUsernameAvailability } from "@/lib/db";
 
 type LoginSearch = {
   type?: string;
@@ -113,10 +114,9 @@ function LoginPage() {
     setCheckingUsername(true);
     const timer = setTimeout(async () => {
       try {
-        const { checkUsernameAvailability } = await import("@/lib/db");
         const available = await checkUsernameAvailability(handle);
         setUsernameAvailable(available);
-      } catch (e) {
+      } catch {
         setUsernameAvailable(null);
       } finally {
         setCheckingUsername(false);

@@ -111,14 +111,18 @@ export function formatChatTimeAgo(createdAt: string): string {
 export function extractModelId(
   modelId?: string | number,
   reelId?: string,
-  streamUrl?: string
+  streamUrl?: string,
 ): string | null {
   if (modelId) {
-    const clean = String(modelId).replace(/^live-/, "").trim();
+    const clean = String(modelId)
+      .replace(/^live-/, "")
+      .trim();
     if (/^\d+$/.test(clean)) return clean;
   }
   if (reelId) {
-    const clean = String(reelId).replace(/^live-/, "").trim();
+    const clean = String(reelId)
+      .replace(/^live-/, "")
+      .trim();
     if (/^\d+$/.test(clean)) return clean;
   }
   if (streamUrl) {
@@ -132,7 +136,9 @@ export function extractModelId(
  * Fetches live chat messages using the modelId
  */
 export async function fetchLiveChat(modelId: string | number): Promise<ChatMessage[]> {
-  const targetModelId = String(modelId).replace(/^live-/, "").trim();
+  const targetModelId = String(modelId)
+    .replace(/^live-/, "")
+    .trim();
   if (!targetModelId) return [];
 
   try {

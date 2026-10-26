@@ -160,10 +160,7 @@ export async function sendTicketReply(payload: {
     updates.status = "replied";
   }
 
-  await supabase
-    .from("feedback_tickets")
-    .update(updates)
-    .eq("id", payload.ticket_id);
+  await supabase.from("feedback_tickets").update(updates).eq("id", payload.ticket_id);
 
   return data;
 }
@@ -215,10 +212,7 @@ export async function adminUpdateTicketStatus(
 /**
  * ADMIN: React to ticket (e.g. ⭐, 💡, ❤️)
  */
-export async function adminReactToTicket(
-  ticketId: string,
-  reaction: string | null,
-): Promise<void> {
+export async function adminReactToTicket(ticketId: string, reaction: string | null): Promise<void> {
   const { error } = await supabase
     .from("feedback_tickets")
     .update({ admin_reaction: reaction, updated_at: new Date().toISOString() })
@@ -231,10 +225,7 @@ export async function adminReactToTicket(
  * ADMIN: Delete ticket
  */
 export async function adminDeleteTicket(ticketId: string): Promise<void> {
-  const { error } = await supabase
-    .from("feedback_tickets")
-    .delete()
-    .eq("id", ticketId);
+  const { error } = await supabase.from("feedback_tickets").delete().eq("id", ticketId);
 
   if (error) throw error;
 }
@@ -288,15 +279,11 @@ export function subscribeToRealtimeTickets(onChange: () => void): () => void {
   const channelName = `realtime-tickets-${Math.random().toString(36).slice(2, 8)}`;
   const channel = supabase
     .channel(channelName)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "feedback_tickets" },
-      () => onChange(),
+    .on("postgres_changes", { event: "*", schema: "public", table: "feedback_tickets" }, () =>
+      onChange(),
     )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "feedback_messages" },
-      () => onChange(),
+    .on("postgres_changes", { event: "*", schema: "public", table: "feedback_messages" }, () =>
+      onChange(),
     )
     .subscribe();
 

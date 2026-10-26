@@ -60,7 +60,9 @@ function UserFeedbackPage() {
     if (!userId && !username) return;
     try {
       const data = await fetchUserFeedbackTickets(userId || "", username);
-      const unique = (data || []).filter((t, idx, arr) => arr.findIndex((x) => x.id === t.id) === idx);
+      const unique = (data || []).filter(
+        (t, idx, arr) => arr.findIndex((x) => x.id === t.id) === idx,
+      );
       setTickets(unique);
       // If an active ticket is open, update its state
       if (activeTicket) {
@@ -343,7 +345,9 @@ function UserFeedbackPage() {
                 title="Refresh tickets"
                 className="p-1 rounded-md text-charcoal/50 hover:text-cocoa dark:text-cream/50 dark:hover:text-cream transition-colors"
               >
-                <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
+                <RefreshCw
+                  className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`}
+                />
               </button>
             </div>
 
@@ -361,7 +365,8 @@ function UserFeedbackPage() {
                   no suggestions yet
                 </div>
                 <p className="max-w-xs text-xs text-charcoal/60 dark:text-cream/60">
-                  have an idea to make Shortify better or need help? Click the button above to start a conversation with admin!
+                  have an idea to make Shortify better or need help? Click the button above to start
+                  a conversation with admin!
                 </p>
               </div>
             ) : (
@@ -381,18 +386,26 @@ function UserFeedbackPage() {
                         </span>
                         {getStatusBadge(t.status)}
                         {isUnderOneHour && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-marker/30 bg-marker/10 px-2 py-0.5 text-[10px] font-semibold text-marker" title="Can edit for under 1 hour of submission">
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full border border-marker/30 bg-marker/10 px-2 py-0.5 text-[10px] font-semibold text-marker"
+                            title="Can edit for under 1 hour of submission"
+                          >
                             <Pencil className="h-2.5 w-2.5" />
                             <span>editable</span>
                           </span>
                         )}
                         {t.admin_reaction && (
-                          <span className="inline-flex items-center rounded-full bg-marker/10 px-2 py-0.5 text-xs" title="Admin reacted">
+                          <span
+                            className="inline-flex items-center rounded-full bg-marker/10 px-2 py-0.5 text-xs"
+                            title="Admin reacted"
+                          >
                             {t.admin_reaction}
                           </span>
                         )}
                         <span className="text-[11px] text-charcoal/40 dark:text-cream/40 ml-auto">
-                          {formatDistanceToNow(new Date(t.updated_at || t.created_at), { addSuffix: true })}
+                          {formatDistanceToNow(new Date(t.updated_at || t.created_at), {
+                            addSuffix: true,
+                          })}
                         </span>
                       </div>
 
@@ -743,7 +756,10 @@ function TicketDetailView({
         </div>
 
         {/* Input box */}
-        <form onSubmit={handleSendReply} className="mt-4 pt-3 border-t border-charcoal/10 dark:border-cream/10 flex items-center gap-2">
+        <form
+          onSubmit={handleSendReply}
+          className="mt-4 pt-3 border-t border-charcoal/10 dark:border-cream/10 flex items-center gap-2"
+        >
           <input
             type="text"
             value={replyText}

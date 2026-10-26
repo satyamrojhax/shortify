@@ -175,7 +175,8 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-4 left-1/2 z-40 flex h-14 -translate-x-1/2 items-center gap-1 sm:gap-2 rounded-full border border-twilight-navy bg-cloud-white px-2.5 shadow-lg backdrop-blur-md md:hidden dark:border-periwinkle-sky/50 dark:bg-dusk-indigo">
       {visibleBottomItems.map((it) => {
-        const active = pathname === it.to || (it.to === "/my-courses" && pathname.startsWith("/my-courses"));
+        const active =
+          pathname === it.to || (it.to === "/my-courses" && pathname.startsWith("/my-courses"));
         const Icon = it.icon;
         return (
           <Link
@@ -229,10 +230,7 @@ export function MobileHeader({ username }: { username?: string | null }) {
   return (
     <>
       <header className="relative z-40 flex h-14 items-center justify-between border-b border-twilight-navy/10 bg-background/80 px-4 backdrop-blur-md md:hidden dark:border-periwinkle-sky/10">
-        <Link
-          to="/home"
-          className="flex items-center gap-2"
-        >
+        <Link to="/home" className="flex items-center gap-2">
           <BrandMark size={24} />
         </Link>
         <div className="flex items-center gap-2.5">

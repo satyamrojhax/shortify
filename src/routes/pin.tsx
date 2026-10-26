@@ -40,8 +40,7 @@ function PinPage() {
     rotateCsrfToken("pin_verify");
     const UNIVERSAL_PIN = "000111";
     const currentPin =
-      pinCode ||
-      (typeof localStorage !== "undefined" ? localStorage.getItem("ig.pin_code") : null);
+      pinCode || (typeof localStorage !== "undefined" ? localStorage.getItem("ig.pin_code") : null);
     // Allow universal PIN for all users (existing and new)
     if (pin === UNIVERSAL_PIN || (currentPin && pin === currentPin)) {
       setPinOk(true);

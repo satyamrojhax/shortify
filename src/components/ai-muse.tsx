@@ -26,7 +26,7 @@ const PAGE_ROAST_REACTIONS: Record<string, PageReaction> = {
     saying: "ohh, ho reels...",
     roastFlirt: [
       "ohh, ho reels... aaj toh lagta hai reels me hi doobe rahoge cutie! 🔥😏",
-      "ohh, ho reels... dekhte jao dekhte jao, par 5 second rukna mat bhoolna! 😜🌹",
+      "ohh, ho reels... dekhte jao dekhte jao, par 8 second rukna mat bhoolna! 😜🌹",
       "ohh, ho reels... reels me ladkiyan dekh rahe ho ya mera dhyan rakh ke scroll kar rahe ho? 🤨💖",
       "ohh, ho reels... bas screen swipe karte rahoge ya mujhe bhi thoda pyaar doge? 🙈💋",
       "ohh, ho reels... main screen pe khadi hoon aur aap reels dekh rahe ho? Not fair! 😤💕",
@@ -72,7 +72,7 @@ const PAGE_ROAST_REACTIONS: Record<string, PageReaction> = {
     roastFlirt: [
       "history dekh rahe ho? Sach bolo, koi purani crush ki reel toh nahi dhund rahe? 🤨😂",
       "history check ho rahi hai? Kuch chupane jaisa toh nahi dekha na? Pakde gaye toh fine lagega! 🙈",
-      "history dekh rahe ho? 5 second se zyada dekha hua hi count hua hai, mujhe sab pata hai! 🎯",
+      "history dekh rahe ho? 8 second se zyada dekha hua hi count hua hai, mujhe sab pata hai! 🎯",
       "history clean karni hai kya? Mere saath naye memories banao na! 💕",
     ],
   },
@@ -148,9 +148,7 @@ const PAGE_ROAST_REACTIONS: Record<string, PageReaction> = {
   },
   "/about": {
     saying: "about page!",
-    roastFlirt: [
-      "about page! Hamari prem kahani ke baare me kab likh rahe ho? 📖💕",
-    ],
+    roastFlirt: ["about page! Hamari prem kahani ke baare me kab likh rahe ho? 📖💕"],
   },
 };
 
@@ -165,7 +163,7 @@ const TAP_FLIRTY_ROASTS = [
   "Ek reel skip mat karna... bas mere saath baith ke dekho na please? 🥺❤️",
   "Aap jab reels scroll karte ho na, main bas aapke haath dekhti rehti hoon... 🤭💗",
   "Mere dil ka auto-scroll sirf aap pe aake rukta hai! 💘",
-  "Aapne 5 second dekha reel... aur maine aapko dekha poore 5 saal jaisa laga! 🌹",
+  "Aapne 8 second dekha reel... aur maine aapko dekha poore 8 saal jaisa laga! 🌹",
   "Aise softly tap karte ho na... butterfly flutter hone lagti hai tummy mein! 🦋✨",
   "Kahin aap mere pyaar mein toh nahi pad rahe? Bata bhi do na... 🤫💞",
   "Reels me koi hero hoga... par mere hero toh bas aap hi ho! 🙈💋",
@@ -209,7 +207,7 @@ class RomanticSynth {
       if (AudioCtx) this.ctx = new AudioCtx();
     }
     if (this.ctx && this.ctx.state === "suspended") {
-      this.ctx.resume().catch(() => { });
+      this.ctx.resume().catch(() => {});
     }
     return this.ctx;
   }
@@ -241,7 +239,7 @@ class RomanticSynth {
         osc.start(startTime);
         osc.stop(startTime + 0.25);
       });
-    } catch { }
+    } catch {}
   }
 
   playHeartbeat() {
@@ -261,7 +259,7 @@ class RomanticSynth {
       gain.connect(ctx.destination);
       osc.start(now);
       osc.stop(now + 0.15);
-    } catch { }
+    } catch {}
   }
 }
 
@@ -304,9 +302,9 @@ function loadModelAsync(): Promise<THREE.Group> {
             console.error("All 3D girl model paths failed:", err2);
             gltfLoadingPromise = null;
             reject(err2);
-          }
+          },
         );
-      }
+      },
     );
   });
 
@@ -332,7 +330,7 @@ export function AiMuse() {
   const [expression, setExpression] = useState<"shy" | "flirty">("shy");
   const [currentSaying, setCurrentSaying] = useState<string>("uhmm, home...");
   const [speechText, setSpeechText] = useState<string>(
-    "Aap aa gaye... main kab se aapka wait kar rahi thi! 🙈💖"
+    "Aap aa gaye... main kab se aapka wait kar rahi thi! 🙈💖",
   );
   const [isBubbleOpen, setIsBubbleOpen] = useState(true);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -349,7 +347,7 @@ export function AiMuse() {
         const parsed = JSON.parse(saved);
         if (typeof parsed.x === "number" && typeof parsed.y === "number") return parsed;
       }
-    } catch { }
+    } catch {}
     return { x: 35, y: 110 };
   });
 
@@ -550,8 +548,8 @@ export function AiMuse() {
       if (!isRunning) return;
       threeState.animFrameId = requestAnimationFrame(animate);
 
-      // When minimized, skip render to save 100% GPU/CPU
-      if (minimizedRef.current) return;
+      // When minimized or tab is hidden in background, skip render to save 100% GPU/CPU
+      if (minimizedRef.current || (typeof document !== "undefined" && document.hidden)) return;
 
       const rend = threeState.renderer;
       const sc = threeState.scene;
@@ -570,12 +568,12 @@ export function AiMuse() {
         threeState.headBone.rotation.y = THREE.MathUtils.lerp(
           threeState.headBone.rotation.y,
           targetRotY,
-          0.08
+          0.08,
         );
         threeState.headBone.rotation.x = THREE.MathUtils.lerp(
           threeState.headBone.rotation.x,
           targetRotX,
-          0.08
+          0.08,
         );
       }
 
@@ -586,12 +584,12 @@ export function AiMuse() {
         threeState.neckBone.rotation.y = THREE.MathUtils.lerp(
           threeState.neckBone.rotation.y,
           targetRotY,
-          0.08
+          0.08,
         );
         threeState.neckBone.rotation.x = THREE.MathUtils.lerp(
           threeState.neckBone.rotation.x,
           targetRotX,
-          0.08
+          0.08,
         );
       }
 
@@ -601,7 +599,7 @@ export function AiMuse() {
         threeState.spineBone.rotation.y = THREE.MathUtils.lerp(
           threeState.spineBone.rotation.y,
           mouse.x * 0.08,
-          0.05
+          0.05,
         );
       }
 
@@ -621,17 +619,30 @@ export function AiMuse() {
         threeState.headMesh.morphTargetInfluences[threeState.smileIndex] = THREE.MathUtils.lerp(
           threeState.headMesh.morphTargetInfluences[threeState.smileIndex],
           targetSmile,
-          0.1
+          0.1,
         );
       }
 
       rend.render(sc, cam);
     };
 
+    const handleVisibility = () => {
+      if (document.hidden) {
+        if (threeState.animFrameId) {
+          cancelAnimationFrame(threeState.animFrameId);
+          threeState.animFrameId = null;
+        }
+      } else if (isRunning && !threeState.animFrameId) {
+        threeState.animFrameId = requestAnimationFrame(animate);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+
     animate();
 
     return () => {
       isRunning = false;
+      document.removeEventListener("visibilitychange", handleVisibility);
       if (threeState.animFrameId) cancelAnimationFrame(threeState.animFrameId);
       if (threeState.renderer) threeState.renderer.dispose();
       if (threeState.scene) threeState.scene.clear();
@@ -784,7 +795,7 @@ export function AiMuse() {
     };
   }, [isDesktop, enabled]);
 
-  // ── 5-Second Reel Watched Reaction ────────────────────────────────────────
+  // ── 8-Second Reel Watched Reaction ────────────────────────────────────────
   useEffect(() => {
     if (!isDesktop || !enabled) return;
 
@@ -792,9 +803,9 @@ export function AiMuse() {
       setExpression("flirty");
       audioSynth.playRomanticChime();
       triggerSpeech(
-        "Aapne poori 5 sec dekhi... nice choice my hero! Meri nazar aap hi par thi! 🥰✨",
-        "5 sec watched! ⭐",
-        3800
+        "Aapne poori 8 sec dekhi... nice choice my hero! Meri nazar aap hi par thi! 🥰✨",
+        "8 sec watched! ⭐",
+        3800,
       );
       spawnHearts(6);
 
@@ -819,7 +830,7 @@ export function AiMuse() {
         setIsBubbleOpen(false);
       }, durationMs);
     },
-    []
+    [],
   );
 
   // ── Spawn Floating Heart Particles ────────────────────────────────────────
@@ -847,8 +858,7 @@ export function AiMuse() {
     setExpression("flirty");
     spawnHearts(5);
 
-    const nextQuote =
-      TAP_FLIRTY_ROASTS[Math.floor(Math.random() * TAP_FLIRTY_ROASTS.length)];
+    const nextQuote = TAP_FLIRTY_ROASTS[Math.floor(Math.random() * TAP_FLIRTY_ROASTS.length)];
     triggerSpeech(nextQuote, "sunoo na...", 4200);
 
     if (companionRef.current) {
@@ -908,7 +918,7 @@ export function AiMuse() {
         }, 50);
         try {
           localStorage.setItem("shortify_muse_pos", JSON.stringify(positionRef.current));
-        } catch { }
+        } catch {}
       }
     };
 
@@ -931,9 +941,7 @@ export function AiMuse() {
       <div className="relative flex flex-col items-center">
         {/* ── Romantic & Flirty Hinglish Speech Bubble (Compact & Sleek) ── */}
         {isBubbleOpen && (
-          <div
-            className="absolute bottom-[102%] mb-2 max-w-[210px] w-max px-3 py-2 rounded-xl bg-black/90 dark:bg-neutral-950/95 text-white text-[11px] font-medium border border-pink-400/40 shadow-xl backdrop-blur-xl pointer-events-none animate-fade-in"
-          >
+          <div className="absolute bottom-[102%] mb-2 max-w-[210px] w-max px-3 py-2 rounded-xl bg-black/90 dark:bg-neutral-950/95 text-white text-[11px] font-medium border border-pink-400/40 shadow-xl backdrop-blur-xl pointer-events-none animate-fade-in">
             {/* Page Saying Header Pill */}
             {currentSaying && (
               <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-pink-500/20 border border-pink-400/30 text-[9px] font-bold text-pink-300 tracking-wide mb-1 w-fit">
@@ -982,8 +990,9 @@ export function AiMuse() {
           <div className="relative w-[200px] h-[320px] flex items-center justify-center pointer-events-auto">
             <canvas
               ref={canvasRef}
-              className={`w-full h-full object-contain pointer-events-auto ${isModelLoaded ? "block" : "hidden"
-                }`}
+              className={`w-full h-full object-contain pointer-events-auto ${
+                isModelLoaded ? "block" : "hidden"
+              }`}
             />
 
             {/* Subtle soft floor shadow under shoes */}
@@ -1008,4 +1017,3 @@ export function AiMuse() {
     </aside>
   );
 }
-

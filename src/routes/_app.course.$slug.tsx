@@ -185,7 +185,7 @@ function CourseDetailsPage() {
           }
         }
 
-        let res = await fetch(
+        const res = await fetch(
           `https://skills.shortify.cc.cd/${encodeURIComponent(mappedFolder)}/${slug}.json`,
         );
 

@@ -13,19 +13,17 @@ import {
   Save,
 } from "lucide-react";
 import { toast } from "sonner";
-import { DEFAULT_PAGES_CONFIG, DEFAULT_SITE_CONTENT_CONFIG, type PageConfig } from "@/lib/site-config";
+import {
+  DEFAULT_PAGES_CONFIG,
+  DEFAULT_SITE_CONTENT_CONFIG,
+  type PageConfig,
+} from "@/lib/site-config";
 
 type ConfigTab = "pages" | "banner" | "blocked";
 
 export function AdminConfigPage() {
-  const {
-    pages,
-    content,
-    togglePage,
-    updatePageCustomMessage,
-    updateContent,
-    savePages,
-  } = useSiteConfig();
+  const { pages, content, togglePage, updatePageCustomMessage, updateContent, savePages } =
+    useSiteConfig();
 
   const [activeTab, setActiveTab] = useState<ConfigTab>("pages");
   const [searchQuery, setSearchQuery] = useState("");
@@ -158,7 +156,8 @@ export function AdminConfigPage() {
             </div>
           </div>
           <p className="text-sm text-foreground/60 mt-1">
-            control page visibility, disable routes, manage live banners, and customize client-side content.
+            control page visibility, disable routes, manage live banners, and customize client-side
+            content.
           </p>
         </div>
 
@@ -187,19 +186,33 @@ export function AdminConfigPage() {
       {/* Stats Counter Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-2xl bg-foreground/5 border border-foreground/10">
-          <span className="text-xs uppercase tracking-wider text-foreground/50 font-semibold">Total Pages</span>
-          <p className="font-display text-2xl sm:text-3xl font-bold text-foreground mt-1">{pages.length}</p>
+          <span className="text-xs uppercase tracking-wider text-foreground/50 font-semibold">
+            Total Pages
+          </span>
+          <p className="font-display text-2xl sm:text-3xl font-bold text-foreground mt-1">
+            {pages.length}
+          </p>
         </div>
         <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
-          <span className="text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold">Active & Visible</span>
-          <p className="font-display text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{activeCount}</p>
+          <span className="text-xs uppercase tracking-wider text-emerald-600 dark:text-emerald-400 font-semibold">
+            Active & Visible
+          </span>
+          <p className="font-display text-2xl sm:text-3xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">
+            {activeCount}
+          </p>
         </div>
         <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-          <span className="text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">Blocked / Hidden</span>
-          <p className="font-display text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 mt-1">{disabledCount}</p>
+          <span className="text-xs uppercase tracking-wider text-amber-600 dark:text-amber-400 font-semibold">
+            Blocked / Hidden
+          </span>
+          <p className="font-display text-2xl sm:text-3xl font-bold text-amber-600 dark:text-amber-400 mt-1">
+            {disabledCount}
+          </p>
         </div>
         <div className="p-4 rounded-2xl bg-purple-500/10 border border-purple-500/20">
-          <span className="text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 font-semibold">Announcement Banner</span>
+          <span className="text-xs uppercase tracking-wider text-purple-600 dark:text-purple-400 font-semibold">
+            Announcement Banner
+          </span>
           <p className="font-display text-lg sm:text-xl font-bold text-purple-600 dark:text-purple-400 mt-1.5">
             {content.announcementBanner.enabled ? "Active" : "Disabled"}
           </p>
@@ -238,7 +251,10 @@ export function AdminConfigPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-2 flex-1 max-w-md">
               <div className="relative w-full">
-                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+                <Search
+                  size={16}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
+                />
                 <input
                   type="text"
                   placeholder="search pages by name or route (/shop, /reels)..."
@@ -312,7 +328,9 @@ export function AdminConfigPage() {
                           <ExternalLink size={12} />
                         </Link>
                       </div>
-                      <p className="text-xs text-foreground/60 mt-2 line-clamp-2">{page.description}</p>
+                      <p className="text-xs text-foreground/60 mt-2 line-clamp-2">
+                        {page.description}
+                      </p>
                     </div>
 
                     {/* Switch Toggle */}
@@ -357,18 +375,28 @@ export function AdminConfigPage() {
 
       {/* TAB 2: Announcement Banner Manager */}
       {activeTab === "banner" && (
-        <form onSubmit={handleSaveBanner} className="space-y-6 max-w-2xl bg-card border border-foreground/10 rounded-2xl p-6 shadow-sm">
+        <form
+          onSubmit={handleSaveBanner}
+          className="space-y-6 max-w-2xl bg-card border border-foreground/10 rounded-2xl p-6 shadow-sm"
+        >
           <div>
-            <h3 className="font-display text-lg font-bold text-foreground">Client Announcement Banner</h3>
+            <h3 className="font-display text-lg font-bold text-foreground">
+              Client Announcement Banner
+            </h3>
             <p className="text-xs text-foreground/60 mt-1">
-              Show an animated top banner across the app for announcements, flash events, or notices.
+              Show an animated top banner across the app for announcements, flash events, or
+              notices.
             </p>
           </div>
 
           <div className="flex items-center justify-between p-4 rounded-xl bg-foreground/5 border border-foreground/10">
             <div>
-              <span className="font-semibold text-sm text-foreground">Enable Announcement Banner</span>
-              <p className="text-xs text-foreground/60">Toggle to immediately show or hide banner for all users.</p>
+              <span className="font-semibold text-sm text-foreground">
+                Enable Announcement Banner
+              </span>
+              <p className="text-xs text-foreground/60">
+                Toggle to immediately show or hide banner for all users.
+              </p>
             </div>
             <input
               type="checkbox"
@@ -391,7 +419,9 @@ export function AdminConfigPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground/80">CTA Button Text (Optional)</label>
+              <label className="text-xs font-semibold text-foreground/80">
+                CTA Button Text (Optional)
+              </label>
               <input
                 type="text"
                 value={bannerForm.linkText || ""}
@@ -401,7 +431,9 @@ export function AdminConfigPage() {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground/80">CTA Destination URL (Optional)</label>
+              <label className="text-xs font-semibold text-foreground/80">
+                CTA Destination URL (Optional)
+              </label>
               <input
                 type="text"
                 value={bannerForm.linkUrl || ""}
@@ -434,21 +466,25 @@ export function AdminConfigPage() {
 
           {/* Realtime Banner Preview */}
           <div className="space-y-2 pt-2 border-t border-foreground/10">
-            <span className="text-xs uppercase tracking-wider font-semibold text-foreground/50">Live Banner Preview</span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-foreground/50">
+              Live Banner Preview
+            </span>
             <div
               className={`p-3 rounded-xl text-sm flex items-center justify-between gap-3 shadow-xs ${
                 bannerForm.variant === "gradient"
                   ? "bg-linear-to-r from-amber-500 via-pink-500 to-indigo-600 text-white"
                   : bannerForm.variant === "info"
-                  ? "bg-blue-600 text-white"
-                  : bannerForm.variant === "warning"
-                  ? "bg-amber-500 text-black font-medium"
-                  : "bg-emerald-600 text-white"
+                    ? "bg-blue-600 text-white"
+                    : bannerForm.variant === "warning"
+                      ? "bg-amber-500 text-black font-medium"
+                      : "bg-emerald-600 text-white"
               }`}
             >
               <div className="flex items-center gap-2 min-w-0">
                 <Sparkles size={16} className="shrink-0" />
-                <span className="truncate">{bannerForm.text || "Preview announcement text goes here..."}</span>
+                <span className="truncate">
+                  {bannerForm.text || "Preview announcement text goes here..."}
+                </span>
               </div>
               {bannerForm.linkText && (
                 <span className="shrink-0 text-xs px-2.5 py-1 rounded-full bg-white/20 backdrop-blur-md font-semibold">
@@ -471,16 +507,24 @@ export function AdminConfigPage() {
 
       {/* TAB 3: Blocked Page Appearance */}
       {activeTab === "blocked" && (
-        <form onSubmit={handleSaveBlocked} className="space-y-6 max-w-2xl bg-card border border-foreground/10 rounded-2xl p-6 shadow-sm">
+        <form
+          onSubmit={handleSaveBlocked}
+          className="space-y-6 max-w-2xl bg-card border border-foreground/10 rounded-2xl p-6 shadow-sm"
+        >
           <div>
-            <h3 className="font-display text-lg font-bold text-foreground">Blocked Page Appearance</h3>
+            <h3 className="font-display text-lg font-bold text-foreground">
+              Blocked Page Appearance
+            </h3>
             <p className="text-xs text-foreground/60 mt-1">
-              Configure the message shown to users when they attempt to visit a disabled page directly.
+              Configure the message shown to users when they attempt to visit a disabled page
+              directly.
             </p>
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-foreground/80">Default Blocked Title</label>
+            <label className="text-xs font-semibold text-foreground/80">
+              Default Blocked Title
+            </label>
             <input
               type="text"
               value={blockedForm.title}
@@ -490,7 +534,9 @@ export function AdminConfigPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold text-foreground/80">Default Blocked Explanation</label>
+            <label className="text-xs font-semibold text-foreground/80">
+              Default Blocked Explanation
+            </label>
             <textarea
               rows={3}
               value={blockedForm.message}
@@ -501,8 +547,12 @@ export function AdminConfigPage() {
 
           <div className="flex items-center justify-between p-4 rounded-xl bg-foreground/5 border border-foreground/10">
             <div>
-              <span className="font-semibold text-sm text-foreground">Show "Check Again" Button</span>
-              <p className="text-xs text-foreground/60">Allows users to retry and reload the page if it was just turned back on.</p>
+              <span className="font-semibold text-sm text-foreground">
+                Show "Check Again" Button
+              </span>
+              <p className="text-xs text-foreground/60">
+                Allows users to retry and reload the page if it was just turned back on.
+              </p>
             </div>
             <input
               type="checkbox"
@@ -514,12 +564,16 @@ export function AdminConfigPage() {
 
           {/* Blocked Page Preview Card */}
           <div className="space-y-2 pt-2 border-t border-foreground/10">
-            <span className="text-xs uppercase tracking-wider font-semibold text-foreground/50">Preview of Blocked Page Notice</span>
+            <span className="text-xs uppercase tracking-wider font-semibold text-foreground/50">
+              Preview of Blocked Page Notice
+            </span>
             <div className="p-6 rounded-2xl border border-destructive/20 bg-destructive/5 text-center space-y-3">
               <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive mx-auto flex items-center justify-center">
                 <ShieldAlert size={24} />
               </div>
-              <h4 className="font-display text-lg font-bold text-foreground">{blockedForm.title}</h4>
+              <h4 className="font-display text-lg font-bold text-foreground">
+                {blockedForm.title}
+              </h4>
               <p className="text-xs text-foreground/70 max-w-md mx-auto">{blockedForm.message}</p>
               <div className="flex items-center justify-center gap-2 pt-2">
                 <span className="px-4 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-semibold">

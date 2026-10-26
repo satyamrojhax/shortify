@@ -84,7 +84,7 @@ function RedeemHistoryPage() {
 
   // Quick stats
   const totalRupees = history.reduce(
-    (acc, cur) => acc + (Number(cur.amount_inr) || (cur.cost / 1000) * 10),
+    (acc, cur) => acc + (Number(cur.amount_inr) || (cur.cost / 10000) * 100),
     0,
   );
   const pendingCount = history.filter(
@@ -116,7 +116,9 @@ function RedeemHistoryPage() {
           className="inline-flex items-center gap-1.5 self-start sm:self-auto rounded-lg border-[1.5px] border-charcoal/30 bg-dew/40 px-3 py-1.5 text-xs font-semibold text-cocoa transition hover:bg-dew dark:border-cream/30 dark:bg-secondary/40 dark:text-cream shadow-xs"
           title="Refresh history"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`}
+          />
           refresh
         </button>
       </div>
@@ -180,7 +182,7 @@ function RedeemHistoryPage() {
               const rupees =
                 record.amount_inr !== null && record.amount_inr !== undefined
                   ? Number(record.amount_inr)
-                  : (record.cost / 1000) * 10;
+                  : (record.cost / 10000) * 100;
               const statusNormalized = (record.status || "pending").toLowerCase();
               const isCompleted =
                 statusNormalized === "completed" || statusNormalized === "approved";

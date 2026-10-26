@@ -37,7 +37,7 @@ export async function fetchUserNotifications(
   username?: string | null,
 ): Promise<NotificationItem[]> {
   try {
-    let query = supabase
+    const query = supabase
       .from("notifications")
       .select("*")
       .order("created_at", { ascending: false })
@@ -52,11 +52,7 @@ export async function fetchUserNotifications(
     const visibleNotifs = notifs.filter((n: any) => {
       if (n.target_type === "all") return true;
       if (userId && n.target_user_id && n.target_user_id === userId) return true;
-      if (
-        lowerUser &&
-        n.target_username &&
-        n.target_username.toLowerCase().trim() === lowerUser
-      )
+      if (lowerUser && n.target_username && n.target_username.toLowerCase().trim() === lowerUser)
         return true;
       return false;
     });
@@ -65,7 +61,7 @@ export async function fetchUserNotifications(
     const notifIds = visibleNotifs.map((n: any) => n.id);
 
     // Fetch reads for this user
-    let userReadsMap = new Map<string, string>();
+    const userReadsMap = new Map<string, string>();
     if (userId || lowerUser) {
       const { data: reads } = await supabase
         .from("notification_reads")
@@ -199,10 +195,7 @@ export async function toggleNotificationReaction(
 
     if (existing) {
       // Remove reaction
-      await supabase
-        .from("notification_reactions")
-        .delete()
-        .eq("id", existing.id);
+      await supabase.from("notification_reactions").delete().eq("id", existing.id);
     } else {
       // Insert reaction
       await supabase.from("notification_reactions").insert({
@@ -369,20 +362,14 @@ export function subscribeToRealtimeNotifications(onChange: () => void): () => vo
   const channelName = `realtime-notifications-${Math.random().toString(36).slice(2, 8)}`;
   const channel = supabase
     .channel(channelName)
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "notifications" },
-      () => onChange(),
+    .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () =>
+      onChange(),
     )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "notification_reads" },
-      () => onChange(),
+    .on("postgres_changes", { event: "*", schema: "public", table: "notification_reads" }, () =>
+      onChange(),
     )
-    .on(
-      "postgres_changes",
-      { event: "*", schema: "public", table: "notification_reactions" },
-      () => onChange(),
+    .on("postgres_changes", { event: "*", schema: "public", table: "notification_reactions" }, () =>
+      onChange(),
     )
     .subscribe();
 

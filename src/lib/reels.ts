@@ -4,7 +4,8 @@ import { videoCache } from "./video-cache";
 
 export type Reel = {
   id: string;
-  source: "trending" | "shorts" | "creator" | "local" | "insta_" | "liked" | "live" | "category" | string;
+  source:
+    "trending" | "shorts" | "creator" | "local" | "insta_" | "liked" | "live" | "category" | string;
   videoUrl: string;
   thumbnail?: string;
   title?: string;
@@ -140,7 +141,10 @@ function shuffle<T>(arr: T[]): T[] {
 
 function hashCode(s: string): string {
   let h = 0;
-  for (let i = 0; i < s.length; i++) ((h = (h << 5) - h + s.charCodeAt(i)), (h |= 0));
+  for (let i = 0; i < s.length; i++) {
+    h = (h << 5) - h + s.charCodeAt(i);
+    h |= 0;
+  }
   return Math.abs(h).toString(36);
 }
 
@@ -204,7 +208,7 @@ async function fetchWithRetry(url: string, attempts = 2): Promise<Response | nul
       const res = await fetch(url, { headers: SHORTS_HEADERS });
       if (res.ok) return res;
       if (res.status >= 400 && res.status < 500 && res.status !== 429) return null;
-    } catch { }
+    } catch {}
     if (i < attempts - 1) {
       await new Promise((r) => setTimeout(r, 250 + secureMathRandom() * 150));
     }
@@ -263,9 +267,7 @@ export function mapShortToReel(item: any, source: string = "trending"): Reel {
   const username = model?.model_dir || model?.model_name || "Creator";
   const creatorDisplayName = model?.model_name || model?.model_dir || "Creator";
   const avatarUrl =
-    model?.model_foto_url && model.model_foto_url !== "None"
-      ? model.model_foto_url
-      : undefined;
+    model?.model_foto_url && model.model_foto_url !== "None" ? model.model_foto_url : undefined;
 
   const categoryName =
     Array.isArray(item.categories) && item.categories.length > 0
@@ -294,7 +296,9 @@ export function mapShortToReel(item: any, source: string = "trending"): Reel {
 }
 
 export async function fetchReelComments(videoId: string, page = 1): Promise<any[]> {
-  const cleanId = String(videoId).replace(/^short-/, "").replace(/^[a-z]+-/, "");
+  const cleanId = String(videoId)
+    .replace(/^short-/, "")
+    .replace(/^[a-z]+-/, "");
   if (!cleanId || !/^\d+$/.test(cleanId)) return [];
 
   const cacheKey = `comments::${cleanId}::p${page}`;
@@ -314,7 +318,7 @@ export async function fetchReelComments(videoId: string, page = 1): Promise<any[
   }));
 
   if (comments.length > 0) {
-    videoCache.set(cacheKey, comments).catch(() => { });
+    videoCache.set(cacheKey, comments).catch(() => {});
   }
   return comments;
 }
@@ -333,7 +337,7 @@ export async function fetchTrendingShorts(page: number): Promise<Reel[]> {
   );
 
   if (reels.length > 0) {
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
   }
   return reels;
 }
@@ -352,7 +356,7 @@ export async function fetchAllShorts(page: number): Promise<Reel[]> {
   );
 
   if (reels.length > 0) {
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
   }
   return reels;
 }
@@ -385,9 +389,11 @@ async function fetchLatestReels(page: number): Promise<Reel[]> {
       username: v.username,
       creator_image:
         v.creator_image ||
-        (v.username ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg` : undefined),
+        (v.username
+          ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg`
+          : undefined),
     }));
-    videoCache.set(cacheKey, reels).catch(() => { });
+    videoCache.set(cacheKey, reels).catch(() => {});
     return reels;
   } catch {
     return [];
@@ -418,7 +424,9 @@ async function fetchCategoryReels(category: string): Promise<Reel[]> {
       username: v.username,
       creator_image:
         v.creator_image ||
-        (v.username ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg` : undefined),
+        (v.username
+          ? `https://love.viraly.wtf/profileImages/${encodeURIComponent(v.username)}.jpg`
+          : undefined),
     }));
     return reels;
   } catch {
@@ -656,7 +664,7 @@ export async function fetchReelsPage(
 
   // Cache the assembled page (except for random mode and categories)
   if (!isRandom && !filter.startsWith("category:")) {
-    videoCache.set(feedCacheKey, result).catch(() => { });
+    videoCache.set(feedCacheKey, result).catch(() => {});
   }
 
   return result;
@@ -667,7 +675,7 @@ export async function fetchReelsPage(
  * Call this to warm the next page before the user scrolls to it.
  */
 export function prefetchReelsPage(page: number, filter: FeedFilter = "all"): void {
-  fetchReelsPage(page, filter).catch(() => { });
+  fetchReelsPage(page, filter).catch(() => {});
 }
 
 export function warmAllFilters(): void {
@@ -682,8 +690,14 @@ export function warmAllFilters(): void {
 export function getShortsModelCandidates(username: string): string[] {
   const raw = username.trim();
   const lower = raw.toLowerCase();
-  const hyphenSlug = lower.replace(/[_\s]+/g, "-").replace(/[^a-z0-9-]+/g, "").replace(/^-+|-+$/g, "");
-  const underscoreSlug = lower.replace(/[-\s]+/g, "_").replace(/[^a-z0-9_]+/g, "").replace(/^_+|_+$/g, "");
+  const hyphenSlug = lower
+    .replace(/[_\s]+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
+    .replace(/^-+|-+$/g, "");
+  const underscoreSlug = lower
+    .replace(/[-\s]+/g, "_")
+    .replace(/[^a-z0-9_]+/g, "")
+    .replace(/^_+|_+$/g, "");
 
   const list = [
     raw,
@@ -706,7 +720,11 @@ export async function fetchCreatorReelsPage(
   const safePage = Math.max(0, page);
   const cacheKey = `creator::${source || "any"}::${cleanUser.toLowerCase()}::${type}::p${safePage}`;
 
-  const cached = await videoCache.get<{ items: Reel[]; nextPage: number | undefined; modelInfo?: any }>(cacheKey);
+  const cached = await videoCache.get<{
+    items: Reel[];
+    nextPage: number | undefined;
+    modelInfo?: any;
+  }>(cacheKey);
   if (cached) return cached;
 
   // SYSTEM B: SHORTS (Normal Reels Player — ViralXXXPorn proxy ONLY)
@@ -725,7 +743,7 @@ export async function fetchCreatorReelsPage(
           const totalPages = parseInt(json.page_total || "1", 10);
           const nextPage = modelPage < totalPages ? modelPage + 1 : undefined;
           const res = { items: reels, nextPage, modelInfo: json.model_info };
-          videoCache.set(cacheKey, res).catch(() => { });
+          videoCache.set(cacheKey, res).catch(() => {});
           return res;
         }
       }
@@ -769,7 +787,7 @@ export async function fetchCreatorReelsPage(
             items: reels,
             nextPage: rawJson.hasNextPage ? (rawJson.nextPage ?? safePage + 1) : undefined,
           };
-          videoCache.set(cacheKey, result).catch(() => { });
+          videoCache.set(cacheKey, result).catch(() => {});
           return result;
         }
       }
@@ -782,14 +800,16 @@ export async function fetchCreatorReelsPage(
   // AUTO-DETECT if source is not explicitly passed:
   // Check viraly first; if count > 0 then route exclusively to viraly, else to shorts.
   try {
-    const checkRes = await fetch(`https://love.viraly.wtf/getPostsCount/${encodeURIComponent(cleanUser)}`);
+    const checkRes = await fetch(
+      `https://love.viraly.wtf/getPostsCount/${encodeURIComponent(cleanUser)}`,
+    );
     if (checkRes.ok) {
       const cData = await checkRes.json();
       if (typeof cData.count === "number" && cData.count > 0) {
         return fetchCreatorReelsPage(cleanUser, type, safePage, "viraly");
       }
     }
-  } catch { }
+  } catch {}
 
   return fetchCreatorReelsPage(cleanUser, type, safePage, "shorts");
 }

@@ -4,7 +4,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { BrandMark } from "@/components/nav";
 import { supabase } from "@/lib/supabase";
-import { Settings, Users, LayoutDashboard, Bell, MessageSquare, Sun, Moon, Sliders } from "lucide-react";
+import {
+  Settings,
+  Users,
+  LayoutDashboard,
+  Bell,
+  MessageSquare,
+  Sun,
+  Moon,
+  Sliders,
+} from "lucide-react";
 
 export const Route = createFileRoute("/admin")({
   component: AdminLayout,
@@ -28,8 +37,7 @@ function AdminLayout() {
   const hasAdminSession =
     (typeof sessionStorage !== "undefined" &&
       sessionStorage.getItem("ig.admin_verified") === "true") ||
-    (typeof localStorage !== "undefined" &&
-      localStorage.getItem("ig.admin_verified") === "true");
+    (typeof localStorage !== "undefined" && localStorage.getItem("ig.admin_verified") === "true");
 
   const isAdmin = isSatyamRojha && hasAdminSession;
 
@@ -52,8 +60,6 @@ function AdminLayout() {
     }
   }, [ready, isAdmin]);
 
-
-
   if (!ready) {
     return (
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
@@ -70,12 +76,7 @@ function AdminLayout() {
       <div className="flex h-screen items-center justify-center bg-background text-foreground">
         <div className="text-center space-y-4 max-w-sm px-4">
           <div className="w-12 h-12 rounded-full bg-destructive/10 text-destructive flex items-center justify-center mx-auto">
-            <svg
-              className="w-6 h-6"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -86,7 +87,9 @@ function AdminLayout() {
           </div>
           <p className="font-display text-xl font-bold">401 Unauthorized</p>
           <p className="text-sm text-foreground/60">
-            Only admin <span className="font-semibold text-foreground">satyamrojha</span> with verified credentials can access this portal. All other users are classified as unauthorized.
+            Only admin <span className="font-semibold text-foreground">satyamrojha</span> with
+            verified credentials can access this portal. All other users are classified as
+            unauthorized.
           </p>
           <button
             onClick={() => navigate({ to: "/madarchod.admin" })}

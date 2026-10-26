@@ -149,7 +149,9 @@ function NotificationsPage() {
             title="Refresh notifications"
             className="p-1.5 rounded-full text-charcoal/50 hover:text-cocoa hover:bg-slate-mist/20 dark:text-cream/50 dark:hover:text-cream transition-colors"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`}
+            />
           </button>
         </div>
 

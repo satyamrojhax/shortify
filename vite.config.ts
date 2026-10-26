@@ -4,6 +4,17 @@ import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
 
+const handleProxyError = (
+  err: Error,
+  _req: http.IncomingMessage,
+  res: http.ServerResponse | any,
+) => {
+  if (res && !res.headersSent && typeof res.writeHead === "function") {
+    res.writeHead(502, { "Content-Type": "application/json" });
+    res.end(JSON.stringify({ error: "Upstream connection error", message: err.message }));
+  }
+};
+
 const proxyConfig: Record<string, ProxyOptions> = {
   "/__viewer-country": {
     target: "https://randomchat.now",
@@ -31,6 +42,7 @@ const proxyConfig: Record<string, ProxyOptions> = {
       accept: "application/json",
     },
     configure: (proxy) => {
+      proxy.on("error", handleProxyError);
       proxy.on("proxyReq", (proxyReq: http.ClientRequest) => {
         proxyReq.setHeader("host", "viralxxxporn.com");
         proxyReq.setHeader("referer", "https://viralxxxporn.com/live/");
@@ -59,6 +71,7 @@ const proxyConfig: Record<string, ProxyOptions> = {
       accept: "application/json",
     },
     configure: (proxy) => {
+      proxy.on("error", handleProxyError);
       proxy.on("proxyReq", (proxyReq: http.ClientRequest) => {
         proxyReq.setHeader("host", "viralxxxporn.com");
         proxyReq.setHeader("referer", "https://viralxxxporn.com/short/trending/");
@@ -87,6 +100,7 @@ const proxyConfig: Record<string, ProxyOptions> = {
       "front-version": "12.1.36",
     },
     configure: (proxy) => {
+      proxy.on("error", handleProxyError);
       proxy.on("proxyReq", (proxyReq: http.ClientRequest) => {
         proxyReq.setHeader("host", "viralxxxporn.cam");
         proxyReq.setHeader("referer", "https://viralxxxporn.cam/");
@@ -142,6 +156,12 @@ export default defineConfig({
           }
           if (id.includes("node_modules/lucide-react")) {
             return "icons-vendor";
+          }
+          if (id.includes("node_modules/three")) {
+            return "three-vendor";
+          }
+          if (id.includes("node_modules/hls.js")) {
+            return "hls-vendor";
           }
         },
         entryFileNames: "assets/[name]-[hash].js",

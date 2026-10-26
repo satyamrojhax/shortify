@@ -36,8 +36,8 @@ function RedeemPage() {
       setError(`You only have ${currentCoins} coins available.`);
       return;
     }
-    if (amount < 1000) {
-      setError("Minimum redeem amount is 1000 coins.");
+    if (amount < 10000) {
+      setError("Minimum redeem amount is 10,000 coins (₹100 INR).");
       return;
     }
     if (!name.trim() || !upi.trim()) {
@@ -45,7 +45,7 @@ function RedeemPage() {
       return;
     }
 
-    const rupees = (amount / 1000) * 10;
+    const rupees = (amount / 10000) * 100;
     setSubmitting(true);
 
     // Save to relational table first
@@ -91,7 +91,7 @@ function RedeemPage() {
   };
 
   const rupeesValue =
-    parseInt(coinsToRedeem, 10) > 0 ? (parseInt(coinsToRedeem, 10) / 1000) * 10 : 0;
+    parseInt(coinsToRedeem, 10) > 0 ? (parseInt(coinsToRedeem, 10) / 10000) * 100 : 0;
 
   return (
     <div className="mx-auto max-w-2xl px-6 py-10 pb-36">
@@ -128,25 +128,25 @@ function RedeemPage() {
 
         <div className="mt-6 rounded-xl border border-charcoal/15 bg-background px-4 py-2.5 text-xs text-charcoal/70 dark:border-cream/15 dark:text-cream/70">
           Exchange rate:{" "}
-          <span className="font-bold text-cocoa dark:text-cream">1,000 coins = ₹10 INR</span>
+          <span className="font-bold text-cocoa dark:text-cream">10,000 coins = ₹100 INR</span>
         </div>
 
         <div className="mt-8 w-full max-w-sm">
           <button
             onClick={() => setIsModalOpen(true)}
-            disabled={currentCoins < 1000}
+            disabled={currentCoins < 10000}
             className={`w-full rounded-xl py-3.5 px-6 font-display text-base font-bold transition-all shadow-md ${
-              currentCoins >= 1000
+              currentCoins >= 10000
                 ? "bg-cobalt-pop text-white hover:bg-cobalt-pop/90 active:scale-95"
                 : "bg-charcoal/10 text-charcoal/40 dark:bg-cream/10 dark:text-cream/40 cursor-not-allowed"
             }`}
           >
-            {currentCoins >= 1000 ? "Request Payout Now" : "Need 1,000 Coins Minimum"}
+            {currentCoins >= 10000 ? "Request Payout Now" : "Need 10,000 Coins Minimum"}
           </button>
 
-          {currentCoins < 1000 && (
+          {currentCoins < 10000 && (
             <p className="mt-3 text-xs text-charcoal/60 dark:text-cream/60">
-              Watch more reels and like posts to reach the 1,000 coins minimum payout threshold.
+              Watch more reels and like posts to reach the 10,000 coins minimum payout threshold.
             </p>
           )}
         </div>
@@ -238,16 +238,16 @@ function RedeemPage() {
 
                   <div>
                     <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-charcoal/70 dark:text-cream/70">
-                      Coins to Redeem
+                      Coins to Redeem (Min. 10,000)
                     </label>
                     <input
                       type="number"
-                      min="1000"
+                      min="10000"
                       max={currentCoins}
                       step="100"
                       value={coinsToRedeem}
                       onChange={(e) => setCoinsToRedeem(e.target.value)}
-                      placeholder="e.g. 1000"
+                      placeholder="e.g. 10000"
                       required
                       className="w-full rounded-lg border-[1.5px] border-charcoal/30 bg-dew/20 px-3.5 py-2.5 text-sm text-cocoa placeholder:text-charcoal/40 focus:border-cobalt-pop focus:outline-none dark:border-cream/30 dark:bg-secondary/30 dark:text-cream dark:placeholder:text-cream/40"
                     />

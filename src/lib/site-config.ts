@@ -410,11 +410,14 @@ export async function initSiteConfig() {
             if (row && row.key === "site_content_config" && row.value) {
               memoryContentConfig = { ...DEFAULT_SITE_CONTENT_CONFIG, ...row.value };
               if (typeof localStorage !== "undefined") {
-                localStorage.setItem(LOCAL_STORAGE_CONTENT_KEY, JSON.stringify(memoryContentConfig));
+                localStorage.setItem(
+                  LOCAL_STORAGE_CONTENT_KEY,
+                  JSON.stringify(memoryContentConfig),
+                );
               }
               notifyListeners();
             }
-          }
+          },
         )
         .subscribe();
     } catch {}

@@ -85,9 +85,7 @@ function ProfilePage() {
       localStorage.setItem("shortify_muse_enabled", String(val));
     }
     if (typeof window !== "undefined") {
-      window.dispatchEvent(
-        new CustomEvent("shortify:muse-toggle", { detail: { enabled: val } })
-      );
+      window.dispatchEvent(new CustomEvent("shortify:muse-toggle", { detail: { enabled: val } }));
     }
     if (val) {
       toast.success("3D Muse Companion enabled! She's back 💖");
@@ -202,7 +200,7 @@ function ProfilePage() {
         const data = await fetchUserProfile(uid);
         if (data.name) setDisplayName(data.name);
         if (data.profile_details?.bio) setBio(data.profile_details.bio);
-      } catch (err) { }
+      } catch (err) {}
     }
     setTimeout(() => setIsRefreshingStats(false), 600);
   };
@@ -232,7 +230,9 @@ function ProfilePage() {
           title="Refresh profile stats"
           className="flex items-center gap-2 rounded-full border border-charcoal/20 bg-background/50 px-3.5 py-1.5 text-xs font-semibold text-charcoal/70 dark:text-cream/70 hover:text-cocoa dark:hover:text-cream transition shadow-xs"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshingStats ? "animate-spin text-marker" : ""}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${isRefreshingStats ? "animate-spin text-marker" : ""}`}
+          />
           <span>refresh</span>
         </button>
       </div>
@@ -268,9 +268,7 @@ function ProfilePage() {
                 {hasUnlocked("badge_verified") && <BadgeCheck className="h-6 w-6 text-blue-500" />}
               </div>
             </div>
-            <div className="text-sm text-marker font-medium mt-1 break-words">
-              {bio}
-            </div>
+            <div className="text-sm text-marker font-medium mt-1 break-words">{bio}</div>
             <div className="mt-2 text-sm text-charcoal/60 dark:text-cream/60 flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
               <span>dropped from universe</span>
               <span>•</span>
@@ -320,10 +318,11 @@ function ProfilePage() {
                 <button
                   key={st.id}
                   onClick={() => handleStyleChange(st.id)}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${active
-                    ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
-                    : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
-                    }`}
+                  className={`flex flex-col items-center gap-1.5 rounded-xl p-2 transition-all border ${
+                    active
+                      ? "border-cobalt-pop bg-cobalt-pop/10 dark:bg-cobalt-pop/20 shadow-sm"
+                      : "border-transparent hover:bg-slate-100 dark:hover:bg-slate-800"
+                  }`}
                 >
                   <UserAvatar
                     username={username}

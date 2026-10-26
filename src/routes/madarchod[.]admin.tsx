@@ -53,8 +53,7 @@ function checkAdminAuth(): boolean {
   if (typeof window === "undefined") return false;
 
   const sessionToken =
-    sessionStorage.getItem("ig.admin_session") ||
-    localStorage.getItem("ig.admin_session");
+    sessionStorage.getItem("ig.admin_session") || localStorage.getItem("ig.admin_session");
   const isVerified =
     sessionStorage.getItem("ig.admin_verified") === "true" ||
     localStorage.getItem("ig.admin_verified") === "true";
@@ -101,7 +100,9 @@ function MadarchodAdminPortal() {
             </div>
             <p className="font-display text-xl font-bold tracking-tight">401 Unauthorized</p>
             <p className="text-xs text-white/60 leading-relaxed font-mono">
-              Only admin <span className="text-amber-400 font-semibold">satyamrojha</span> with verified credentials can access this portal. All other users are classified as unauthorized.
+              Only admin <span className="text-amber-400 font-semibold">satyamrojha</span> with
+              verified credentials can access this portal. All other users are classified as
+              unauthorized.
             </p>
             <button
               onClick={() => {
@@ -229,7 +230,11 @@ function MadarchodAdminPortal() {
               title="Toggle Light / Dark mode"
             >
               <div className="flex items-center gap-2">
-                {theme === "dark" ? <Sun size={15} className="text-amber-400" /> : <Moon size={15} />}
+                {theme === "dark" ? (
+                  <Sun size={15} className="text-amber-400" />
+                ) : (
+                  <Moon size={15} />
+                )}
                 <span className="capitalize">{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>
               </div>
               <span className="text-[10px] uppercase tracking-wider text-foreground/50">Theme</span>
@@ -273,9 +278,7 @@ function MadarchodAdminPortal() {
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto pt-14 pb-20 md:pt-0 md:pb-0">
-          <div className="p-3 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">
-            {renderCurrentPage()}
-          </div>
+          <div className="p-3 sm:p-6 md:p-8 max-w-6xl mx-auto w-full">{renderCurrentPage()}</div>
         </main>
 
         {/* Mobile Bottom Nav */}
@@ -334,15 +337,15 @@ function AdminSecureLoginForm({ onSuccess }: { onSuccess: () => void }) {
 
     // Strict check 1: ONLY satyamrojha can ever be admin
     if (trimmedUser !== "satyamrojha") {
-      setErrorMsg("401 Unauthorized: Only satyamrojha is authorized to access the admin portal. All other users are unauthorized.");
+      setErrorMsg(
+        "401 Unauthorized: Only satyamrojha is authorized to access the admin portal. All other users are unauthorized.",
+      );
       return;
     }
 
     // Strict check 2: Secret Code verification
     const expectedSecret =
-      import.meta.env.VITE_ADMIN_SECRET_CODE ||
-      import.meta.env.VITE_SECRET_CODE ||
-      "CHUT";
+      import.meta.env.VITE_ADMIN_SECRET_CODE || import.meta.env.VITE_SECRET_CODE || "CHUT";
 
     if (trimmedSecret !== expectedSecret) {
       setErrorMsg("403 Forbidden: Invalid Secret Code. High-level security alert logged.");
@@ -383,7 +386,7 @@ function AdminSecureLoginForm({ onSuccess }: { onSuccess: () => void }) {
       setErrorMsg(
         err instanceof Error
           ? err.message
-          : "Authentication failed. Please verify your credentials and try again."
+          : "Authentication failed. Please verify your credentials and try again.",
       );
     } finally {
       setLoading(false);

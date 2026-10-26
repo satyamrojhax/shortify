@@ -1,11 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Radio, Send, ChevronDown, Smile } from "lucide-react";
-import {
-  ChatMessage,
-  fetchLiveChat,
-  extractModelId,
-  formatChatTimeAgo,
-} from "@/lib/live-chat";
+import { ChatMessage, fetchLiveChat, extractModelId, formatChatTimeAgo } from "@/lib/live-chat";
 
 interface LiveChatProps {
   modelId?: string | number;
@@ -87,10 +82,10 @@ export function LiveChat({
               (msg.details?.amount
                 ? `Tipped ${msg.details.amount} tokens`
                 : msg.type === "tip"
-                ? "Sent a tip"
-                : msg.type === "lovense"
-                ? "Activated toy"
-                : "Live message");
+                  ? "Sent a tip"
+                  : msg.type === "lovense"
+                    ? "Activated toy"
+                    : "Live message");
 
             map.set(msg.id, {
               ...msg,
@@ -228,9 +223,7 @@ export function LiveChat({
             No messages yet. Say hello to {modelName}!
           </div>
         ) : (
-          messages.map((msg) => (
-            <MessageRow key={String(msg.id)} message={msg} />
-          ))
+          messages.map((msg) => <MessageRow key={String(msg.id)} message={msg} />)
         )}
       </div>
 
@@ -321,9 +314,7 @@ function MessageRow({ message }: { message: ChatMessage }) {
       }`}
     >
       <div className="flex items-center justify-between gap-2">
-        <span className="font-bold text-xs text-charcoal dark:text-cream truncate">
-          {username}
-        </span>
+        <span className="font-bold text-xs text-charcoal dark:text-cream truncate">{username}</span>
         {timeAgo && (
           <span className="text-[11px] text-charcoal/40 dark:text-cream/40 shrink-0 font-normal">
             {timeAgo}

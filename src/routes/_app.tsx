@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, useNavigate, useRouterState, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { useSiteConfig } from "@/hooks/use-site-config";
@@ -10,7 +10,8 @@ import { BubbleLoader } from "@/components/ui/bubble-loader";
 import { useOnline } from "@/hooks/use-offline";
 import { toast } from "sonner";
 import { WifiOff, ShieldAlert, RefreshCw, Sparkles } from "lucide-react";
-import { AiMuse } from "@/components/ai-muse";
+
+const AiMuse = lazy(() => import("@/components/ai-muse").then((mod) => ({ default: mod.AiMuse })));
 
 export const Route = createFileRoute("/_app")({
   component: AppLayout,
@@ -208,7 +209,11 @@ function AppLayout() {
       </div>
       {online && <InstallPwa />}
       {online && <StreakModal />}
-      {online && <AiMuse />}
+      {online && (
+        <Suspense fallback={null}>
+          <AiMuse />
+        </Suspense>
+      )}
     </div>
   );
 }

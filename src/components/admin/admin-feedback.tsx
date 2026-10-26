@@ -40,7 +40,9 @@ export function AdminFeedbackPage() {
   const loadTickets = async () => {
     try {
       const data = await adminFetchAllTickets(categoryFilter, statusFilter);
-      const unique = (data || []).filter((t, idx, arr) => arr.findIndex((x) => x.id === t.id) === idx);
+      const unique = (data || []).filter(
+        (t, idx, arr) => arr.findIndex((x) => x.id === t.id) === idx,
+      );
       setTickets(unique);
       if (selectedTicket) {
         const updated = unique.find((t) => t.id === selectedTicket.id);
@@ -102,7 +104,7 @@ export function AdminFeedbackPage() {
   const handleDelete = async (ticket: FeedbackTicket) => {
     if (
       !confirm(
-        `Are you sure you want to permanently delete ticket "${ticket.title}" submitted by @${ticket.username || "User"}? This action cannot be undone.`
+        `Are you sure you want to permanently delete ticket "${ticket.title}" submitted by @${ticket.username || "User"}? This action cannot be undone.`,
       )
     )
       return;
@@ -139,7 +141,8 @@ export function AdminFeedbackPage() {
             User Help & Suggestions Centre
           </h1>
           <p className="text-xs text-foreground/60 mt-1">
-            Review user feedback, suggestions, and help requests. Reply and react to tickets in real-time.
+            Review user feedback, suggestions, and help requests. Reply and react to tickets in
+            real-time.
           </p>
         </div>
 
@@ -148,7 +151,9 @@ export function AdminFeedbackPage() {
           disabled={isRefreshing || loading}
           className="self-start sm:self-auto flex items-center gap-1.5 rounded-full border border-foreground/15 bg-background/50 px-3.5 py-1.5 text-xs text-foreground/70 hover:text-foreground transition-all shadow-xs"
         >
-          <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`} />
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${isRefreshing || loading ? "animate-spin text-marker" : ""}`}
+          />
           <span>Refresh</span>
         </button>
       </div>
@@ -198,7 +203,9 @@ export function AdminFeedbackPage() {
       {/* Main Content: Split View on PC or Drawer on Mobile */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Tickets List */}
-        <div className={`${selectedTicket ? "hidden lg:block lg:col-span-5" : "col-span-12"} space-y-3`}>
+        <div
+          className={`${selectedTicket ? "hidden lg:block lg:col-span-5" : "col-span-12"} space-y-3`}
+        >
           {loading && tickets.length === 0 ? (
             <div className="p-10 text-center text-xs text-foreground/50">
               <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-marker" />
@@ -254,14 +261,16 @@ export function AdminFeedbackPage() {
                   <h3 className="font-display font-semibold text-sm text-foreground truncate">
                     {t.title}
                   </h3>
-                  <p className="text-xs text-foreground/70 line-clamp-2 mt-1">
-                    {t.message}
-                  </p>
+                  <p className="text-xs text-foreground/70 line-clamp-2 mt-1">{t.message}</p>
 
                   <div className="mt-3 pt-2 border-t border-foreground/10 flex items-center justify-between text-[11px] text-foreground/50">
                     <span className="font-medium">@{t.username || "User"}</span>
                     <div className="flex items-center gap-2">
-                      <span>{formatDistanceToNow(new Date(t.updated_at || t.created_at), { addSuffix: true })}</span>
+                      <span>
+                        {formatDistanceToNow(new Date(t.updated_at || t.created_at), {
+                          addSuffix: true,
+                        })}
+                      </span>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -298,7 +307,8 @@ export function AdminFeedbackPage() {
               Select a suggestion or ticket to view
             </div>
             <p className="text-xs max-w-xs mt-1">
-              Click any ticket on the left to read user details, reply in real-time, react with emojis, or change the status.
+              Click any ticket on the left to read user details, reply in real-time, react with
+              emojis, or change the status.
             </p>
           </div>
         )}
@@ -512,9 +522,7 @@ function AdminTicketDetail({
                   ) : (
                     <>
                       <User className="h-3 w-3" />
-                      <span className="font-semibold text-foreground">
-                        @{ticket.username}
-                      </span>
+                      <span className="font-semibold text-foreground">@{ticket.username}</span>
                     </>
                   )}
                   <span>•</span>
@@ -555,11 +563,7 @@ function AdminTicketDetail({
           className="flex h-9 w-9 items-center justify-center rounded-full bg-marker text-white transition hover:opacity-90 disabled:opacity-40 shrink-0"
           title="Send reply"
         >
-          {sending ? (
-            <RefreshCw className="h-4 w-4 animate-spin" />
-          ) : (
-            <Send className="h-4 w-4" />
-          )}
+          {sending ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
         </button>
       </form>
     </div>
