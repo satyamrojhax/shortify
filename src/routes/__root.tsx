@@ -10,7 +10,6 @@ import { useEffect, type ReactNode } from "react";
 import { NotFoundComponent } from "@/components/not-found";
 import { syncRouteUrl, initGlobalActionTracking } from "@/lib/url-tracker";
 import { Toaster } from "@/components/ui/sonner";
-import { SecurityGuard } from "@/components/security-guard";
 
 function ErrorComponent({ error, reset }: { error: unknown; reset: () => void }) {
   const router = useRouter();
@@ -77,7 +76,6 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <Outlet />
       <Toaster richColors position="top-center" closeButton />
-      <SecurityGuard />
     </QueryClientProvider>
   );
 }
